@@ -1,0 +1,12 @@
+{
+  "status": "skipped",
+  "reason": "missing OPENAI_API_KEY",
+  "expected_output_shape": {
+    "analyst_summary": [],
+    "executive_summary": [],
+    "notable_pivots": [],
+    "likely_objectives": [],
+    "iocs": {},
+    "ti_summary": []
+  }
+}

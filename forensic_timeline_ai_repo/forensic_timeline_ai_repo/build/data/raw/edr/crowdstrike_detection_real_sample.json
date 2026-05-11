@@ -1,0 +1,23 @@
+[
+  {
+    "detection_id": "ldt:1234567890:abcdef",
+    "created_timestamp": "2026-04-08T13:04:05Z",
+    "status": "new",
+    "severity": 8,
+    "device": {
+      "hostname": "APP01",
+      "device_id": "device-123"
+    },
+    "behaviors": [
+      {
+        "id": "beh-001",
+        "timestamp": "2026-04-08T13:04:05Z",
+        "display_name": "Suspicious PowerShell Download from https://evil.example/path",
+        "user_name": "svc-backup",
+        "device_name": "APP01",
+        "tactic": "Execution",
+        "technique": "PowerShell"
+      }
+    ]
+  }
+]

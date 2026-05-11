@@ -1,0 +1,17 @@
+{
+  "case_id": "orion-insurance-001",
+  "event_count": 5,
+  "sources": [
+    "aws",
+    "crowdstrike",
+    "entra"
+  ],
+  "high_or_critical_events": 2,
+  "hash_algorithm": "SHA-256",
+  "schema_version": "normalized-real-parser-1.0",
+  "trust_boundary": {
+    "verified_evidence": true,
+    "ai_isolated": true,
+    "ai_can_modify_evidence": false
+  }
+}

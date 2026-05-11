@@ -1,0 +1,6 @@
+timeline_position,time_utc,source_name,product_name,activity_name,user_name,asset_name,severity,status,event_uuid,raw_data_hash
+1,2026-04-08T13:00:02+00:00,aws,AWS CloudTrail,ListBuckets,arn:aws:iam::111122223333:user/svc.backup,s3.amazonaws.com,medium,success,1,hash1
+2,2026-04-08T13:00:30+00:00,entra,Microsoft Entra Sign-in Logs,UserSignedIn,svc-backup@contoso.com,Azure Portal,medium,SUCCESS,2,hash2
+3,2026-04-08T13:01:11+00:00,entra,Microsoft Entra Sign-in Logs,UserSignInFailed,svc-backup@contoso.com,Azure Portal,high,Strong authentication is required.,3,hash3
+4,2026-04-08T13:02:17+00:00,aws,AWS CloudTrail,GetObject,arn:aws:iam::111122223333:user/svc.backup,arn:aws:s3:::claims-prod,medium,success,4,hash4
+5,2026-04-08T13:04:05+00:00,crowdstrike,CrowdStrike Falcon,Suspicious PowerShell Download from https://evil.example/path,svc-backup,APP01,high,new,5,hash5

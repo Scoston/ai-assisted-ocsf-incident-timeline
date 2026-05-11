@@ -1,0 +1,1808 @@
+[
+  {
+    "artifact_id": "windows_registry_run_keys",
+    "platform": "windows",
+    "description": "windows registry run keys",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "windows_userassist",
+    "platform": "windows",
+    "description": "windows userassist",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "windows_shellbags",
+    "platform": "windows",
+    "description": "windows shellbags",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "windows_recentdocs",
+    "platform": "windows",
+    "description": "windows recentdocs",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "windows_typedpaths",
+    "platform": "windows",
+    "description": "windows typedpaths",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "windows_amcache",
+    "platform": "windows",
+    "description": "windows amcache",
+    "priority": "high",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "windows_shimcache",
+    "platform": "windows",
+    "description": "windows shimcache",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "windows_bam_dam",
+    "platform": "windows",
+    "description": "windows bam dam",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "windows_prefetch",
+    "platform": "windows",
+    "description": "windows prefetch",
+    "priority": "high",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "windows_jumplists",
+    "platform": "windows",
+    "description": "windows jumplists",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "windows_lnk_files",
+    "platform": "windows",
+    "description": "windows lnk files",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "windows_recycle_bin",
+    "platform": "windows",
+    "description": "windows recycle bin",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "windows_srum",
+    "platform": "windows",
+    "description": "windows srum",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "windows_usnjrnl",
+    "platform": "windows",
+    "description": "windows usnjrnl",
+    "priority": "high",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "windows_mft",
+    "platform": "windows",
+    "description": "windows mft",
+    "priority": "high",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "windows_eventlog_security",
+    "platform": "windows",
+    "description": "windows eventlog security",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "windows_eventlog_system",
+    "platform": "windows",
+    "description": "windows eventlog system",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "windows_eventlog_application",
+    "platform": "windows",
+    "description": "windows eventlog application",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "windows_eventlog_powershell",
+    "platform": "windows",
+    "description": "windows eventlog powershell",
+    "priority": "high",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "windows_eventlog_sysmon",
+    "platform": "windows",
+    "description": "windows eventlog sysmon",
+    "priority": "high",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "windows_eventlog_taskscheduler",
+    "platform": "windows",
+    "description": "windows eventlog taskscheduler",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "windows_eventlog_defender",
+    "platform": "windows",
+    "description": "windows eventlog defender",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "windows_eventlog_applocker",
+    "platform": "windows",
+    "description": "windows eventlog applocker",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "windows_task_scheduler",
+    "platform": "windows",
+    "description": "windows task scheduler",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "windows_services",
+    "platform": "windows",
+    "description": "windows services",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "windows_wmi_persistence",
+    "platform": "windows",
+    "description": "windows wmi persistence",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "windows_usb_devices",
+    "platform": "windows",
+    "description": "windows usb devices",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "windows_rdp_artifacts",
+    "platform": "windows",
+    "description": "windows rdp artifacts",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "windows_firewall_logs",
+    "platform": "windows",
+    "description": "windows firewall logs",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "windows_dns_cache",
+    "platform": "windows",
+    "description": "windows dns cache",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "windows_webcache",
+    "platform": "windows",
+    "description": "windows webcache",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "windows_chrome_history",
+    "platform": "windows",
+    "description": "windows chrome history",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "windows_chrome_downloads",
+    "platform": "windows",
+    "description": "windows chrome downloads",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "windows_chrome_cookies",
+    "platform": "windows",
+    "description": "windows chrome cookies",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "windows_chrome_logins",
+    "platform": "windows",
+    "description": "windows chrome logins",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "windows_edge_history",
+    "platform": "windows",
+    "description": "windows edge history",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "windows_edge_downloads",
+    "platform": "windows",
+    "description": "windows edge downloads",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "windows_firefox_history",
+    "platform": "windows",
+    "description": "windows firefox history",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "windows_firefox_downloads",
+    "platform": "windows",
+    "description": "windows firefox downloads",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "windows_outlook_metadata",
+    "platform": "windows",
+    "description": "windows outlook metadata",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "windows_onedrive_sync",
+    "platform": "windows",
+    "description": "windows onedrive sync",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "windows_teams_artifacts",
+    "platform": "windows",
+    "description": "windows teams artifacts",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "windows_office_recent",
+    "platform": "windows",
+    "description": "windows office recent",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "windows_clipboard_history",
+    "platform": "windows",
+    "description": "windows clipboard history",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "windows_eventtranscript_db",
+    "platform": "windows",
+    "description": "windows eventtranscript db",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "linux_auth_logs",
+    "platform": "linux",
+    "description": "linux auth logs",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "linux_bash_history",
+    "platform": "linux",
+    "description": "linux bash history",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "linux_journald",
+    "platform": "linux",
+    "description": "linux journald",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "linux_cron",
+    "platform": "linux",
+    "description": "linux cron",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "linux_syslog",
+    "platform": "linux",
+    "description": "linux syslog",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "linux_wtmp_btmp",
+    "platform": "linux",
+    "description": "linux wtmp btmp",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "linux_browser_history",
+    "platform": "linux",
+    "description": "linux browser history",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "linux_ssh_keys",
+    "platform": "linux",
+    "description": "linux ssh keys",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "linux_container_artifacts",
+    "platform": "linux",
+    "description": "linux container artifacts",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "linux_cloud_init",
+    "platform": "linux",
+    "description": "linux cloud init",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "mac_unified_logs",
+    "platform": "mac",
+    "description": "mac unified logs",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "mac_launch_agents",
+    "platform": "mac",
+    "description": "mac launch agents",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "mac_quarantine_events",
+    "platform": "mac",
+    "description": "mac quarantine events",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "mac_fsevents",
+    "platform": "mac",
+    "description": "mac fsevents",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "mac_recent_items",
+    "platform": "mac",
+    "description": "mac recent items",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "mac_spotlight",
+    "platform": "mac",
+    "description": "mac spotlight",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "mac_safari_history",
+    "platform": "mac",
+    "description": "mac safari history",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "mac_chrome_history",
+    "platform": "mac",
+    "description": "mac chrome history",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "mac_firefox_history",
+    "platform": "mac",
+    "description": "mac firefox history",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "browser_session_storage",
+    "platform": "saas/cloud",
+    "description": "browser session storage",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "browser_local_storage",
+    "platform": "saas/cloud",
+    "description": "browser local storage",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "browser_cache",
+    "platform": "saas/cloud",
+    "description": "browser cache",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "browser_extensions",
+    "platform": "saas/cloud",
+    "description": "browser extensions",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "m365_unified_audit",
+    "platform": "saas/cloud",
+    "description": "m365 unified audit",
+    "priority": "high",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "m365_exchange_admin",
+    "platform": "saas/cloud",
+    "description": "m365 exchange admin",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "m365_sharepoint_onedrive",
+    "platform": "saas/cloud",
+    "description": "m365 sharepoint onedrive",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "okta_system_log",
+    "platform": "saas/cloud",
+    "description": "okta system log",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "google_workspace_admin",
+    "platform": "saas/cloud",
+    "description": "google workspace admin",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "salesforce_event_monitoring",
+    "platform": "saas/cloud",
+    "description": "salesforce event monitoring",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "github_audit_log",
+    "platform": "saas/cloud",
+    "description": "github audit log",
+    "priority": "high",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "slack_audit_log",
+    "platform": "saas/cloud",
+    "description": "slack audit log",
+    "priority": "high",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "zoom_admin_audit",
+    "platform": "saas/cloud",
+    "description": "zoom admin audit",
+    "priority": "high",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "box_admin_events",
+    "platform": "saas/cloud",
+    "description": "box admin events",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "servicenow_sys_audit",
+    "platform": "saas/cloud",
+    "description": "servicenow sys audit",
+    "priority": "high",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "workday_audit",
+    "platform": "saas/cloud",
+    "description": "workday audit",
+    "priority": "high",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "snowflake_access_history",
+    "platform": "saas/cloud",
+    "description": "snowflake access history",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "aws_cloudtrail",
+    "platform": "saas/cloud",
+    "description": "aws cloudtrail",
+    "priority": "high",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "aws_s3_data_events",
+    "platform": "saas/cloud",
+    "description": "aws s3 data events",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "azure_activity_logs",
+    "platform": "saas/cloud",
+    "description": "azure activity logs",
+    "priority": "medium",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "entra_signin_logs",
+    "platform": "saas/cloud",
+    "description": "entra signin logs",
+    "priority": "high",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  },
+  {
+    "artifact_id": "crowdstrike_detection_exports",
+    "platform": "saas/cloud",
+    "description": "crowdstrike detection exports",
+    "priority": "high",
+    "example_fields": [
+      "timestamp",
+      "user",
+      "host",
+      "path",
+      "source",
+      "action",
+      "hash"
+    ],
+    "triage_questions": [
+      "What changed?",
+      "Who performed the action?",
+      "What is the earliest reliable timestamp?",
+      "Does this corroborate persistence, execution, access, or exfiltration?"
+    ]
+  }
+]

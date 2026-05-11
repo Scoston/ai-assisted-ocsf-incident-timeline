@@ -1,0 +1,14 @@
+[
+  {
+    "provider": "abuseipdb",
+    "ioc": "198.51.100.10",
+    "status": "skipped",
+    "reason": "missing ABUSEIPDB_API_KEY"
+  },
+  {
+    "provider": "otx",
+    "ioc": "evil.example",
+    "status": "skipped",
+    "reason": "missing OTX_API_KEY"
+  }
+]

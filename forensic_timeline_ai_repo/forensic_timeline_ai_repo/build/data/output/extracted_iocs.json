@@ -1,0 +1,15 @@
+{
+  "ips": [
+    "198.51.100.10"
+  ],
+  "domains": [
+    "evil.example"
+  ],
+  "urls": [
+    "https://evil.example/path"
+  ],
+  "sha256": [],
+  "emails": [
+    "svc-backup@contoso.com"
+  ]
+}

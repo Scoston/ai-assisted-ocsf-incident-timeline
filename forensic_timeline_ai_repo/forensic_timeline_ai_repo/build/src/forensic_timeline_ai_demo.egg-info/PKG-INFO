@@ -1,0 +1,5 @@
+Metadata-Version: 2.4
+Name: forensic-timeline-ai-demo
+Version: 0.4.0
+Summary: Breach timeline demo with parsers, IOC extraction, TI/AI enrichment, SaaS/AI/DFIR catalogs, and Streamlit UI
+Requires-Python: >=3.10

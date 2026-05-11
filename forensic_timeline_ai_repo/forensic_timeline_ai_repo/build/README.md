@@ -36,6 +36,7 @@ python -m streamlit run app/app.py
 - `catalogs/ai_artifacts/training_data.jsonl`
 - `catalogs/saas_profiles/top50_saas_profiles.json`
 - `catalogs/log2timeline_artifacts/artifact_catalog.json`
+<img width="1681" height="528" alt="image" src="https://github.com/user-attachments/assets/bb2c0e0b-1806-45f5-8a2a-e63fa12c0fd0" />
 
 ## Windows executable build
 

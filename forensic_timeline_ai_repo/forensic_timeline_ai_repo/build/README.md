@@ -38,6 +38,7 @@ python -m streamlit run app/app.py
 - `catalogs/log2timeline_artifacts/artifact_catalog.json`
 <img width="1681" height="528" alt="image" src="https://github.com/user-attachments/assets/bb2c0e0b-1806-45f5-8a2a-e63fa12c0fd0" />
 <img width="846" height="203" alt="image" src="https://github.com/user-attachments/assets/0df978c1-d872-49bd-8987-e7872d5b27ca" />
+<img width="511" height="320" alt="image" src="https://github.com/user-attachments/assets/bdaf5d02-dfc7-4505-9f2e-97d68d8e691e" />
 
 ## Windows executable build
 

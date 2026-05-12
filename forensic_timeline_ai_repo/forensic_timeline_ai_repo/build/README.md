@@ -36,9 +36,15 @@ python -m streamlit run app/app.py
 - `catalogs/ai_artifacts/training_data.jsonl`
 - `catalogs/saas_profiles/top50_saas_profiles.json`
 - `catalogs/log2timeline_artifacts/artifact_catalog.json`
-<img width="1681" height="528" alt="image" src="https://github.com/user-attachments/assets/bb2c0e0b-1806-45f5-8a2a-e63fa12c0fd0" />
-<img width="846" height="203" alt="image" src="https://github.com/user-attachments/assets/0df978c1-d872-49bd-8987-e7872d5b27ca" />
-<img width="511" height="320" alt="image" src="https://github.com/user-attachments/assets/bdaf5d02-dfc7-4505-9f2e-97d68d8e691e" /><img width="301" height="381" alt="image" src="https://github.com/user-attachments/assets/234957c7-1c59-436c-bff6-fdef42bf6de1" /><img width="255" height="339" alt="image" src="https://github.com/user-attachments/assets/9c60d1d6-db00-4cd2-a1ab-dcd465ff3365" /><img width="342" height="325" alt="image" src="https://github.com/user-attachments/assets/004f1e4c-f953-4b8f-9ff2-b417fb32301c" /><img width="314" height="348" alt="image" src="https://github.com/user-attachments/assets/04288ca4-37fc-4181-8fe0-6a0c98e1bc32" />
+<img width="860" height="271" alt="image" src="https://github.com/user-attachments/assets/96ac93bb-3336-4ebc-b51e-8ba4d898ca08" /><img width="832" height="190" alt="image" src="https://github.com/user-attachments/assets/3c1811c0-1bf9-48d6-b26b-5fee44da1a6b" /><img width="839" height="220" alt="image" src="https://github.com/user-attachments/assets/c8aae210-c2e6-42e6-8a64-7b98a8d2b65d" /><img width="874" height="345" alt="image" src="https://github.com/user-attachments/assets/1eab477a-e2d1-4814-a678-47e471a6aaee" /><img width="851" height="343" alt="image" src="https://github.com/user-attachments/assets/d0de80fa-2c8e-4c10-a043-3617af707041" /><img width="845" height="363" alt="image" src="https://github.com/user-attachments/assets/46551e21-612e-4095-a66b-6182b6c50ff5" /><img width="864" height="308" alt="image" src="https://github.com/user-attachments/assets/61151f6b-8b3e-4bff-abdd-9624850c1d06" /><img width="708" height="281" alt="image" src="https://github.com/user-attachments/assets/f409a542-9d3a-48c0-80c9-4bf84092e250" />
+
+
+
+
+
+
+
+
 
 
 

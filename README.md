@@ -8,6 +8,12 @@ The timeline uses an **OCSF-aligned analytical profile**. The separate `export-o
 
 Start with the [enterprise readiness assessment](docs/ENTERPRISE_READINESS.md) for implemented controls and the tenant, identity, storage and administrator acceptance work required before production use.
 
+## Watch the feature demo
+
+[![Watch the v0.13.0 feature demo](https://github.com/Scoston/ai-assisted-ocsf-incident-timeline/releases/download/demo-v0.13.0/timeline-v0.13.0-demo-poster.png)](https://github.com/Scoston/ai-assisted-ocsf-incident-timeline/releases/download/demo-v0.13.0/timeline-v0.13.0-demo.mp4)
+
+**[Watch or download the narrated 1080p video](https://github.com/Scoston/ai-assisted-ocsf-incident-timeline/releases/download/demo-v0.13.0/timeline-v0.13.0-demo.mp4)** — approximately eight minutes, with captions and 20 chapters. It covers the viewer, evidence verification, collectors, Plaso, OCSF, signatures, Tines, Databricks, Jupyter, AI routing and budgets, recovery, and shared deployment. See the [chapter guide and transcript](docs/DEMO.md). The tour uses synthetic evidence and labels cloud configuration walkthroughs and simulated providers explicitly.
+
 ## Start locally
 
 Python 3.10+:
@@ -83,12 +89,12 @@ By default, invalid records fail the run without exposing a partial bundle. `--q
 
 ```bash
 python -m pip install -e '.[dev,ai,databricks,collection,signing]'
-ruff check src tests scripts streamlit_timeline_ui integrations/databricks
+ruff check src tests scripts streamlit_timeline_ui integrations/databricks integrations/plaso
 pytest -q
 python scripts/check_notebooks.py --kernel
 python -m build
 ```
 
-GitHub Actions tests Python 3.10/3.12, executes all eight notebooks, builds the distribution, runs real Spark/Delta replay, audits dependencies, runs CodeQL and exercises the installed wheel in an unprivileged offline container. Successful main builds attest the distribution. Tenant credentials are not used in CI. See [validation record](docs/VALIDATION.md) for results and live acceptance steps.
+GitHub Actions tests Python 3.10/3.12, executes all ten notebooks, builds the distribution, runs real Spark/Delta replay and native Plaso validation, audits dependencies, runs CodeQL and exercises the installed wheel in an unprivileged offline container. Successful main builds attest the distribution. Tenant credentials are not used in CI. See [validation record](docs/VALIDATION.md) for results and live acceptance steps.
 
 Upgrading from the nested 0.4 demo? Read [UPGRADING.md](UPGRADING.md). The original training catalogs and demo material remain in `catalogs/` and `docs/legacy_demo_guide.md`; catalogs describe investigation coverage and are not executable parsers.

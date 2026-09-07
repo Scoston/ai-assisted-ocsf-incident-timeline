@@ -1,5 +1,13 @@
 # Validation record
 
+## 0.13 native forensic release
+
+Feature baseline: `274fa8d037badafffbbf467b4d1ebd780a1166d9`, 7 September 2026. [PR #15](https://github.com/Scoston/ai-assisted-ocsf-incident-timeline/pull/15) and [main CI run 34160916880](https://github.com/Scoston/ai-assisted-ocsf-incident-timeline/actions/runs/34160916880) record the completed release gates: 864 project tests, ten real Jupyter notebooks, separately gated Spark/Delta replay, native Plaso validation, dependency/container checks, CodeQL and main distribution attestations. The upstream parser suite passed 637 tests with no skips.
+
+Native fixture ingestion processed 14,991 source records into 14,988 timeline events and three explicit quarantined records with source evidence preserved. The disk-image and embedded-archive fixture produced 37 events with no quarantine. Storage re-import preserved event identities. These fixture results do not establish complete recognition of arbitrary artifacts or complete tenant acquisition.
+
+The [new demo](DEMO.md) reproduces offline ingestion, OCSF export, integrity failure, signer lifecycle, AI planning/cache contracts, and checkpoint recovery with synthetic evidence. Its recorded native results refer to the release run above. Cloud tenant, identity-provider, and paid-model connections are not represented as live demonstrations.
+
 ## 0.12 follow-up release
 
 Baseline: `d9e88310e5df53dd4f1a54221b678265970e7f5d`, 7 September 2026. Local regression: **313 passed**, one separately gated real Delta test; all **nine notebooks** execute offline. New regressions exercise rolling/migration recovery, source inventory, AI WAL/cache/reservation restoration, malformed usage and GitHub/Kubernetes source contracts. [Synthetic diagnostics](../benchmarks/results/2026-09-07-gap-review-quality.json) report 54/54 timestamp/class assertions across 27 parser fixtures; this is not incident/model accuracy. The existing CI gates execute Python 3.10/3.12, real Jupyter, signed Delta, container/dependency/security checks and main-build attestations. See this release PR for the exact CI result. No live tenant/OIDC/scheduler deployment or paid model invocation was performed.

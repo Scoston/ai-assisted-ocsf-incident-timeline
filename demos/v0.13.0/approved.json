@@ -1,0 +1,36 @@
+{
+  "version": "1.0",
+  "candidate_asset": "candidate-114b9fced62ea429e584e79d5987f5d959d39f71.zip",
+  "candidate_commit": "114b9fced62ea429e584e79d5987f5d959d39f71",
+  "candidate_sha256": "9cc14893c0029d2c93b43fb34e5c9dc22385095634a4a780248c5bc1d7914f79",
+  "files": {
+    "SHA256SUMS": "bdb1a1198e0a3a011099082bc239a53aebe3966a2862c35dcc59d6d027b43f7f",
+    "timeline-v0.13.0-demo-chapters.txt": "80539a9d23d4aeb225a2a4354877e9026dea59a376304d757eb6c59bfd0b5a90",
+    "timeline-v0.13.0-demo-poster.png": "02c8f74935d92cfc0c95dcdc36cbc202550873a4b70a147e596ec3520731d2d5",
+    "timeline-v0.13.0-demo-provenance.json": "2ac143d080002b775a881f968fed0f32e33ee75b0ab82b927ee2b85d202ea8a5",
+    "timeline-v0.13.0-demo-sources.zip": "22b4a343d5b7ef039912348feb8b080fcae396422566481c81eb17b0f1f7dfcd",
+    "timeline-v0.13.0-demo-transcript.md": "f4328d33290ad4b13f8950786b7a123fd21e993657e4267ff93367a428ba0779",
+    "timeline-v0.13.0-demo.mp4": "5a09d6fdfd6146915034ad7830922be3efa0ea325ee4cbd2eb8f87bcd00c7197",
+    "timeline-v0.13.0-demo.srt": "58572c0654be59f8f4a89fd1813a9584dcf28d65fb11e4a5548f0612f0077d6d",
+    "timeline-v0.13.0-demo.vtt": "efadc441e2eb7140a4985d56f0b2f8ae19ecadb62e7b9a7f3065c66a712bfff6"
+  },
+  "review": {
+    "duration_seconds": 461.739,
+    "resolution": [
+      1920,
+      1080
+    ],
+    "video_codec": "h264",
+    "audio_codec": "aac",
+    "audio_sample_rate": 48000,
+    "audio_channels": 2,
+    "chapters": 20,
+    "caption_cues": 70,
+    "decode_ci_run": 34165081459,
+    "frame_review": "Inspected title, command results, filtering, source provenance, indicators, integration labels, budgets and closing frames.",
+    "audio_mean_db": -19.2,
+    "audio_peak_db": -4.1,
+    "cloud_connections": false,
+    "paid_model_calls": 0
+  }
+}

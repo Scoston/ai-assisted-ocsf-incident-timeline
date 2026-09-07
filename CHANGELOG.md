@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.0 — 2026-09-07
+
+- Added deterministic core OCSF 1.3.0 export and verification for nine classes, with complete pinned JSON Schemas generated from the official catalog and reproducible generator/source hashes.
+- Added required-field mappings, native OCSF validation, strict failure or explicit quarantine, source binding, provenance receipts and duplicate-reference detection. Export uses zero model tokens.
+- Added `timeline export-ocsf` and `timeline verify-ocsf`, a fourth offline Jupyter notebook, and a separate export manifest.
+- Added optional Databricks OCSF export job task, insert-only Delta events/rejections and a final publication marker/view; documented Tines strict failure and partial-success implications.
+- Added OCSF regression coverage, expanded the real Delta replay gate and packaged schema/license verification. Existing 0.5 timeline and parser identities remain compatible.
+
 ## 0.5.0 — 2026-09-07
 
 - Reorganized the nested demo into an installable package with an explicit CLI and dependency extras.

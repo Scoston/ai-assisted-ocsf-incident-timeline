@@ -11,7 +11,8 @@ pytestmark = pytest.mark.skipif(
 def test_delta_publication_and_replay(bundle, tmp_path):
     from delta import configure_spark_with_delta_pip
     from pyspark.sql import SparkSession
-    from timeline_demo.integrations.databricks import publish_bundle
+    from timeline_demo.integrations.databricks import publish_bundle, publish_ocsf_export
+    from timeline_demo.ocsf import export_bundle
 
     builder = (
         SparkSession.builder.master("local[2]")
@@ -31,5 +32,15 @@ def test_delta_publication_and_replay(bundle, tmp_path):
         assert spark.table(result["table"]).count() == 1
         assert spark.table("spark_catalog.timeline_test.published_bundles").count() == 1
         assert spark.table("spark_catalog.timeline_test.ingestion_receipts").count() == 1
+        export_dir = tmp_path / "ocsf"
+        export_bundle(bundle, export_dir)
+        for _ in range(2):
+            ocsf = publish_ocsf_export(spark, export_dir, bundle, "spark_catalog", "timeline_test")
+            assert spark.table(ocsf["table"]).count() == 1
+        assert spark.table("spark_catalog.timeline_test.published_ocsf_exports").count() == 1
+        row = spark.table(ocsf["table"]).first()
+        assert row.class_uid == 6003 and row.time == 1788256800000
+        assert len(row.event_uuid) == 64
+        assert spark.table("spark_catalog.timeline_test.ocsf_rejections").count() == 0
     finally:
         spark.stop()

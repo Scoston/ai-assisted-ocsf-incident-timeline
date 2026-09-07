@@ -1,4 +1,14 @@
-# Upgrade from the nested 0.4 demo
+# Upgrading
+
+## From 0.5 to 0.6
+
+Reinstall the package and redeploy the Databricks bundle to obtain the optional OCSF task. Existing evidence bundles, timeline fields, parser versions and event identities remain compatible. OCSF export writes to a separate new directory; it does not rewrite an existing bundle or convert project Parquet in place.
+
+`ocsf_enabled=false` preserves ordinary job behavior. Enable it and configure `ocsf_export_root` to require pinned OCSF publication. Strict mode is the default; `ocsf_quarantine=true` permits partial exports whose rejected counts require review. See [OCSF migration and deployment](docs/OCSF_EXPORT.md).
+
+Remove older wheel files from your local `dist/` directory before deploying a newly built wheel with the bundle's `dist/*.whl` artifact pattern.
+
+## From the nested 0.4 demo
 
 Use a clean checkout or remove the old editable installation before installing the root package:
 

@@ -26,6 +26,7 @@ Reviewed baseline: `d8e8169e1c5bb175bc8c5218f005f6f2a9a563d3` on 2026-09-07. Sco
 6. Three executable Jupyter examples, including optional live Databricks and AI cells disabled by default.
 7. AI harness with model/task routing, no hidden retries, durable per-case token/call budget, conservative input bounds, minimized evidence, schema/citation validation, audit receipts and cache.
 8. Updated user, operator, architecture, model-selection, parser, migration and validation documentation; CI and packaging gates.
+9. Version 0.6.0 completes the pinned OCSF export milestone: nine core 1.3.0 class schemas generated from the official catalog, source-backed mappings, strict/quarantine exports, source-bound verification, an additional Jupyter notebook, optional Databricks job/Delta publication and documented Tines completion implications. See [the exact scope and validation provenance](OCSF_EXPORT.md).
 
 ## Deployment acceptance that depends on the operator environment
 
@@ -41,9 +42,10 @@ These are explicit acceptance steps, not claims of completed production deployme
 | Priority | Enhancement | Acceptance evidence |
 | --- | --- | --- |
 | 1 | Tenant acceptance and organization-specific parser fixtures | Sanitized representative exports pass source/record/field-level review; live workflow evidence recorded |
-| 2 | Full pinned OCSF schema export | Upstream schema validation passes for each advertised class; mapping deviations documented |
 | 3 | Continuous collection and checkpoints | Source-specific pagination/cursors, collection windows, throttling and replay tested; no silent gaps |
 | 4 | Scale and quality evaluation | Published hardware/dataset limits, peak memory/runtime, precision/recall and citation faithfulness measurements |
 | 5 | Signed manifests and external trust anchors | Explicit signer trust, key rotation and revocation; independent audit/retention controls |
 
 The existing artifact-family and top-50 SaaS catalogs remain descriptive references. Implementing a catalog entry requires a source contract and representative test data; the project does not claim those entries are all parsers.
+
+Completed priority 2 is bounded to the nine advertised core classes, with no optional OCSF profiles or extensions. Regression cases validate each class against the packaged schemas and exercise missing fields, wrong versions, invalid nested objects and provenance mismatches. New profiles, newer versions and additional classes need their own reviewed mapping and acceptance work.

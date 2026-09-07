@@ -38,6 +38,7 @@ def write(name, cells):
 
 
 def main():
+    build_ocsf_notebook()
     write(
         "01_offline_investigation.ipynb",
         [
@@ -124,6 +125,44 @@ def main():
                 "Run `correlate` or `review` explicitly when the investigation needs them. The harness does not auto-escalate to more expensive models. Do not treat model confidence or syntactically valid citations as proof of an interpretation.",
             ),
             ("code", "assert verify_bundle(bundle)['bundle_id'] == manifest['bundle_id']\nwork.cleanup()"),
+        ],
+    )
+
+
+def build_ocsf_notebook():
+    write(
+        "04_ocsf_export.ipynb",
+        [
+            (
+                "md",
+                "# Pinned OCSF export\nExport a verified evidence bundle as core OCSF 1.3.0. Schema validation runs offline, uses zero model tokens, and keeps the original bundle unchanged. Required fields are never filled with model guesses.",
+            ),
+            ("code", SETUP),
+            (
+                "code",
+                "from timeline_demo.ocsf import export_bundle, verify_export, schema_lock\nfrom timeline_demo.parsers.common import file_hash\nsource_pin = file_hash(bundle/'audit_manifest.json')\nocsf_dir = workdir/'ocsf'\nreport = export_bundle(bundle, ocsf_dir, manifest_sha256=source_pin)\nassert report['counts'] == {'source_events':5, 'exported_events':5, 'rejected_events':0}\nassert report['model_tokens'] == 0\nreport['counts']",
+            ),
+            (
+                "code",
+                "lock = schema_lock()\n[(int(uid), entry['name']) for uid, entry in lock['classes'].items()]",
+            ),
+            (
+                "code",
+                "export_pin = file_hash(ocsf_dir/'export_manifest.json')\nassert verify_export(ocsf_dir, bundle=bundle, manifest_sha256=export_pin) == report\nocsf_rows = [json.loads(line) for line in (ocsf_dir/'ocsf.jsonl').read_text().splitlines()]\nocsf_rows[0]",
+            ),
+            (
+                "md",
+                "## Explicitly account for sparse source records\nThe timeline can retain a partial audit record, but the API Activity export requires an actor and source endpoint. Strict mode rejects the export; quarantine mode writes a rejection receipt. Neither mode changes the evidence bundle.",
+            ),
+            (
+                "code",
+                "sparse = workdir/'sparse.json'\nsparse.write_text(json.dumps({'eventTime':'2026-09-01T10:00:00Z','eventName':'GetObject','eventID':'sparse-1'}))\nsparse_bundle = workdir/'sparse_bundle'\nrun_pipeline([Input('cloudtrail', sparse)], sparse_bundle, 'sparse-demo')\npartial = export_bundle(sparse_bundle, workdir/'partial', quarantine=True)\nassert partial['counts']['rejected_events'] == 1\njson.loads((workdir/'partial/rejections.jsonl').read_text())",
+            ),
+            (
+                "md",
+                "## Databricks publication\nOn a configured Databricks cluster, generate the export into a separate Unity Catalog Volume directory, then call `publish_ocsf_export(spark, export_dir, source_bundle, catalog, schema)`. Both paths must be accessible to Spark workers. The function verifies the source binding, inserts events and rejection receipts, then writes a final marker. Query `published_ocsf` for completed exports and inspect `published_ocsf_exports` for rejection counts. See `docs/OCSF_EXPORT.md` for a runnable Volume example and Tines completion implications. A successful export with quarantine enabled may be partial.",
+            ),
+            ("code", "assert file_hash(bundle/'audit_manifest.json') == source_pin\nwork.cleanup()"),
         ],
     )
 

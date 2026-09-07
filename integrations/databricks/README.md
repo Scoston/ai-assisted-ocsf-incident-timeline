@@ -23,7 +23,9 @@ databricks bundle deploy -t dev --profile timeline-dev --var cluster_id=YOUR_CLU
 
 Set `DATABRICKS_CONFIG_PROFILE=timeline-dev` for SDK commands using that profile. The root `databricks.yml` builds and attaches the wheel, defines `publish_timeline`, limits concurrent runs to one, and retries deterministic publication tasks twice. Notebook/wheel task syntax follows [Databricks' bundle task documentation](https://docs.databricks.com/aws/en/dev-tools/bundles/job-task-types).
 
-The first task requires a Volume bundle path and pinned manifest SHA-256, verifies it, and publishes the tables. The second notebook reads the committed view, checks the event count and displays at most 200 events. Neither task invokes an AI model.
+The first task requires a Volume bundle path and pinned manifest SHA-256, verifies it, and publishes the tables. The optional `export_and_publish_ocsf` task runs next. The final inspection notebook reads the committed timeline view, checks the event count and displays at most 200 events. These tasks invoke no AI model.
+
+OCSF publication is disabled by default. Enable it with bundle variables `ocsf_enabled=true,ocsf_export_root=/Volumes/main/incident_timelines/evidence/ocsf,ocsf_quarantine=false`, in addition to your existing cluster/catalog/schema variables. This adds a strict, schema-validated export for nine pinned OCSF 1.3.0 classes. Configure a separate writable derived-output directory; see [OCSF setup, replay and partial-publication semantics](../../docs/OCSF_EXPORT.md). Remove older local wheels before deploying through `dist/*.whl`.
 
 ## End-to-end flow
 
@@ -61,10 +63,14 @@ python -c "from timeline_demo.parsers.common import file_hash; print(file_hash('
 | `analysis` | Validated AI response and receipt, with `human_review_required=true`; separate from evidence |
 | `published_bundles` | Manifest and publication marker inserted after all evidence tables |
 | `published_timeline` | Events joined to committed bundle markers; default analyst read surface |
+| `ocsf_events` / `ocsf_rejections` | Optional core OCSF records and rejected-event receipts keyed by case/bundle/export/timeline-event identity |
+| `published_ocsf_exports` / `published_ocsf` | Optional export-manifest marker with counts, and accepted events joined to completed export markers |
 
 Writes use insert-only `MERGE` clauses, explicit schemas and deduplication, following [Delta merge semantics](https://docs.databricks.com/aws/en/delta/merge). There is no update/delete clause. `delta.appendOnly=true` reinforces the table's write behavior. This is not a claim of immutable/WORM storage; administrators, retention settings and object-store access remain material controls.
 
 Always filter both `case_id` and `bundle_id` when comparing row counts or reviewing a specific investigation snapshot. Different bundles intentionally retain separate copies of an event. Use the committed view for normal reads; staging tables may include rows from an incomplete attempt.
+
+For OCSF, also filter `export_id`. Strict OCSF failures make the job fail after the ordinary timeline may already have been published. `ocsf_quarantine=true` allows a successful partial export; inspect the marker's rejected count before declaring OCSF coverage complete. Empty accepted exports still have a marker and rejection records.
 
 ## Source data already in Databricks
 

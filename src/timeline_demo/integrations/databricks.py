@@ -146,6 +146,9 @@ TABLE_SCHEMAS = {
     "quarantine": "case_id STRING, bundle_id STRING, receipt_id STRING, record_json STRING",
     "analysis": "case_id STRING, bundle_id STRING, request_hash STRING, human_review_required BOOLEAN, record_json STRING",
     "published_bundles": "case_id STRING, bundle_id STRING, manifest_sha256 STRING, manifest_json STRING",
+    "ocsf_events": "case_id STRING, bundle_id STRING, export_id STRING, event_uuid STRING, class_uid BIGINT, type_uid BIGINT, time BIGINT, record_json STRING",
+    "ocsf_rejections": "case_id STRING, bundle_id STRING, export_id STRING, event_uuid STRING, record_json STRING",
+    "published_ocsf_exports": "case_id STRING, bundle_id STRING, export_id STRING, manifest_json STRING",
 }
 
 
@@ -252,6 +255,47 @@ def publish_bundle(spark, bundle, catalog, schema, expected_manifest_sha256=None
         "event_count": manifest["counts"]["event_count"],
         "table": catalog + "." + schema + ".published_timeline",
     }
+
+
+def publish_ocsf_export(spark, export_dir, bundle, catalog, schema, expected_export_sha256=None):
+    """Publish a validated, source-bound OCSF export with a separate final marker.
+
+    Paths must be readable by Spark workers (for Databricks use a UC Volume).
+    This does not run a model, create a second raw bundle or alter source tables.
+    """
+    from pyspark.sql import functions as F
+    from timeline_demo.ocsf import verify_export
+
+    report = verify_export(export_dir, manifest_sha256=expected_export_sha256, bundle=bundle)
+    export_id = file_hash(Path(export_dir) / "export_manifest.json")
+    prefix = f"`{identifier(catalog)}`.`{identifier(schema)}`"
+    spark.sql(f"CREATE SCHEMA IF NOT EXISTS {prefix}")
+    base = {"case_id": report["case_id"], "bundle_id": report["source_bundle_id"], "export_id": export_id}
+    keys = ["case_id", "bundle_id", "export_id", "event_uuid"]
+    for table, filename in [("ocsf_events", "ocsf.jsonl"), ("ocsf_rejections", "rejections.jsonl")]:
+        rows = spark.read.text(str(Path(export_dir) / filename))
+        fields = [F.lit(value).alias(key) for key, value in base.items()]
+        event_path = "$.unmapped.timeline_export.event_uuid" if table == "ocsf_events" else "$.event_uuid"
+        fields.append(F.get_json_object("value", event_path).alias("event_uuid"))
+        if table == "ocsf_events":
+            fields.extend(
+                F.get_json_object("value", "$." + name).cast("long").alias(name)
+                for name in ("class_uid", "type_uid", "time")
+            )
+        fields.append(F.col("value").alias("record_json"))
+        _merge(spark, prefix + "." + table, TABLE_SCHEMAS[table], rows.select(*fields), keys)
+    # Spark reads are lazy; verify again after all inserts and before making them visible.
+    verify_export(export_dir, manifest_sha256=export_id, bundle=bundle)
+    marker = spark.createDataFrame(
+        [{**base, "manifest_json": compact_json(report)}], TABLE_SCHEMAS["published_ocsf_exports"]
+    )
+    _merge(
+        spark, prefix + ".published_ocsf_exports", TABLE_SCHEMAS["published_ocsf_exports"], marker, keys[:-1]
+    )
+    spark.sql(
+        f"CREATE OR REPLACE VIEW {prefix}.published_ocsf AS SELECT e.* FROM {prefix}.ocsf_events e INNER JOIN {prefix}.published_ocsf_exports p ON e.case_id=p.case_id AND e.bundle_id=p.bundle_id AND e.export_id=p.export_id"
+    )
+    return {**base, "counts": report["counts"], "table": catalog + "." + schema + ".published_ocsf"}
 
 
 def publish_analysis(spark, result, catalog, schema):

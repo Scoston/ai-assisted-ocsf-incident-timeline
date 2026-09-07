@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "forensic-timeline-ai-demo"
-version = "0.5.0"
+version = "0.6.0"
 description = "Evidence-preserving incident timelines with Tines, Databricks, and bounded AI analysis"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -28,7 +28,7 @@ timeline-databricks = "timeline_demo.integrations.databricks:job_main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-timeline_demo = ["resources/*.json"]
+timeline_demo = ["resources/*.json", "resources/ocsf/1.3.0/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

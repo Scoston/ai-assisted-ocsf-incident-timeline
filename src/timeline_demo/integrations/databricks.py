@@ -211,6 +211,7 @@ TABLE_SCHEMAS = {
     "ingestion_receipts": "case_id STRING, bundle_id STRING, receipt_id STRING, record_json STRING",
     "quarantine": "case_id STRING, bundle_id STRING, receipt_id STRING, record_json STRING",
     "analysis": "case_id STRING, bundle_id STRING, request_hash STRING, human_review_required BOOLEAN, record_json STRING",
+    "analysis_releases": "case_id STRING, bundle_id STRING, request_hash STRING, review_sha256 STRING, human_review_required BOOLEAN, record_json STRING",
     "signature_verifications": "case_id STRING, bundle_id STRING, artifact_id STRING, key_id STRING, trust_store_sha256 STRING, signature_sha256 STRING, record_json STRING",
     "published_bundles": "case_id STRING, bundle_id STRING, manifest_sha256 STRING, manifest_json STRING",
     "ocsf_events": "case_id STRING, bundle_id STRING, export_id STRING, event_uuid STRING, class_uid BIGINT, type_uid BIGINT, time BIGINT, record_json STRING",
@@ -465,33 +466,69 @@ def publish_ocsf_export(
     }
 
 
-def publish_analysis(spark, result, catalog, schema):
-    from timeline_demo.ai import validate_analysis
+def publish_analysis(
+    spark, result, catalog, schema, *, bundle=None, ledger=None, review_policy=None, review_policy_sha256=None
+):
+    """Publish only a freshly checked human-approved action from the authoritative ledger."""
+    from timeline_demo.ai import Harness
+    from timeline_demo.ai_audit import append_audit
 
-    if result.get("status") != "completed" or result.get("human_review_required") is not True:
-        raise ValueError("only validated, review-required analysis may be published")
-    receipt = result["receipt"]
-    validate_analysis(result["analysis"], receipt["evidence_refs"])
+    if not all((bundle, ledger, review_policy, review_policy_sha256)):
+        raise ValueError("analysis publication requires evidence, ledger and pinned human-review policy")
+    harness = Harness(ledger)
+    accepted = harness.approved(
+        bundle, result["action_id"], review_policy=review_policy, review_policy_sha256=review_policy_sha256
+    )
+    if (
+        result.get("status") != "approved"
+        or result.get("analysis") != accepted["analysis"]
+        or result.get("human_review", {}).get("digest") != accepted["human_review"]["digest"]
+    ):
+        raise ValueError("submitted analysis does not match the approved result")
+    receipt = accepted["receipt"]
     prefix = f"`{identifier(catalog)}`.`{identifier(schema)}`"
-    frame = spark.createDataFrame(
-        [
+    try:
+        frame = spark.createDataFrame(
+            [
+                {
+                    "case_id": receipt["case_id"],
+                    "bundle_id": receipt["bundle_id"],
+                    "request_hash": receipt["request_hash"],
+                    "review_sha256": accepted["human_review"]["digest"],
+                    "human_review_required": False,
+                    "record_json": compact_json(accepted),
+                }
+            ],
+            TABLE_SCHEMAS["analysis_releases"],
+        )
+        _merge(
+            spark,
+            prefix + ".analysis_releases",
+            TABLE_SCHEMAS["analysis_releases"],
+            frame,
+            ["case_id", "bundle_id", "request_hash", "review_sha256"],
+        )
+    except Exception as exc:
+        with harness._db() as db:
+            append_audit(
+                db,
+                result["action_id"],
+                "publication_failed",
+                {"destination": "databricks", "error_type": type(exc).__name__},
+            )
+        raise
+    with harness._db() as db:
+        append_audit(
+            db,
+            result["action_id"],
+            "published",
             {
-                "case_id": receipt["case_id"],
-                "bundle_id": receipt["bundle_id"],
-                "request_hash": receipt["request_hash"],
-                "human_review_required": True,
-                "record_json": compact_json(result),
-            }
-        ],
-        TABLE_SCHEMAS["analysis"],
-    )
-    _merge(
-        spark,
-        prefix + ".analysis",
-        TABLE_SCHEMAS["analysis"],
-        frame,
-        ["case_id", "bundle_id", "request_hash"],
-    )
+                "destination": "databricks",
+                "table": prefix + ".analysis_releases",
+                "review_sha256": accepted["human_review"]["digest"],
+            },
+        )
+    return {"status": "published", "action_id": result["action_id"], "model_tokens": 0}
 
 
 def job_signature_options(bundle, manifest_pin, required, signature_root, trust_store, trust_pin):

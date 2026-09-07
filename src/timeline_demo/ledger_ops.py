@@ -36,6 +36,11 @@ def _usage(db):
         raise ValueError("unsupported AI ledger")
     if db.execute("SELECT count(*) FROM calls").fetchone()[0] > 1000000:
         raise ValueError("AI ledger inspection limit exceeded")
+    if db.execute("SELECT 1 FROM sqlite_master WHERE name='ai_audit'").fetchone():
+        from timeline_demo.ai_audit import audit_records
+
+        for action in db.execute("SELECT DISTINCT action_id FROM ai_audit"):
+            audit_records(db, action[0])
     cases = {}
     for row in db.execute("SELECT * FROM calls ORDER BY key"):
         identity = _strict_json(row["request"])
@@ -50,39 +55,60 @@ def _usage(db):
             or row["charged"] < 0
         ):
             raise ValueError("invalid AI ledger reservation")
-        known = row["response"] is not None
+        from timeline_demo.ai import PROMPT_VERSION
+
+        current = identity.get("prompt_version") == PROMPT_VERSION
+        history = []
+        if current:
+            from timeline_demo.ai_audit import check_call
+
+            history = check_call(db, row)
+        response = _strict_json(row["response"]) if row["response"] is not None else None
+        usage = response.get("usage") if isinstance(response, dict) else None
+        known = isinstance(usage, dict) and all(
+            type(usage.get(k)) is int and usage[k] >= 0 for k in ("input_tokens", "output_tokens")
+        )
+        # A crash between response archival and metering keeps the larger reservation.
+        if current and not any(e["event"] == "usage_recorded" for e in history):
+            known = False
         if not known and row["charged"] != (
             len(compact_json(identity["request"]).encode("utf-8"))
             + 256
             + identity["request"]["max_output_tokens"]
         ):
             raise ValueError("AI ledger reservation was changed without provider usage")
-        if known:
-            response = _strict_json(row["response"])
-            usage = response["usage"]
-            values = [usage[k] for k in ("input_tokens", "output_tokens")]
-            if any(type(v) is not int or v < 0 for v in values) or sum(values) != row["charged"]:
-                raise ValueError("AI ledger usage mismatch")
+        if known and usage["input_tokens"] + usage["output_tokens"] != row["charged"]:
+            raise ValueError("AI ledger usage mismatch")
         if row["status"] == "completed":
-            from timeline_demo.ai import validate_analysis
-
             result = _strict_json(row["result"])
             receipt = result["receipt"]
             if (
                 not known
-                or result["status"] != "completed"
+                or result["status"] != ("awaiting_review" if current else "completed")
                 or receipt["request_hash"] != row["key"]
                 or any(receipt[k] != identity[k] for k in ("case_id", "bundle_id", "task"))
                 or receipt["model"] != identity["request"]["model"]
                 or any(receipt[k] != usage[k] for k in ("input_tokens", "output_tokens"))
             ):
                 raise ValueError("invalid completed AI receipt")
-            import jsonschema
+            if current:
+                from timeline_demo.ai_evidence import digest, verify_candidate
 
-            try:
-                validate_analysis(result["analysis"], identity["evidence_refs"])
-            except jsonschema.ValidationError:
-                raise ValueError("invalid cached analysis") from None
+                if (
+                    result["result_sha256"]
+                    != digest({k: v for k, v in result.items() if k != "result_sha256"})
+                    or result["verification"] != verify_candidate(result["candidate"], identity["chunks"])
+                    or not result["verification"]["passed"]
+                ):
+                    raise ValueError("invalid cached AI verification")
+            else:
+                from timeline_demo.ai import validate_analysis
+                import jsonschema
+
+                try:
+                    validate_analysis(result["analysis"], identity["evidence_refs"])
+                except jsonschema.ValidationError:
+                    raise ValueError("invalid cached analysis") from None
         case = sha256_of_text(row["case_id"])
         counts = cases.setdefault(
             case,

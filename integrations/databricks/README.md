@@ -89,7 +89,7 @@ The normalization notebook runs the shared pipeline on the driver. It is suitabl
 
 ## Optional AI in notebooks
 
-Use `notebooks/03_ai_harness.ipynb` for planning or explicit analysis. Install the `ai` extra, retrieve secrets through the approved scope and choose a durable transactional ledger location. Publish a completed result separately with `publish_analysis(spark, result, catalog, schema)`. No paid AI calls run inside the deployed publication job.
+Use `notebooks/03_ai_harness.ipynb` for planning or explicit analysis. Install the `ai` extra, retrieve secrets through the approved scope and choose a durable transactional ledger location. Publish only a current human-approved result with `publish_analysis(spark, result, catalog, schema, bundle=bundle, ledger=ledger, review_policy=policy_path, review_policy_sha256=policy_pin)`. The function reloads the action and approval from the protected ledger and writes `analysis_releases`, keyed by action and review hash; legacy `analysis` rows remain unapproved. No paid AI calls run inside the deployed publication job.
 
 ## Live acceptance
 
@@ -104,3 +104,5 @@ Version 0.9.0 adds signed sidecar upload, verification before writes and final p
 ## Local staging in 0.11
 
 Normalization and OCSF jobs perform SQLite work on driver-local disk, then upload verified Volume artifacts through the Files API with manifests last. The normalization source notebook now calls `normalize_volume_sources`; redeploy the wheel and job dependency configuration. Direct pipeline/export output to `/Volumes/` is rejected. Preserve adequate local disk space and test partial upload replay with the production service principal. See [deployment](../../docs/DEPLOYMENT.md).
+
+Version 0.14.0 review policy and audit storage must be administered outside incoming job parameters. Keep SQLite on a durable locking-capable filesystem or call a single authenticated harness service; never share it through Volumes/FUSE. Grant access to reviewed `analysis_releases` only after removing older unreviewed analysis access. Releases are historical approval snapshots: live applications must recheck the ledger and reconcile later revocations before presenting them. The real Delta CI gate tests approval refusal, reviewed inserts and replay. [AI evidence and review](../../docs/AI_EVIDENCE_AND_REVIEW.md).

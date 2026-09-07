@@ -45,6 +45,7 @@ def main():
     build_operations_notebook()
     build_developer_incident_notebook()
     build_plaso_notebook()
+    build_ai_review_notebook()
     write(
         "01_offline_investigation.ipynb",
         [
@@ -128,7 +129,7 @@ def main():
             ),
             (
                 "md",
-                "Run `correlate` or `review` explicitly when the investigation needs them. The harness does not auto-escalate to more expensive models. Do not treat model confidence or syntactically valid citations as proof of an interpretation.",
+                "Run `correlate` or `review` explicitly when needed. Each AI result is now an awaiting-review receipt with stable chunk IDs and zero-token evidence checks; unapproved prose is withheld. Use notebook 11 for claim-level human decisions, evidence inspection, audit export and the approval gate. No model can approve another model. Source authenticity and semantic support still require investigation.",
             ),
             ("code", "assert verify_bundle(bundle)['bundle_id'] == manifest['bundle_id']\nwork.cleanup()"),
         ],
@@ -486,6 +487,104 @@ if RUN_NATIVE:
     print(result)
 else:
     print('Native execution disabled; synthetic export only. Zero model tokens.')""",
+            ),
+            ("code", "work.cleanup()"),
+        ],
+    )
+
+
+def build_ai_review_notebook():
+    write(
+        "11_ai_evidence_and_human_review.ipynb",
+        [
+            (
+                "md",
+                "# AI evidence, verification and human review\nAn offline synthetic walkthrough. The captured response below is handwritten: no model is called and these cells do not measure AI accuracy. Review actions are deliberately disabled by default. Real reviewers must inspect the original evidence and make their own decisions.",
+            ),
+            ("code", SETUP),
+            (
+                "code",
+                """from timeline_demo.ai import Harness, prepare
+from timeline_demo.ai_audit import local_principal
+from timeline_demo.ai_cli import review_template
+from timeline_demo.ai_export import inspect_chunk, export_audit, verify_audit_export
+from timeline_demo.parsers.common import compact_json, file_hash
+plan = prepare(bundle)
+first_ref = next(iter(plan['chunks']))
+witness = {'chunk_ref': first_ref, 'field': 'count', 'value': str(plan['chunks'][first_ref]['payload']['count'])}
+candidate = {'observations': [witness], 'hypotheses': [], 'abstain': False}
+envelope = {'provider': 'handwritten-offline-fixture', 'request': plan['request'],
+            'response': {'id': 'synthetic-no-provider-call', 'status': 'completed',
+                         'usage': {'input_tokens': 0, 'output_tokens': 0},
+                         'output_text': compact_json(candidate)}}
+harness = Harness(workdir/'analysis.sqlite')
+receipt = harness.import_external(bundle, envelope)
+action_id = receipt['action_id']
+assert receipt['status'] == 'awaiting_review' and 'analysis' not in receipt
+assert receipt['verification']['passed'] and receipt['verification']['model_tokens'] == 0
+receipt""",
+            ),
+            (
+                "code",
+                """workspace = harness.inspect(bundle, action_id)
+chunk_id = workspace['chunks'][first_ref]['chunk_id']
+evidence_page = inspect_chunk(harness, bundle, action_id, chunk_id)
+assert evidence_page['locators'][0]['event_chunk_id'].startswith('event-')
+print({'chunk_id': chunk_id, 'records': evidence_page['total'], 'coverage': receipt['receipt']['coverage']})
+evidence_page['locators']""",
+            ),
+            (
+                "md",
+                "The summary can only assert checked field/value observations. A matching citation does not prove arbitrary prose: each hypothesis, alternative and proposed step needs a separate human judgment. Do not approve merely because a verifier returned `passed`. Review coverage, quarantine, aliases and source authenticity.",
+            ),
+            (
+                "code",
+                """review_policy = workdir/'human-policy.json'
+# Local teaching policy only. Production normally separates initiator and reviewer.
+review_policy.write_text(compact_json({'version': '1.0', 'require_separation': False,
+    'reviewers': [{'principal': local_principal(), 'cases': [manifest['case_id']]}]}))
+review_options = {'review_policy': review_policy, 'review_policy_sha256': file_hash(review_policy)}
+decision = review_template(workspace)
+decision_path = workdir/'human-decision.json'
+decision_path.write_text(json.dumps(decision, indent=2))
+try:
+    harness.approved(bundle, action_id, **review_options)
+except ValueError:
+    print('Publication blocked until a human completes and submits a valid decision.')
+else:
+    raise AssertionError('Unreviewed analysis was published')
+print(decision_path)
+decision""",
+            ),
+            (
+                "md",
+                "Inspect the cited raw records using their evidence paths and record indices. Edit `human-decision.json` yourself: choose approve/reject/request_changes, provide a reason and each claim assessment, and acknowledge coverage. Observations require `supported`; hypotheses require `plausible_hypothesis`, with rationale covering interpretation, alternative and next step. Leave the result hash and cited chunk IDs intact. The next cell submits only after you enable it.",
+            ),
+            (
+                "code",
+                """SUBMIT_MY_HUMAN_DECISION = False
+if SUBMIT_MY_HUMAN_DECISION:
+    reviewed = json.loads(decision_path.read_text())
+    outcome = harness.review(bundle, action_id, reviewed, **review_options)
+    print(outcome)
+    if reviewed['decision'] == 'approve':
+        accepted = harness.approved(bundle, action_id, **review_options)
+        print(accepted['analysis'])
+else:
+    print('No human approval recorded. The candidate remains unavailable as an accepted summary.')""",
+            ),
+            (
+                "code",
+                """exported = export_audit(harness, bundle, action_id, workdir/'audit-package')
+assert verify_audit_export(exported['output'], exported['manifest_sha256'])['status'] == 'integrity_verified'
+index = [json.loads(line) for line in (workdir/'audit-package/chunks.jsonl').read_text().splitlines()]
+assert len(index) == manifest['counts']['event_count']
+assert (workdir/'audit-package/evidence_bundle/quarantine.jsonl').is_file()
+print({'all_event_chunks': len(index), 'audit_head': exported['audit_head'], 'manifest_sha256': exported['manifest_sha256']})""",
+            ),
+            (
+                "md",
+                "Retain real audit packages and their independent pins in protected case storage. These notebook files are temporary synthetic fixtures and are removed below. Use the current ledger gate again before Databricks/Tines publication; exported files are snapshots and cannot be recalled after delivery. See docs/AI_EVIDENCE_AND_REVIEW.md for research, recovery and deployment boundaries.",
             ),
             ("code", "work.cleanup()"),
         ],

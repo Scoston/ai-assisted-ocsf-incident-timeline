@@ -85,6 +85,41 @@ def test_delta_publication_and_replay(bundle, tmp_path):
         assert inspected["status"] == "publication_verified"
         assert inspected["signature_verification"]["key_id"] == key_id
         assert result["signature_verification"]["key_id"] == key_id
+        # A real Delta write must also enforce and preserve the human review binding.
+        from timeline_demo.ai import Harness
+        from timeline_demo.integrations.databricks import publish_analysis
+        from test_ai import FakeClient
+        from test_ai_evidence import adjudicate, review_config
+
+        harness = Harness(tmp_path / "ai.sqlite", client=FakeClient())
+        action_id = harness.run(bundle, allow_ai=True)["action_id"]
+        review_options = review_config(tmp_path)
+        with pytest.raises(ValueError):
+            publish_analysis(
+                spark,
+                {"action_id": action_id},
+                "spark_catalog",
+                "timeline_test",
+                bundle=bundle,
+                ledger=harness.path,
+                **review_options,
+            )
+        harness.review(bundle, action_id, adjudicate(harness.inspect(bundle, action_id)), **review_options)
+        accepted = harness.approved(bundle, action_id, **review_options)
+        for _ in range(2):
+            publish_analysis(
+                spark,
+                accepted,
+                "spark_catalog",
+                "timeline_test",
+                bundle=bundle,
+                ledger=harness.path,
+                **review_options,
+            )
+        release = spark.table("spark_catalog.timeline_test.analysis_releases")
+        assert release.count() == 1
+        assert release.first().review_sha256 == accepted["human_review"]["digest"]
+        assert release.first().human_review_required is False
         policy["keys"][key_id]["status"] = "revoked"
         revoked = tmp_path / "revoked.json"
         revoked_pin = write_trust(revoked, policy)["trust_store_sha256"]

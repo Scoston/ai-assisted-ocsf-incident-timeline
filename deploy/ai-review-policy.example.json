@@ -1,0 +1,7 @@
+{
+  "version": "1.0",
+  "require_separation": true,
+  "reviewers": [
+    {"principal": "local:uid:REPLACE_WITH_REVIEWER_UID", "cases": ["case-001"]}
+  ]
+}

@@ -1,5 +1,7 @@
 # v0.13.0 feature demo
 
+This recording predates 0.14.0. Use [notebook 11](../notebooks/11_ai_evidence_and_human_review.ipynb) and the [AI review guide](AI_EVIDENCE_AND_REVIEW.md) for the new chunk, audit and human-approval workflow.
+
 [Watch or download the narrated 1080p video](https://github.com/Scoston/ai-assisted-ocsf-incident-timeline/releases/download/demo-v0.13.0/timeline-v0.13.0-demo.mp4) (**7 minutes 42 seconds**).
 
 The video has burned captions, an optional English subtitle track, and 20 embedded chapters. The [release](https://github.com/Scoston/ai-assisted-ocsf-incident-timeline/releases/tag/demo-v0.13.0) also includes the [transcript](https://github.com/Scoston/ai-assisted-ocsf-incident-timeline/releases/download/demo-v0.13.0/timeline-v0.13.0-demo-transcript.md), [SRT captions](https://github.com/Scoston/ai-assisted-ocsf-incident-timeline/releases/download/demo-v0.13.0/timeline-v0.13.0-demo.srt), WebVTT captions, a poster, provenance and checksums. Open the MP4 directly or download it to a player that supports chapters.

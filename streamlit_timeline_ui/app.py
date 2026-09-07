@@ -8,6 +8,7 @@ from itertools import islice
 import pandas as pd
 import streamlit as st
 
+from timeline_demo.ai_view import display_ai
 from timeline_demo.core.manifest import verify_bundle
 from timeline_demo.pipeline import read_timeline
 from timeline_demo.viewer import load_access_policy, authorized_cases, open_case, audit_access
@@ -81,14 +82,6 @@ with st.expander("Manifest and acquisition references"):
     st.json(manifest)
 with st.expander("Extracted indicators (not verdicts)"):
     st.json(json.loads((bundle / "extracted_iocs.json").read_text()))
-analysis_path = st.sidebar.text_input("Optional analysis JSON file") if mode == "local" else None
-if analysis_path:
-    st.subheader("AI interpretation — human review required")
-    try:
-        analysis = json.loads(Path(analysis_path).read_text())
-        if analysis.get("receipt", {}).get("bundle_id") != manifest["bundle_id"]:
-            st.error("Analysis belongs to a different bundle.")
-        else:
-            st.json(analysis)
-    except (ValueError, OSError) as exc:
-        st.error(str(exc))
+# Analysis is resolved from a protected ledger, never trusted from an arbitrary JSON file.
+
+display_ai(st, bundle, manifest, mode=mode, viewer_policy=policy if mode == "oidc" else None, claims=claims)

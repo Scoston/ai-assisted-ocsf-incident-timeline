@@ -23,7 +23,7 @@ def main():
     export_bundle(bundle, root / "ocsf")
     verify_export(root / "ocsf", bundle=bundle)
     assert Harness(root / "ledger.sqlite").run(bundle)["status"] == "planned"
-    assert not (root / "ledger.sqlite").exists()
+    assert (root / "ledger.sqlite").is_file()  # Planning is also audited, with no model dispatch.
 
     class EmptySource:
         parser = "entra_signin"

@@ -1,0 +1,20 @@
+00:00:00 Follow the evidence
+00:00:19 Start with source evidence
+00:00:38 Explore the investigation
+00:00:58 Trace every event
+00:01:16 Detect altered evidence
+00:01:40 Collect across the enterprise
+00:02:04 Include developer incidents
+00:02:24 Bring native artifacts into scope
+00:02:46 Preserve the forensic context
+00:03:14 Export validated OCSF
+00:03:38 Control who can sign
+00:04:00 Orchestrate with Tines
+00:04:24 Publish into Databricks
+00:04:52 Investigate in Jupyter
+00:05:17 Choose a model by task
+00:05:40 Spend tokens deliberately
+00:06:06 Recover interrupted collection
+00:06:31 Deploy with explicit access
+00:06:56 Keep the claims measurable
+00:07:23 Run your first verified case

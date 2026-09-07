@@ -1,8 +1,5 @@
-# Demo guide
+# Legacy demo guide
 
-1. Open `catalogs/scenarios/orion_insurance_hollow_ledger.md`
-2. Run `python -m src.timeline_demo.run_real_pipeline`
-3. Show `data/output`
-4. Launch Streamlit: `cd streamlit_timeline_ui` then `python -m streamlit run app/app.py`
-5. Show evidence timeline, event detail drawer, extracted IOCs, TI enrichment, and AI enrichment
-6. Open the AI/SaaS/log2timeline catalogs
+The nested 0.4 demo entry points have been replaced. Use the [current narrated demo and executable walkthrough](DEMO.md), [README quick start](../README.md#start-locally), and [upgrade guide](../UPGRADING.md).
+
+The original training scenarios remain under `catalogs/`. They describe investigation coverage; they are not executable parsers or evidence of live integration support. The current video shows the v0.13.0 implementation and identifies simulated and configuration-only portions.

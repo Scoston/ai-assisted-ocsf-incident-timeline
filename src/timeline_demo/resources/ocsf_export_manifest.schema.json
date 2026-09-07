@@ -6,7 +6,7 @@
   "properties": {
     "format": {"const": "timeline-ocsf-export-1.0"},
     "ocsf_version": {"const": "1.3.0"},
-    "mapping_version": {"enum": ["ocsf-export-1.0.0", "ocsf-export-1.1.0", "ocsf-export-1.2.0"]},
+    "mapping_version": {"enum": ["ocsf-export-1.0.0", "ocsf-export-1.1.0", "ocsf-export-1.2.0", "ocsf-export-1.3.0"]},
     "schema_lock_sha256": {"$ref": "#/$defs/digest"},
     "source_manifest_sha256": {"$ref": "#/$defs/digest"},
     "source_bundle_id": {"$ref": "#/$defs/digest"},

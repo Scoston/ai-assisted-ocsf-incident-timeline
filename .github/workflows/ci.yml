@@ -28,7 +28,7 @@ jobs:
       - name: Exercise the locked deployment dependencies
         if: matrix.python == '3.12'
         run: python -m pip install --require-hashes -r requirements/runtime-py312-linux.txt
-      - run: ruff check src tests scripts streamlit_timeline_ui integrations/databricks
+      - run: ruff check src tests scripts streamlit_timeline_ui integrations/databricks integrations/plaso
       - run: pytest -q
       - run: python scripts/check_notebooks.py --kernel
       - name: Check evaluation contracts and small scale workloads
@@ -94,6 +94,32 @@ jobs:
           path: dist/
           if-no-files-found: error
           retention-days: 30
+  plaso:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: python -m pip install -e .
+      - name: Build the source and dependency pinned native backend
+        run: docker build --tag timeline-plaso:20260720-00fcc6e integrations/plaso
+      - name: Run upstream native parser tests
+        run: |
+          mkdir -p /tmp/plaso-validation
+          docker run --rm --network none --read-only --cap-drop ALL --security-opt no-new-privileges --tmpfs /tmp:size=1g,mode=1777 --entrypoint python3 timeline-plaso:20260720-00fcc6e /opt/timeline-plaso/check_upstream.py > /tmp/plaso-validation/upstream-tests.json
+      - name: Verify native artifacts, disk image and storage round trip
+        run: python scripts/check_plaso_native.py --output /tmp/plaso-validation
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: plaso-validation
+          path: /tmp/plaso-validation/
+          if-no-files-found: error
+          retention-days: 30
   codeql:
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -112,7 +138,7 @@ jobs:
       - uses: github/codeql-action/analyze@6f5948dfacef28e207b48d0905cf90c03365536d # v3
   attest:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [tests, delta, enterprise, codeql]
+    needs: [tests, delta, enterprise, plaso, codeql]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:

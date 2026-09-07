@@ -1,5 +1,5 @@
 {
-  "fixture_sha256": "165c5d4757789b706d2543beab5e70b4b8ea466bf92c5b05ed7a89cbaaf8115c",
+  "fixture_sha256": "a52d91558066a6c93f882627f5f07de756f4ab52a666b96e50969c12b4716c27",
   "scope": "Minimal synthetic field contracts, authored from the input fixture. Not organization-specific or held-out accuracy.",
   "expected": {
     "cloudtrail": {
@@ -109,6 +109,10 @@
     "kubernetes_audit": {
       "epoch_ms": 1788256800000,
       "ocsf_class_uid": 6003
+    },
+    "plaso_event": {
+      "epoch_ms": 1788256800000,
+      "ocsf_class_uid": 1001
     }
   }
 }

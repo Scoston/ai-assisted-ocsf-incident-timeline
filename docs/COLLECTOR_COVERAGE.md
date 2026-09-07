@@ -2,7 +2,7 @@
 
 Reviewed against version 0.9.0 on 2026-09-07. The four original collectors had durable paging and evidence receipts, but covered only Entra sign-ins, regional CloudTrail management history, Tines audit and Databricks audit. They could not independently reconstruct mailbox compromise, endpoint execution, directory persistence or most network activity.
 
-Version 0.12.0 provides **19 collector types** and **27 parser contracts**. GitHub organization audit collection and Kubernetes audit parsing extend the identity, cloud, endpoint, mail and SIEM coverage. Choose the sources present in your organization. This is an incident-response coverage assessment, not a claim that every enterprise owns these products or that their APIs expose every event.
+Version 0.13.0 provides **19 collector types**, **28 import/parser contracts**, and [complete pinned native Plaso parser coverage](PLASO.md). GitHub organization audit collection and Kubernetes audit parsing extend the identity, cloud, endpoint, mail and SIEM coverage. Choose the sources present in your organization. This is an incident-response coverage assessment, not a claim that every enterprise owns these products or that their APIs expose every event.
 
 ## Coverage decisions
 

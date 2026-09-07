@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.13.0 — 2026-09-07
+
+- Added a native Plaso backend covering all 59 parsers, 186 parser plugins and 4 cookie helpers at source revision 00fcc6e7f95a0, including VMware ESXi added after the latest release.
+- Added source/image/storage ingestion, split-image companion handling, immutable source/dependency pins, runtime census validation, resource limits and isolated offline processing.
+- Preserve acquired originals, Plaso storage, JSONL, commands, logs, source stat inventory and receipts; block missing plugins, export count mismatches and incomplete sessions/warnings unless explicitly allowed.
+- Added the versioned `plaso_event` importer for JSONL, dynamic CSV and l2tcsv, including semantic-time rejection and detailed artifact provenance. Existing parser event IDs remain unchanged. OCSF mapping version 1.3.0 retains historical verification.
+- Added the complete format catalog/table, operating guide, tenth Jupyter notebook, contract regressions, upstream native parser suite and real artifact/image/storage round-trip CI gate. Native processing uses zero model tokens.
+
 ## 0.12.0 — 2026-09-07
 
 - Fixed interrupted partial rolling windows when subsequent invocations extend their end time; serialized schema migrations and conservative legacy-window adoption.

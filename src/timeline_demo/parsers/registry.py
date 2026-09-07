@@ -32,6 +32,18 @@ class Spec:
 
 
 SPECS = {
+    "plaso_event": Spec(
+        "Plaso Native Event Export",
+        0,
+        "timestamp",
+        "message",
+        "username",
+        "hostname|filename|display_name",
+        "source_ip|ip_address",
+        "event_identifier|_event_identifier|inode",
+        unit="us",
+        version="1.0.0",
+    ),
     "github_audit": Spec(
         "GitHub Organization Audit",
         6003,
@@ -415,6 +427,11 @@ def normalize_record(raw, parser, evidence_path, raw_file_hash, record_index, as
     if not isinstance(raw, dict):
         raise ValueError("record must be an object")
     record = copy.deepcopy(raw)
+    plaso_metadata = None
+    if parser == "plaso_event":
+        from .plaso_events import project
+
+        record, plaso_metadata = project(raw, assume_timezone)
     if parser == "kubernetes_audit":
         if (
             record.get("apiVersion") != "audit.k8s.io/v1"
@@ -497,8 +514,12 @@ def normalize_record(raw, parser, evidence_path, raw_file_hash, record_index, as
                 class_uid = 1008
             else:
                 class_uid = 0
-        if parser == "plaso":
+        if parser in {"plaso", "plaso_event"}:
             class_uid = 1001 if str(record.get("data_type", "")).startswith("fs:") else 0
+        if parser == "plaso_event":
+            class_uid = (
+                1001 if record.get("data_type") in {"fs:stat", "fs:stat:ntfs", "fs:ntfs:usn_change"} else 0
+            )
         status = field(record, spec.status, "unknown")
         if parser == "cloudtrail":
             status = "failure" if status != "unknown" else "success"
@@ -542,6 +563,7 @@ def normalize_record(raw, parser, evidence_path, raw_file_hash, record_index, as
                 "record_index": record_index,
                 "child_index": child_index,
                 "metadata": {
+                    **({"plaso": plaso_metadata} if plaso_metadata is not None else {}),
                     "schema_version": PROFILE_VERSION,
                     "mapping_version": spec.version,
                     "ocsf_class_reference_version": "1.3.0",

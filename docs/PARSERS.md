@@ -1,6 +1,6 @@
 # Parser contracts and coverage
 
-All parsers use version `2.0.0` and the `timeline-ocsf-aligned-2.0` analytical profile. Select a parser explicitly with `--input PARSER=PATH`; the pipeline does not ask an LLM to infer a schema.
+Parser contracts use explicit versions in the registry and the `timeline-ocsf-aligned-2.0` analytical profile. Select a parser explicitly with `--input PARSER=PATH`; the pipeline does not ask an LLM to infer a schema.
 
 The mappings reference classes in the [OCSF 1.3.0 schema](https://github.com/ocsf/ocsf-schema/tree/v1.3.0). They select a class, not a complete upstream event schema. Unmapped generic events retain `ocsf_class_uid=0` and `metadata.ocsf_mapping_status=unmapped`; the tool does not label arbitrary log entries as process activity.
 
@@ -26,6 +26,7 @@ Version 0.6.0 adds a separate [schema-validated OCSF export](OCSF_EXPORT.md) for
 | `syslog` | RFC 5424 version 1 text or equivalent structured JSON | Zoned RFC 5424 timestamp | Unmapped; message retained in original source |
 | `zeek` | JSON connection, DNS and HTTP logs with `_path` | `ts`, seconds | Conn 4001, DNS 4003, HTTP 4002; other explicit paths unmapped |
 | `suricata` | EVE JSON | `timestamp`, ISO | Alert 2004, flow/netflow 4001, DNS 4003, HTTP 4002; other types unmapped |
+| `plaso_event` | Complete pinned native Plaso output; JSONL, dynamic CSV and legacy 17-column l2tcsv | Microsecond timestamp, zoned Datetime or split date/time with explicit zone | Known filesystem types 1001; others unmapped |
 | `plaso` | psort JSONL or CSV with `datetime` or `timestamp` and a message/data type | `datetime` ISO or `timestamp` microseconds | `fs:` records 1001; others unmapped |
 | `ocsf` | OCSF JSON/JSONL/Parquet with `class_uid` and time; project Parquet `record_json` envelope | `time` milliseconds or `time_utc` ISO | Preserve positive source class; re-ingestion records new source provenance |
 | `tines_audit` | Tines audit record export | `created_at` or `timestamp`, ISO | API Activity 6003 |
@@ -36,7 +37,7 @@ Version 0.6.0 adds a separate [schema-validated OCSF export](OCSF_EXPORT.md) for
 | `google_workspace` | Admin Reports activity with `id`, `actor`, `events[]`; every event expanded | `id.time`, ISO | Login 3002; admin/token/drive 6003 |
 | `crowdstrike_alert` | Falcon alerts v2 entity (separate from legacy detection/behavior exports) | `timestamp`, then `created_timestamp`, ISO | Detection Finding 2004 |
 
-Version 0.12.0 supplies 27 parser contracts. New `github_audit` and `kubernetes_audit` parsers are described in [developer infrastructure evidence](DEVELOPER_INCIDENTS.md). New parsers start at 1.0.0. M365 and GuardDuty advance to 2.1.0: suffix-free M365 `CreationTime` is explicitly UTC under the source contract, and GuardDuty captures native `ipAddressV4` fields. Re-ingesting these two sources changes event identities; retained bundles are not rewritten. Current OCSF mappings are version `ocsf-export-1.2.0` and retain verification support for 1.0.0 and 1.1.0 exports.
+Version 0.13.0 supplies 28 import/parser contracts plus [all 249 native Plaso registrations](PLASO_COVERAGE.md). New `github_audit` and `kubernetes_audit` parsers are described in [developer infrastructure evidence](DEVELOPER_INCIDENTS.md). New parsers start at 1.0.0. M365 and GuardDuty advance to 2.1.0: suffix-free M365 `CreationTime` is explicitly UTC under the source contract, and GuardDuty captures native `ipAddressV4` fields. Re-ingesting these two sources changes event identities; retained bundles are not rewritten. Current OCSF mappings are version `ocsf-export-1.3.0` and retain verification support for 1.0.0, 1.1.0 and 1.2.0 exports.
 
 For query exports use `{"table":"DeviceProcessEvents","record":{...}}` or `{"table":"SecurityEvent","record":{...}}` per row; raw Results/columns/rows arrays are not guessed into a table. See [allowed tables and source clocks](ENTERPRISE_APIS.md). Collection archives both the native API body and projected parser records. A mapped class alone does not guarantee all required OCSF fields exist.
 
@@ -46,22 +47,13 @@ The exact field aliases are centralized in `src/timeline_demo/parsers/registry.p
 
 JSON documents support arrays, single objects and `Records`, `records`, `value`, `resources`, `Findings`, `findings` or `items` arrays. JSONL records stream one object per line. CSV/TSV are supported where the source contract is flat. Gzip wraps text formats. Parquet reads in batches and requires the `parquet` extra; native nested fields remain available to the parser.
 
-Windows XML is an **exported Event XML document**, not a native `.evtx` reader. DTD/entity declarations are rejected. RFC 3164 timestamps without a year/time zone are not accepted as RFC 5424. Custom VPC Flow field orders, non-JSON Zeek TSV logs, Falcon FDR, binary Plaso storage, browser SQLite files and memory images require their own source export/conversion step.
+Windows XML is an **exported Event XML document**, not a native `.evtx` reader. DTD/entity declarations are rejected. RFC 3164 timestamps without a year/time zone are not accepted as RFC 5424. Custom VPC Flow field orders, non-JSON Zeek TSV logs, Falcon FDR and memory images require an appropriate source export/conversion step. Native EVTX, browser SQLite and compatible binary Plaso storage now use `timeline plaso-ingest`; select `windows_event` only for exported Windows records.
 
 Malformed record objects and timestamps fail by default. `--quarantine` records per-record failures and retains the original source. Malformed whole JSON/XML documents fail the batch. Source-specific numeric units are explicit; the tool does not guess seconds versus milliseconds from magnitude.
 
 ## Plaso and broad forensic artifact coverage
 
-Use upstream Plaso/log2timeline to parse disk, file-system, browser, registry and native event-log artifacts, then export its event records for this pipeline. Consult the [official psort documentation](https://plaso.readthedocs.io/en/latest/sources/user/Using-psort.html) for supported output modules in your installed Plaso version. Preserve original artifacts, the `.plaso` storage file, tool version, parser selection, time-zone assumptions and export commands in the acquisition record.
-
-For example, with an installed psort version that exposes `json_line`:
-
-```bash
-psort.py -o json_line -w events.jsonl collection.plaso
-timeline ingest --case-id case-001 --input plaso=events.jsonl --output output/case-001
-```
-
-Confirm the output module and timestamp fields in your installed version with `psort.py -h`; this repository does not bundle Plaso or claim to reimplement all upstream parsers. CSV exports need `datetime` or `timestamp` fields; legacy l2tcsv split date/time columns need an explicit conversion before ingestion.
+Use `timeline plaso-ingest` to run every parser/plugin in the pinned upstream collection, or `--input plaso_event=PATH` for existing JSONL, dynamic CSV and l2tcsv exports. See the [complete implementation and evidence rules](PLASO.md) and [every registered artifact format](PLASO_COVERAGE.md). Runtime source hashes, actual registrations and stored/exported event counts are checked before publishing a bundle. The legacy `plaso` importer remains compatible with its existing contract and IDs.
 
 ## Adding a source
 

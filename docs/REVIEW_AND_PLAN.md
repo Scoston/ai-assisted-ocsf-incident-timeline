@@ -28,6 +28,8 @@ Reviewed baseline: `d8e8169e1c5bb175bc8c5218f005f6f2a9a563d3` on 2026-09-07. Sco
 8. Updated user, operator, architecture, model-selection, parser, migration and validation documentation; CI and packaging gates.
 9. Version 0.6.0 completes the pinned OCSF export milestone: nine core 1.3.0 class schemas generated from the official catalog, source-backed mappings, strict/quarantine exports, source-bound verification, an additional Jupyter notebook, optional Databricks job/Delta publication and documented Tines completion implications. See [the exact scope and validation provenance](OCSF_EXPORT.md).
 
+10. Version 0.7.0 adds four checkpointed collectors, fixed windows, overlapping catch-up batches, raw page attachments, conservative failure handling and replay tests. [Collection coverage and operations](COLLECTION.md) define what each source actually supplies.
+
 ## Deployment acceptance that depends on the operator environment
 
 These are explicit acceptance steps, not claims of completed production deployment:
@@ -42,7 +44,6 @@ These are explicit acceptance steps, not claims of completed production deployme
 | Priority | Enhancement | Acceptance evidence |
 | --- | --- | --- |
 | 1 | Tenant acceptance and organization-specific parser fixtures | Sanitized representative exports pass source/record/field-level review; live workflow evidence recorded |
-| 3 | Continuous collection and checkpoints | Source-specific pagination/cursors, collection windows, throttling and replay tested; no silent gaps |
 | 4 | Scale and quality evaluation | Published hardware/dataset limits, peak memory/runtime, precision/recall and citation faithfulness measurements |
 | 5 | Signed manifests and external trust anchors | Explicit signer trust, key rotation and revocation; independent audit/retention controls |
 

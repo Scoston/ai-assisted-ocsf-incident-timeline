@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.0 — 2026-09-07
+
+- Added Tines audit, Entra sign-in, regional CloudTrail event-history and Databricks system audit collectors with fixed read-only queries and credential references.
+- Persist raw pages and record projections before cursor advancement; resume interruptions, enforce budgets, detect paging cycles/truncation and pin completed bundles.
+- Added `collect` and `collect-until`, overlapping windows, atomic watermarks, raw response attachments, configuration examples and source coverage/operations documentation. Collection uses zero model tokens.
+- Corrected native Tines `request_ip` mapping; only that parser advances to version 2.1.0. New manifests record each input parser version.
+- Added 15 collection regression cases and the collection dependency extra.
+
 ## 0.6.0 — 2026-09-07
 
 - Added deterministic core OCSF 1.3.0 export and verification for nine classes, with complete pinned JSON Schemas generated from the official catalog and reproducible generator/source hashes.

@@ -1,0 +1,6 @@
+{
+  "source": "cloudtrail",
+  "source_id": "replace-with-account-label",
+  "region": "us-east-1",
+  "profile": "replace-with-aws-profile"
+}

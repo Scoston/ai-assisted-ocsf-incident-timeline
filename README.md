@@ -2,7 +2,7 @@
 
 Build an investigation timeline from cloud, identity, endpoint, network and forensic exports. Preserve source files, normalize timestamps, retain parser provenance, verify artifact hashes, and add optional AI interpretation for human review.
 
-**Version 0.6.0:** an installable Python package, 21 parser contracts, two dedicated Tines stories, Databricks Volume/Jobs/Delta integration, four Jupyter notebooks, a token-bounded AI harness, and a schema-validated OCSF 1.3.0 export. The offline pipeline and OCSF export require no API key and consume **zero model tokens**.
+**Version 0.7.0:** an installable Python package, 21 parser contracts, two dedicated Tines stories, Databricks Volume/Jobs/Delta integration, four Jupyter notebooks, a token-bounded AI harness, a schema-validated OCSF 1.3.0 export, and four checkpointed collectors. The offline pipeline and OCSF export require no API key and consume **zero model tokens**.
 
 The timeline uses an **OCSF-aligned analytical profile**. The separate `export-ocsf` command emits validated core OCSF events for nine pinned classes; missing required fields are rejected explicitly. File integrity checks do not prove source authenticity, complete collection, accurate clocks, or legal admissibility. AI analysis is stored separately and cannot establish those properties.
 
@@ -41,6 +41,7 @@ The viewer starts with a verified example bundle. Select a newly generated bundl
 
 | Need | Implemented path | Guide |
 | --- | --- | --- |
+| Continuous collection | Fixed windows, durable pages/cursors and overlapping catch-up batches for four sources | [Collection setup and coverage](docs/COLLECTION.md) |
 | Tines orchestration | Importable publish/monitor and run-inspection stories; asynchronous receipts, bounded polling and stable Databricks idempotency keys | [Tines implementation and operational implications](integrations/tines/README.md) |
 | Databricks | Upload/download verified bundles through Unity Catalog Volumes; submit/poll Jobs; publish insert-only Delta tables and committed views | [Databricks setup and acceptance](integrations/databricks/README.md) |
 | Jupyter | Offline investigation, Databricks round trip, AI harness and pinned OCSF export notebooks | [Notebooks](notebooks/README.md) |
@@ -72,7 +73,7 @@ By default, invalid records fail the run without exposing a partial bundle. `--q
 ## Development and verification
 
 ```bash
-python -m pip install -e '.[dev,ai,databricks]'
+python -m pip install -e '.[dev,ai,databricks,collection]'
 ruff check src tests scripts streamlit_timeline_ui integrations/databricks
 pytest -q
 python scripts/check_notebooks.py --kernel

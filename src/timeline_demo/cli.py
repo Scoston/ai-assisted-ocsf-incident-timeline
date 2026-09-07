@@ -11,6 +11,21 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description="Evidence-preserving OCSF-aligned incident timelines")
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("parsers", help="List supported parser contracts")
+    for name in ("collect", "collect-until"):
+        collector = commands.add_parser(name, help="Collect read-only audit records with durable checkpoints")
+        collector.add_argument("--config", required=True)
+        collector.add_argument("--state", required=True)
+        collector.add_argument("--output", required=True)
+        collector.add_argument("--case-id", required=True)
+        collector.add_argument("--start", required=True)
+        collector.add_argument("--end", required=True)
+        collector.add_argument("--max-pages", type=int, default=100)
+        collector.add_argument("--max-records", type=int, default=100000)
+        collector.add_argument("--max-bytes", type=int, default=134217728)
+        if name == "collect-until":
+            collector.add_argument("--window-seconds", type=int, default=3600)
+            collector.add_argument("--overlap-seconds", type=int, default=300)
+            collector.add_argument("--max-windows", type=int, default=24)
     ingest = commands.add_parser("ingest", help="Build an offline evidence bundle")
     ingest.add_argument("--input", action="append", required=True, metavar="PARSER=PATH")
     ingest.add_argument("--case-id", required=True)
@@ -58,6 +73,34 @@ def main(argv=None):
     try:
         if args.command == "parsers":
             result = {name: spec.product for name, spec in SPECS.items()}
+        elif args.command in {"collect", "collect-until"}:
+            from timeline_demo.collection import collect_window, collect_until
+            from timeline_demo.collection.providers import make_provider
+            from timeline_demo.parsers.readers import _strict_json
+
+            provider = make_provider(_strict_json(Path(args.config).read_text(encoding="utf-8")))
+            options = {
+                "max_pages": args.max_pages,
+                "max_records": args.max_records,
+                "max_bytes": args.max_bytes,
+            }
+            if args.command == "collect":
+                result = collect_window(
+                    provider, args.state, args.output, args.case_id, args.start, args.end, **options
+                )
+            else:
+                result = collect_until(
+                    provider,
+                    args.state,
+                    args.output,
+                    args.case_id,
+                    args.start,
+                    args.end,
+                    window_seconds=args.window_seconds,
+                    overlap_seconds=args.overlap_seconds,
+                    max_windows=args.max_windows,
+                    **options,
+                )
         elif args.command == "ingest":
             from timeline_demo.pipeline import Input, run_pipeline
 

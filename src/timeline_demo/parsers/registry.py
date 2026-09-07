@@ -26,6 +26,7 @@ class Spec:
     status: str = "status"
     severity: str = "severity"
     unit: str | None = None
+    version: str = PARSER_VERSION
 
 
 SPECS = {
@@ -235,8 +236,9 @@ SPECS = {
         "operation_name|action|operation",
         "user_email|user.email|actor.email",
         "story_id|resource_id",
-        "ip_address|ip",
+        "request_ip|ip_address|ip",
         "id",
+        version="2.1.0",
     ),
     "databricks_audit": Spec(
         "Databricks Audit Log",
@@ -400,7 +402,7 @@ def normalize_record(raw, parser, evidence_path, raw_file_hash, record_index, as
             status = "success" if str(status) == "0" else "unknown" if status == "unknown" else "failure"
         elif parser == "gcp_audit":
             status = "success" if str(status) == "0" else "unknown" if status == "unknown" else "failure"
-        event_uuid = sha256_of_text(compact_json([parser, PARSER_VERSION, raw_hash, child_index]))
+        event_uuid = sha256_of_text(compact_json([parser, spec.version, raw_hash, child_index]))
         results.append(
             {
                 "event_uuid": event_uuid,
@@ -412,7 +414,7 @@ def normalize_record(raw, parser, evidence_path, raw_file_hash, record_index, as
                 "timezone_assumption": assume_timezone,
                 "temporal_confidence": "source_reported",
                 "parser_name": parser,
-                "parser_version": PARSER_VERSION,
+                "parser_version": spec.version,
                 "source_name": parser,
                 "product_name": spec.product,
                 "ocsf_class_uid": class_uid,
@@ -429,7 +431,7 @@ def normalize_record(raw, parser, evidence_path, raw_file_hash, record_index, as
                 "child_index": child_index,
                 "metadata": {
                     "schema_version": PROFILE_VERSION,
-                    "mapping_version": PARSER_VERSION,
+                    "mapping_version": spec.version,
                     "ocsf_class_reference_version": "1.3.0",
                     "ocsf_mapping_status": "mapped_class" if class_uid else "unmapped",
                     "record_hash_encoding": "sorted-compact-json-utf8-v1",

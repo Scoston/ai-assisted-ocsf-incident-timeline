@@ -1,5 +1,5 @@
 {
-  "fixture_sha256": "5c1f985c675fcb9c6c1e996daac2ac70ab8b54d73a854b7f192776ff5856629d",
+  "fixture_sha256": "165c5d4757789b706d2543beab5e70b4b8ea466bf92c5b05ed7a89cbaaf8115c",
   "scope": "Minimal synthetic field contracts, authored from the input fixture. Not organization-specific or held-out accuracy.",
   "expected": {
     "cloudtrail": {
@@ -101,6 +101,14 @@
     "crowdstrike_alert": {
       "epoch_ms": 1788256800000,
       "ocsf_class_uid": 2004
+    },
+    "github_audit": {
+      "epoch_ms": 1788256800000,
+      "ocsf_class_uid": 6003
+    },
+    "kubernetes_audit": {
+      "epoch_ms": 1788256800000,
+      "ocsf_class_uid": 6003
     }
   }
 }

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.12.0 — 2026-09-07
+
+- Fixed interrupted partial rolling windows when subsequent invocations extend their end time; serialized schema migrations and conservative legacy-window adoption.
+- Added clock-relative scheduling with settling delay, systemd examples and expected-source inventories/health metrics.
+- Added read-only AI usage reporting and pinned SQLite-aware backup/restore retaining failed/pending charges and cached results; tightened provider token-usage validation.
+- Added GitHub organization audit collector and Kubernetes audit parser, bringing coverage to 19 collector types and 27 parser contracts; OCSF mappings advance to 1.2.0 with historical verification.
+- Added a ninth offline Jupyter notebook, source fixtures, regression tests, upgrade guidance and a follow-up enterprise assessment.
+
 ## 0.11.0 — 2026-09-07
 
 - Added an enterprise readiness assessment, threat model, operating/recovery procedures, deployment baseline, security policy and administrator ruleset.

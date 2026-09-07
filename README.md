@@ -2,7 +2,7 @@
 
 Build an investigation timeline from cloud, identity, endpoint, network and forensic exports. Preserve source files, normalize timestamps, retain parser provenance, verify artifact hashes, and add optional AI interpretation for human review.
 
-**Version 0.11.0:** an installable Python package, 25 parser contracts, two dedicated Tines stories, Databricks Volume/Jobs/Delta integration, eight Jupyter notebooks, a token-bounded AI harness, a schema-validated OCSF 1.3.0 export, 18 checkpointed collector types, published scale measurements, and optional signed manifests with pinned signer trust. This release adds verified recovery, health metrics, OIDC case access, ingestion limits and a locked container deployment. The offline pipeline and OCSF export require no API key and consume **zero model tokens**.
+**Version 0.12.0:** an installable Python package, 27 parser contracts, two dedicated Tines stories, Databricks Volume/Jobs/Delta integration, nine Jupyter notebooks, a token-bounded AI harness, a schema-validated OCSF 1.3.0 export, 19 checkpointed collector types, published scale measurements, and optional signed manifests with pinned signer trust. This release adds restart-safe scheduling, expected-source monitoring, AI ledger recovery, and GitHub/Kubernetes evidence coverage to the signed, access-controlled deployment baseline. See the [follow-up review](docs/GAP_REVIEW.md). The offline pipeline and OCSF export require no API key and consume **zero model tokens**.
 
 The timeline uses an **OCSF-aligned analytical profile**. The separate `export-ocsf` command emits validated core OCSF events for nine pinned classes; missing required fields are rejected explicitly. File integrity checks do not prove source authenticity, complete collection, accurate clocks, or legal admissibility. AI analysis is stored separately and cannot establish those properties.
 
@@ -46,14 +46,14 @@ Local viewer mode requires a loopback bind and starts with a verified example bu
 | Enterprise operations | Health/Prometheus, consistent checkpoint backup/restore and parser upgrade boundaries | [Operations](docs/OPERATIONS.md) |
 | Shared access and deployment | OIDC case authorization, locked dependencies, container, advisory scans and build provenance | [Deployment](docs/DEPLOYMENT.md) |
 | Signed evidence | Detached bundle/export signatures, pinned signer policy, rotation/revocation and optional Databricks enforcement | [Signer setup and operating limits](docs/SIGNING.md) |
-| Continuous collection | Fixed windows, durable pages/cursors and overlapping catch-up batches for 18 collector types | [Collection setup and coverage](docs/COLLECTION.md) |
+| Continuous collection | Fixed windows, durable pages/cursors and overlapping catch-up batches for 19 collector types | [Collection setup and coverage](docs/COLLECTION.md) |
 | Tines orchestration | Importable publish/monitor and run-inspection stories; asynchronous receipts, bounded polling and stable Databricks idempotency keys | [Tines implementation and operational implications](integrations/tines/README.md) |
 | Databricks | Upload/download verified bundles through Unity Catalog Volumes; submit/poll Jobs; publish insert-only Delta tables and committed views | [Databricks setup and acceptance](integrations/databricks/README.md) |
 | Jupyter | Offline investigation, Databricks round trip, AI harness, OCSF export, evaluation, signer lifecycle and enterprise collection notebooks | [Notebooks](notebooks/README.md) |
 | OCSF interoperability | Nine complete core class validators, strict/quarantine export, source binding and optional Databricks job task | [OCSF mappings, validation and deployment](docs/OCSF_EXPORT.md) |
 | Evaluation | Reproducible runtime/RSS/coverage benchmarks, parser/IOC truth fixtures and analyst-label scorer | [Measurements and evaluation](docs/EVALUATION.md) |
 | AI task harness | Optional single-call tasks, compact evidence groups, citations, durable case budgets and cache | [AI harness and model policy](docs/AI_HARNESS.md) |
-| Parsers | 25 named contracts with fixtures; JSON/JSONL/gzip/CSV/TSV/Parquet, exported Windows XML, RFC 5424 and VPC text readers | [Parser coverage and limits](docs/PARSERS.md) |
+| Parsers | 27 named contracts with fixtures; JSON/JSONL/gzip/CSV/TSV/Parquet, exported Windows XML, RFC 5424 and VPC text readers | [Parser coverage and limits](docs/PARSERS.md) |
 | Review and improvement plan | Original findings, implemented work, acceptance requirements and next milestones | [Repository review and plan](docs/REVIEW_AND_PLAN.md) |
 
 Preview AI cost boundaries without sending a request:

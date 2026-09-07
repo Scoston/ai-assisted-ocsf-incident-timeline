@@ -27,6 +27,12 @@ def main(argv=None):
             collector.add_argument("--window-seconds", type=int, default=3600)
             collector.add_argument("--overlap-seconds", type=int, default=300)
             collector.add_argument("--max-windows", type=int, default=24)
+            collector.add_argument(
+                "--settling-seconds",
+                type=int,
+                default=300,
+                help="Delay behind the clock when --end now is used",
+            )
     ingest = commands.add_parser("ingest", help="Build an offline evidence bundle")
     ingest.add_argument("--input", action="append", required=True, metavar="PARSER=PATH")
     ingest.add_argument("--case-id", required=True)
@@ -111,6 +117,7 @@ def main(argv=None):
                     window_seconds=args.window_seconds,
                     overlap_seconds=args.overlap_seconds,
                     max_windows=args.max_windows,
+                    settling_seconds=args.settling_seconds,
                     **options,
                 )
         elif args.command == "ingest":

@@ -35,6 +35,7 @@ SOURCES = frozenset(
         "cloudwatch_logs",
         "crowdstrike_alert",
         "splunk",
+        "github_audit",
     }
 )
 CONTENT_TYPES = frozenset(
@@ -165,6 +166,51 @@ class Okta(Enterprise):
             raise ValueError("ambiguous Okta next link")
         next_cursor = {"path": _next_path(next_links[0], self.http.host, base)} if next_links else None
         return Page(raw, records(value), next_cursor)
+
+
+class GitHubAudit(Enterprise):
+    # The audit endpoint has its own per-user/IP hourly quota. Shared identities
+    # across workers still need an external rate limit.
+    interval = 2.1
+
+    def fetch(self, start, end, cursor):
+        from datetime import timezone
+
+        base = f"/orgs/{self.config['organization']}/audit-log"
+        # Search syntax documents second precision; query an enclosing range and
+        # let the runner apply the exact half-open millisecond boundary.
+        start_ms, end_ms = parse_time(start)[1], parse_time(end)[1]
+        lower = datetime.fromtimestamp(start_ms // 1000, timezone.utc).isoformat()
+        upper = datetime.fromtimestamp((end_ms + 999) // 1000, timezone.utc).isoformat()
+        path = (
+            cursor["path"]
+            if cursor
+            else base
+            + "?"
+            + urlencode(
+                {
+                    "phrase": f"created:{lower}..{upper}",
+                    "include": "all",
+                    "order": "asc",
+                    "per_page": 100,
+                }
+            )
+        )
+        _next_path(self.http.host + path, self.http.host, base)
+        raw, value, headers = self.http.request("GET", path, array=True, headers=True)
+        links = []
+        for part in re.split(r",\s*(?=<)", headers.get("link", "")):
+            if not part:
+                continue
+            match = re.fullmatch(r'\s*<([^>]+)>\s*;\s*rel="([^"]+)"\s*', part)
+            if not match:
+                raise ValueError("malformed GitHub pagination header")
+            url, rel = match.groups()
+            if "next" in rel.split():
+                links.append(_next_path(url, self.http.host, base))
+        if len(links) > 1:
+            raise ValueError("ambiguous GitHub next link")
+        return Page(raw, records(value), {"path": links[0]} if links else None)
 
 
 class M365(Enterprise):
@@ -640,6 +686,7 @@ def make_enterprise_provider(config):
         "cloudwatch_logs": {"region", "profile", "log_group", "parser", "format"},
         "crowdstrike_alert": set(),
         "splunk": {"index", "sourcetype", "parser", "format"},
+        "github_audit": {"organization"},
     }
     aws = source in {"guardduty", "securityhub", "cloudwatch_logs"}
     allowed = common | special[source] | (set() if aws else {"host", "token_env"})
@@ -652,6 +699,8 @@ def make_enterprise_provider(config):
             raise ValueError("invalid or missing collector " + key)
 
     match("source_id", r"[A-Za-z0-9_.-]{1,100}")
+    if source == "github_audit":
+        match("organization", r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?")
     for key in ("tenant_id", "subscription_id", "workspace_id"):
         if key in special[source]:
             match(key, GUID)
@@ -699,6 +748,7 @@ def make_enterprise_provider(config):
         "defender_hunting": ("https://api.security.microsoft.com", "DEFENDER_ACCESS_TOKEN", Hunting),
         "gcp_audit": ("https://logging.googleapis.com", "GOOGLE_ACCESS_TOKEN", GCP),
         "google_workspace": ("https://admin.googleapis.com", "GOOGLE_WORKSPACE_ACCESS_TOKEN", Workspace),
+        "github_audit": ("https://api.github.com", "GITHUB_AUDIT_TOKEN", GitHubAudit),
     }
     if source in fixed:
         host, env, cls = fixed[source]
@@ -730,6 +780,9 @@ def make_enterprise_provider(config):
         value = os.environ.get(env)
         if not value:
             raise ValueError("collector token environment variable is unset")
-        return {"Authorization": scheme + " " + value}
+        result = {"Authorization": scheme + " " + value}
+        if source == "github_audit":
+            result.update({"Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2026-03-10"})
+        return result
 
     return cls(config, Http(host, headers, ports=(443, 8089) if source == "splunk" else (443,)))

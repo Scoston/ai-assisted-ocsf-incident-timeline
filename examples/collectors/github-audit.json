@@ -1,0 +1,6 @@
+{
+  "source": "github_audit",
+  "source_id": "github-example-enterprise",
+  "organization": "example-enterprise",
+  "token_env": "GITHUB_AUDIT_TOKEN"
+}

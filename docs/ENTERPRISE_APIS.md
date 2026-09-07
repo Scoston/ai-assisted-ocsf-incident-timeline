@@ -1,6 +1,6 @@
 # Enterprise API contracts
 
-Version 0.10.0 adds the following 14 collectors to the four in [COLLECTION.md](COLLECTION.md). Filenames are under `examples/collectors/`. See [coverage and incident-specific selection](COLLECTOR_COVERAGE.md).
+The original enterprise expansion adds the following 14 collectors to the four in [COLLECTION.md](COLLECTION.md). Version 0.12 additionally supplies [GitHub organization audit collection](DEVELOPER_INCIDENTS.md), giving 19 total. Filenames are under `examples/collectors/`. See [coverage and incident-specific selection](COLLECTOR_COVERAGE.md).
 
 | Configuration | Captured scope and selection clock | Authentication/access |
 | --- | --- | --- |

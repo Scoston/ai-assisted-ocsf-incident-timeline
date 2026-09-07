@@ -25,7 +25,7 @@ from timeline_demo.parsers.readers import _strict_json, iter_records
 from timeline_demo.pipeline import read_timeline
 
 VERSION = "1.3.0"
-MAPPING_VERSION = "ocsf-export-1.1.0"
+MAPPING_VERSION = "ocsf-export-1.2.0"
 RESOURCE_ROOT = files("timeline_demo").joinpath("resources/ocsf/1.3.0")
 EXPORT_FILES = {"ocsf.jsonl", "rejections.jsonl"}
 REPORT_VALIDATOR = Draft202012Validator(
@@ -166,6 +166,8 @@ def _vendor(parser):
         "tines_audit": "Tines",
         "databricks_audit": "Databricks",
         "ai_agent": "Unknown",
+        "github_audit": "GitHub",
+        "kubernetes_audit": "Kubernetes",
     }.get(parser, "Unknown")
 
 

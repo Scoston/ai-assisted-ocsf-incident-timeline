@@ -1,5 +1,13 @@
 # Upgrading
 
+## From 0.11 to 0.12
+
+Stop and fence old collector processes and take a verified backup before upgrading. State migration now runs in one serialized transaction and adds a pending window end and hashed policy contract. Do not run old and new binaries against the same migrated state. One matching pre-upgrade rolling window is adopted automatically, including a published window whose watermark commit was interrupted. Multiple conflicting legacy windows fail closed: retain both states/bundles, reconcile their reports, and start an explicitly inventoried replacement acquisition instead of editing SQLite. Pending parser-version checks still apply.
+
+Keep the original source configuration, initial start, case prefix, output root and window policy. `--end now` uses a default five-minute settling delay; adjust `--settling-seconds` for source delivery. The first resumed invocation finishes the frozen partial window before planning another. Do not shrink the end past that pending boundary.
+
+Existing parsers and evidence IDs are unchanged. GitHub/Kubernetes parsers start at 1.0.0; OCSF mapping advances to 1.2.0 while historical 1.0.0/1.1.0 exports remain verifiable. Re-export into a new directory and redeploy the current wheel for new mappings. Update monitoring with an expected-source inventory. AI ledger recovery is additive and preserves old charges/cache rows; restore into a new directory and keep the original writer fenced. See [operations](docs/OPERATIONS.md) and [follow-up review](docs/GAP_REVIEW.md).
+
 ## From 0.10 to 0.11
 
 Read [enterprise readiness](docs/ENTERPRISE_READINESS.md), [deployment](docs/DEPLOYMENT.md) and [operations](docs/OPERATIONS.md). Finish active windows with the old release before upgrading. The state schema adds a nullable parser version: new runs bind it; incomplete legacy/changed-version runs with committed pages fail before network access. Completed old runs remain replayable. Back up state and published evidence before migration; do not roll a migrated active state back by editing SQLite.

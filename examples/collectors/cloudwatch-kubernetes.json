@@ -1,0 +1,8 @@
+{
+  "source": "cloudwatch_logs",
+  "source_id": "eks-production-audit",
+  "region": "us-east-1",
+  "log_group": "/enterprise/audit/kubernetes/example-cluster",
+  "parser": "kubernetes_audit",
+  "format": "json"
+}

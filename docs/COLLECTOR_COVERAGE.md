@@ -2,7 +2,7 @@
 
 Reviewed against version 0.9.0 on 2026-09-07. The four original collectors had durable paging and evidence receipts, but covered only Entra sign-ins, regional CloudTrail management history, Tines audit and Databricks audit. They could not independently reconstruct mailbox compromise, endpoint execution, directory persistence or most network activity.
 
-Version 0.10.0 adds **14 collector types**, for **18 total**, and four parser contracts, for **25 total**. Choose the sources present in your organization. This is an incident-response coverage assessment, not a claim that every enterprise owns these products or that their APIs expose every event.
+Version 0.12.0 provides **19 collector types** and **27 parser contracts**. GitHub organization audit collection and Kubernetes audit parsing extend the identity, cloud, endpoint, mail and SIEM coverage. Choose the sources present in your organization. This is an incident-response coverage assessment, not a claim that every enterprise owns these products or that their APIs expose every event.
 
 ## Coverage decisions
 
@@ -50,4 +50,8 @@ Offline regressions and the seventh notebook exercise synthetic contracts. CI ad
 
 ## Organization-specific gaps
 
-This release does not install endpoint agents, scrape arbitrary SaaS consoles, acquire disks/memory/packets, implement every firewall/VPN dialect or replace vendor retention. Direct Falcon FDR, SentinelOne, Elastic, Salesforce/GitHub audit, Kubernetes audit and long-term object-store acquisition are candidates when the organization's inventory requires them. Use a matching parser for structured exports, or add a reviewed contract and representative fixtures first. These are explicit gaps, not advertised placeholder collectors.
+This release does not install endpoint agents, scrape arbitrary SaaS consoles, acquire disks/memory/packets, implement every firewall/VPN dialect or replace vendor retention. Direct Falcon FDR, SentinelOne, Elastic, Salesforce audit and long-term object-store acquisition are candidates when the organization's inventory requires them. Use a matching parser for structured exports, or add a reviewed contract and representative fixtures first. These are explicit gaps, not advertised placeholder collectors.
+
+## Developer infrastructure incidents
+
+Repository/credential or supply-chain incidents can use `github_audit`; Kubernetes API abuse and cluster authorization investigations can use `kubernetes_audit` through dedicated CloudWatch/Splunk sources or offline exports. Neither is a disk/runtime/packet collector. See [contracts, source restrictions and acceptance](DEVELOPER_INCIDENTS.md).

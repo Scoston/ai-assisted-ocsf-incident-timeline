@@ -9,6 +9,7 @@ import pytest
 from timeline_demo.collection import collect_window
 from timeline_demo.collection.enterprise import (
     AWS,
+    SOURCES,
     AzureActivity,
     CloudWatch,
     Falcon,
@@ -445,7 +446,7 @@ def test_all_example_configs_construct_without_reading_credentials(monkeypatch):
             continue
         sources.add(value["source"])
         make_provider(value)
-    assert len(sources) == 14
+    assert sources == SOURCES
 
 
 def test_http_arrays_form_creation_and_pagination_header_allowlist():

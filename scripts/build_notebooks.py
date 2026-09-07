@@ -43,6 +43,7 @@ def main():
     build_signing_notebook()
     build_enterprise_notebook()
     build_operations_notebook()
+    build_developer_incident_notebook()
     write(
         "01_offline_investigation.ipynb",
         [
@@ -255,7 +256,7 @@ root = Path.cwd()
 if not (root/'examples').exists():
     root = root.parent
 configs = [json.loads(p.read_text()) for p in sorted((root/'examples/collectors').glob('*.json'))]
-assert len({c['source'] for c in configs}) == 18
+assert len({c['source'] for c in configs}) == 19
 [(c['source_id'], c['source'], c.get('table', c.get('content_type', ''))) for c in configs]""",
             ),
             (
@@ -317,9 +318,16 @@ assert len([name for name in manifest['files'] if name.startswith('attachments/c
 
 
 def build_operations_notebook():
-    write("08_operations_and_recovery.ipynb", [
-        ("md", "# Collector recovery and monitoring\nSimulate an interrupted collection, inspect health, back up committed pages, and resume from a verified snapshot. Synthetic data only; no provider or model calls. Install the collection extra."),
-        ("code", """import tempfile
+    write(
+        "08_operations_and_recovery.ipynb",
+        [
+            (
+                "md",
+                "# Collector recovery and monitoring\nSimulate an interrupted collection, inspect health, back up committed pages, and resume from a verified snapshot. Synthetic data only; no provider or model calls. Install the collection extra.",
+            ),
+            (
+                "code",
+                """import tempfile
 from pathlib import Path
 from timeline_demo.collection import collect_window
 from timeline_demo.collection.providers import Page
@@ -343,8 +351,11 @@ try:
 except ValueError as error:
     assert 'page budget' in str(error)
 assert not (root/'bundle').exists()
-health(root/'state', verify_blobs=True)"""),
-        ("code", """saved = backup(root/'state', root/'snapshot')
+health(root/'state', verify_blobs=True)""",
+            ),
+            (
+                "code",
+                """saved = backup(root/'state', root/'snapshot')
 assert saved['published_bundles_included'] is False
 restore(root/'snapshot', root/'restored', saved['snapshot_sha256'])
 remaining = Source([Page(b'{"value":[]}', [], None)])
@@ -352,10 +363,68 @@ result = collect_window(remaining, root/'restored', *arguments[1:])
 assert remaining.calls == 1
 assert result['collection']['model_tokens'] == 0
 assert health(root/'restored', verify_blobs=True, verify_bundles=True)['healthy']
-print(prometheus(health(root/'restored')))"""),
-        ("md", "Persist the snapshot SHA-256 independently in production. Backups contain state and committed page blobs, not published bundles, signing keys or AI ledgers. Restore published bundles to their original absolute paths first. Never run both restored and original collector state simultaneously. See docs/OPERATIONS.md for recovery, retention and monitoring procedures."),
-        ("code", "work.cleanup()"),
-    ])
+print(prometheus(health(root/'restored')))""",
+            ),
+            (
+                "md",
+                "Persist the snapshot SHA-256 independently in production. Backups contain state and committed page blobs, not published bundles, signing keys or AI ledgers. Restore published bundles to their original absolute paths first. Never run both restored and original collector state simultaneously. See docs/OPERATIONS.md for recovery, retention and monitoring procedures.",
+            ),
+            ("code", "work.cleanup()"),
+        ],
+    )
+
+
+def build_developer_incident_notebook():
+    write(
+        "09_developer_incidents.ipynb",
+        [
+            (
+                "md",
+                "# GitHub and Kubernetes incident evidence\nInspect repository and cluster API activity with synthetic records, schema-validated OCSF and a zero-call AI plan. Audit events describe recorded actions; they do not establish malicious intent. This notebook makes no provider requests.",
+            ),
+            (
+                "code",
+                """from pathlib import Path
+import json
+import tempfile
+from timeline_demo.pipeline import Input, run_pipeline, read_timeline
+from timeline_demo.ocsf import export_bundle, verify_export
+from timeline_demo.ai import prepare
+from timeline_demo.operations import inventory
+root = Path.cwd()
+if not (root/'examples').exists():
+    root = root.parent
+samples = json.loads((root/'examples/parser_samples.json').read_text())
+work = tempfile.TemporaryDirectory()
+workdir = Path(work.name)
+inputs = []
+for parser in ['github_audit', 'kubernetes_audit']:
+    path = workdir/(parser + '.json')
+    path.write_text(json.dumps(samples[parser]))
+    inputs.append(Input(parser, path))
+bundle = workdir/'bundle'
+manifest = run_pipeline(inputs, bundle, 'developer-incident-demo')
+events = list(read_timeline(bundle))
+assert manifest['counts']['event_count'] == 2
+[(event['product_name'], event['activity_name'], event['status']) for event in events]""",
+            ),
+            (
+                "code",
+                """report = export_bundle(bundle, workdir/'ocsf')
+assert verify_export(workdir/'ocsf', bundle=bundle) == report
+plan = prepare(bundle, 'summarize')
+print({'model': plan['model'], 'coverage': plan['coverage'], 'model_calls': 0})
+configs = [json.loads((root/'examples/collectors'/name).read_text()) for name in
+           ['github-audit.json', 'cloudwatch-kubernetes.json']]
+inventory(configs)""",
+            ),
+            (
+                "md",
+                "Use the generated inventory with `timeline-ops health --inventory FILE` on collected state to detect sources that never started. GitHub collection is organization-scoped on api.github.com; Kubernetes historical audits must come from an enabled log backend or exported files. Different audit stages share an auditID but retain distinct evidence identities. The original authenticated user and any impersonated user remain separate in raw evidence. Review docs/DEVELOPER_INCIDENTS.md before tenant acceptance.",
+            ),
+            ("code", "work.cleanup()"),
+        ],
+    )
 
 
 if __name__ == "__main__":

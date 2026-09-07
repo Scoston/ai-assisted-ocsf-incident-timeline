@@ -13,6 +13,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from timeline_demo.core.manifest import verify_bundle
+from timeline_demo.core.storage import no_links, private_file
 from timeline_demo.parsers.common import compact_json, file_hash, parse_time, sha256_of_text
 from timeline_demo.parsers.readers import _strict_json
 from timeline_demo.parsers.registry import SPECS, field
@@ -24,9 +25,11 @@ def _iso(ms):
 
 
 def _open(state):
-    state = Path(state).resolve()
+    state = no_links(state)
     state.mkdir(parents=True, exist_ok=True, mode=0o700)
     (state / "blobs").mkdir(exist_ok=True, mode=0o700)
+    no_links(state / "blobs")
+    private_file(state / "collection.sqlite")
     db = sqlite3.connect(state / "collection.sqlite", timeout=1, isolation_level=None)
     db.row_factory = sqlite3.Row
     db.execute("PRAGMA synchronous=FULL")
@@ -39,6 +42,8 @@ def _open(state):
     db.execute(
         "CREATE TABLE IF NOT EXISTS watermarks (id TEXT PRIMARY KEY, initial_ms INTEGER, through_ms INTEGER)"
     )
+    if "parser_version" not in {row[1] for row in db.execute("PRAGMA table_info(runs)")}:
+        db.execute("ALTER TABLE runs ADD COLUMN parser_version TEXT")
     os.chmod(state / "collection.sqlite", 0o600)
     return db
 
@@ -166,7 +171,7 @@ def collect_window(
     sleep=time.sleep,
 ):
     """Resume a fixed window. No final bundle or watermark is emitted while incomplete."""
-    state, target = Path(state).resolve(), Path(output).resolve()
+    state, target = no_links(state), Path(output).resolve()
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,127}", case_id):
         raise ValueError("invalid collection case ID")
     if state.is_relative_to(target) or target.is_relative_to(state):
@@ -194,8 +199,8 @@ def collect_window(
         try:
             db.execute("BEGIN IMMEDIATE")
             db.execute(
-                "INSERT OR IGNORE INTO runs (id,contract,start,end,case_id,output,cursor) VALUES (?,?,?,?,?,?,?)",
-                (run_id, contract, start, end, case_id, str(target), "null"),
+                "INSERT OR IGNORE INTO runs (id,contract,start,end,case_id,output,cursor,parser_version) VALUES (?,?,?,?,?,?,?,?)",
+                (run_id, contract, start, end, case_id, str(target), "null", SPECS[provider.parser].version),
             )
             db.execute("COMMIT")
             for _ in range(max_pages + 1):
@@ -204,6 +209,15 @@ def collect_window(
                 if run["contract"] != contract or run["output"] != str(target):
                     raise ValueError("collection checkpoint configuration changed")
                 prior = db.execute("SELECT * FROM pages WHERE run_id=? ORDER BY n", (run_id,)).fetchall()
+                if not run["manifest_sha256"] and run["parser_version"] != SPECS[provider.parser].version:
+                    if prior:
+                        raise ValueError(
+                            "checkpoint parser version changed or is unknown; resume with the original release"
+                        )
+                    db.execute(
+                        "UPDATE runs SET parser_version=? WHERE id=?",
+                        (SPECS[provider.parser].version, run_id),
+                    )
                 if _ == 0:
                     for page in prior:
                         _checked_blob(state, page["body_sha"])

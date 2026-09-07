@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "forensic-timeline-ai-demo"
-version = "0.10.0"
+version = "0.11.0"
 description = "Evidence-preserving incident timelines with Tines, Databricks, and bounded AI analysis"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -18,12 +18,13 @@ signing = ["cryptography>=46,<51"]
 collection = ["requests>=2.32.3,<3", "boto3>=1.40,<2"]
 parquet = ["pyarrow>=18,<26"]
 notebooks = ["jupyterlab>=4,<5", "pandas>=2.2,<4", "nbformat>=5,<6", "nbclient>=0.10,<1", "ipykernel>=6,<8"]
-ui = ["streamlit>=1.52,<2", "pandas>=2.2,<4"]
+ui = ["streamlit[auth]>=1.52,<2", "pandas>=2.2,<4"]
 ti = ["requests>=2.32.3,<3"]
 dev = ["pytest>=8,<10", "ruff>=0.12,<1", "build>=1,<2", "nbformat>=5,<6", "nbclient>=0.10,<1", "ipykernel>=6,<8", "pyarrow>=18,<26", "PyYAML>=6,<7"]
 
 [project.scripts]
 timeline = "timeline_demo.cli:main"
+timeline-ops = "timeline_demo.operations:main"
 timeline-sign = "timeline_demo.signing:main"
 timeline-evaluate = "timeline_demo.evaluation:main"
 timeline-databricks = "timeline_demo.integrations.databricks:job_main"

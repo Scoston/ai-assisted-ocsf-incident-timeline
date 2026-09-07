@@ -100,3 +100,7 @@ SDK tests and local contract validation are included. They do not establish your
 ## Required signer verification
 
 Version 0.9.0 adds signed sidecar upload, verification before writes and final publication, and insert-only `signature_verifications` receipts. Configure `require_signature`, `signature_root`, `trust_store_path` and `trust_store_sha256` as deployment variables; they are not incoming job parameters. The OCSF task verifies the source signer but does not automatically sign its derived output. Historical receipts remain historical after revocation. [Exact setup, rotation and signed-export publication](../../docs/SIGNING.md).
+
+## Local staging in 0.11
+
+Normalization and OCSF jobs perform SQLite work on driver-local disk, then upload verified Volume artifacts through the Files API with manifests last. The normalization source notebook now calls `normalize_volume_sources`; redeploy the wheel and job dependency configuration. Direct pipeline/export output to `/Volumes/` is rejected. Preserve adequate local disk space and test partial upload replay with the production service principal. See [deployment](../../docs/DEPLOYMENT.md).

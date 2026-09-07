@@ -370,6 +370,8 @@ def export_bundle(bundle, output, *, quarantine=False, manifest_sha256=None):
     source_manifest = verify_bundle(bundle, manifest_sha256)
     source_pin = file_hash(bundle / "audit_manifest.json")
     target = Path(output).resolve()
+    if target.as_posix().startswith("/Volumes/"):
+        raise ValueError("use the Databricks OCSF job for Volume output; SQLite staging requires local disk")
     if target.is_relative_to(bundle):
         raise ValueError("OCSF export must be outside the evidence bundle")
     if target.exists():
@@ -476,6 +478,9 @@ def export_bundle(bundle, output, *, quarantine=False, manifest_sha256=None):
         }
         (result_dir / "export_manifest.json").write_text(compact_json(report) + "\n", encoding="utf-8")
         verify_export(result_dir, bundle=bundle)
+        from timeline_demo.core.storage import private_tree
+
+        private_tree(result_dir)
         result_dir.rename(target)
     return report
 

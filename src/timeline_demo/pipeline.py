@@ -5,7 +5,6 @@ from __future__ import annotations
 import csv
 import json
 import re
-import shutil
 import sqlite3
 import tempfile
 from dataclasses import dataclass
@@ -14,6 +13,7 @@ from importlib.resources import files
 from jsonschema import Draft202012Validator
 
 from timeline_demo.core.manifest import safe_member, verify_bundle, write_manifest
+from timeline_demo.core.storage import publish_tree
 from timeline_demo.core.timeline_builder import PREFERRED_FIELD_ORDER, csv_value
 from timeline_demo.enrichment.ioc_extractor import extract_iocs_from_text
 from timeline_demo.parsers.common import compact_json, file_hash
@@ -31,20 +31,55 @@ class Input:
     path: str | Path
 
 
+@dataclass(frozen=True)
+class Limits:
+    max_input_bytes: int = 10 * 1024**3
+    max_records: int = 1000000
+    max_events: int = 2000000
+    max_iocs: int = 100000
+    max_inputs: int = 1000
+
+    def __post_init__(self):
+        if any(type(value) is not int or value < 1 for value in vars(self).values()):
+            raise ValueError("positive integer ingestion limits are required")
+
+
 def run_pipeline(
-    inputs, output_dir, case_id, *, quarantine=False, assume_timezone=None, parquet=False, attachments=None
+    inputs,
+    output_dir,
+    case_id,
+    *,
+    quarantine=False,
+    assume_timezone=None,
+    parquet=False,
+    attachments=None,
+    limits=None,
 ):
+    limits = limits or Limits()
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,127}", case_id):
         raise ValueError("case_id must be 1-128 letters, numbers, dots, dashes or underscores")
     inputs = list(inputs)
-    if not inputs:
-        raise ValueError("at least one input is required")
+    if not inputs or len(inputs) > limits.max_inputs:
+        raise ValueError("at least one input is required; input count must be within budget")
+    copied = 0
+
+    def copy_bounded(source, destination):
+        nonlocal copied
+        with Path(source).open("rb") as reader, destination.open("xb") as writer:
+            for block in iter(lambda: reader.read(1024 * 1024), b""):
+                copied += len(block)
+                if copied > limits.max_input_bytes:
+                    raise ValueError("ingestion input byte budget exceeded")
+                writer.write(block)
+
     for item in inputs:
         if item.parser not in SPECS:
             raise ValueError("unsupported parser: " + item.parser)
         if not Path(item.path).is_file():
             raise ValueError("input is not a file: " + str(item.path))
     target = Path(output_dir).resolve()
+    if target.as_posix().startswith("/Volumes/"):
+        raise ValueError("use normalize_volume_sources for Databricks; SQLite staging requires local disk")
     if target.exists():
         raise FileExistsError("output already exists; choose a new bundle directory")
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -67,7 +102,7 @@ def run_pipeline(
                 source = Path(item.path)
                 # Copy first, then hash and parse the same snapshot; never parse the live source twice.
                 snapshot = work / "snapshot"
-                shutil.copyfile(source, snapshot)
+                copy_bounded(source, snapshot)
                 digest = file_hash(snapshot)
                 extension = "".join(source.suffixes[-2:]) if source.suffix.lower() == ".gz" else source.suffix
                 evidence_name = "evidence/" + digest + extension.lower()
@@ -89,6 +124,8 @@ def run_pipeline(
                 )
                 for index, raw, error in iter_records(archived, item.parser):
                     counts["source_records"] += 1
+                    if counts["source_records"] > limits.max_records:
+                        raise ValueError("ingestion record budget exceeded")
                     try:
                         if error:
                             raise ValueError(error)
@@ -115,9 +152,13 @@ def run_pipeline(
                         continue
                     for key, values in extract_iocs_from_text(compact_json(raw)).items():
                         iocs[key].update(values)
+                    if sum(map(len, iocs.values())) > limits.max_iocs:
+                        raise ValueError("ingestion IOC budget exceeded")
                     for event in events:
                         EVENT_VALIDATOR.validate(event)
                         counts["emitted_events"] += 1
+                        if counts["emitted_events"] > limits.max_events:
+                            raise ValueError("ingestion event budget exceeded")
                         cursor = db.execute(
                             "INSERT OR IGNORE INTO events VALUES (?,?,?)",
                             (event["event_uuid"], event["epoch_ms"], compact_json(event)),
@@ -165,7 +206,7 @@ def run_pipeline(
             if destination.exists():
                 raise ValueError("supporting artifact collision")
             destination.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(source, destination)
+            copy_bounded(source, destination)
         write_manifest(
             {
                 "case_id": case_id,
@@ -185,7 +226,7 @@ def run_pipeline(
         )
         manifest = verify_bundle(bundle)
         # No partial output is exposed on failure. Existing bundles are never overwritten.
-        bundle.rename(target)
+        publish_tree(bundle, target)
     return manifest
 
 

@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.11.0 — 2026-09-07
+
+- Added an enterprise readiness assessment, threat model, operating/recovery procedures, deployment baseline, security policy and administrator ruleset.
+- Added `timeline-ops` health/Prometheus output and pinned, consistent checkpoint backup/restore, plus an eighth Jupyter recovery notebook.
+- Added shared-viewer OIDC authentication, issuer/subject case authorization, identity expiry checks, required pinned signatures and access auditing. Local mode requires a loopback bind.
+- Hardened manifests against duplicate keys, noncanonical paths, special files, invalid sizes and missing provenance; fixed nested manifest attachments being omitted from hashes.
+- Added aggregate ingestion limits, private evidence/ledger files and durable local publication; incomplete collector checkpoints now bind their parser version.
+- Moved Databricks normalization/OCSF SQLite staging to local disk and published Volume artifacts through sequential, resumable Files API uploads with manifests last.
+- Added hash-locked runtime/build dependencies, pinned Actions/base image, Dependabot, advisory audits/SBOMs, CodeQL, unprivileged offline container verification and main-build provenance attestations.
+- No paid model calls or new per-event AI processing; collector/parser/OCSF identity versions remain unchanged.
+
 ## 0.10.0 — 2026-09-07
 
 - Evaluated enterprise incident coverage and added 14 collectors: Entra audit, M365 audit feeds, Defender alerts/hunting, Okta, Azure Activity/Monitor Logs, GCP Audit, Workspace audit, GuardDuty, Security Hub CSPM, CloudWatch Logs, Falcon alerts and Splunk.

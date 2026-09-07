@@ -4,15 +4,17 @@ from __future__ import annotations
 
 import copy
 import json
-import os
 import re
 import sqlite3
+from contextlib import closing, contextmanager
 from importlib.resources import files
 from pathlib import Path
 
 import jsonschema
 
 from timeline_demo.core.manifest import verify_bundle
+from timeline_demo.core.storage import no_links, private_file
+from timeline_demo.parsers.readers import _strict_json
 from timeline_demo.parsers.common import compact_json, sha256_of_text
 from timeline_demo.pipeline import read_timeline
 
@@ -30,7 +32,7 @@ def resource(name):
 
 
 def load_policy(path=None):
-    policy = json.loads(Path(path).read_text(encoding="utf-8")) if path else resource("model_policy.json")
+    policy = _strict_json(Path(path).read_text(encoding="utf-8")) if path else resource("model_policy.json")
     for key in ("max_case_tokens", "max_case_calls", "max_groups"):
         if type(policy.get(key)) is not int or policy[key] < 1:
             raise ValueError("invalid AI policy: " + key)
@@ -194,21 +196,24 @@ def validate_analysis(value, refs):
 
 class Harness:
     def __init__(self, ledger, policy=None, client=None):
-        self.path = Path(ledger).resolve()
+        self.path = no_links(ledger)
         self.policy = policy or load_policy()
         self.client = client
 
     def _initialize(self):
-        self.path.parent.mkdir(parents=True, exist_ok=True)
+        private_file(self.path)
         with self._db() as db:
             db.execute("""CREATE TABLE IF NOT EXISTS calls (
                 key TEXT PRIMARY KEY, case_id TEXT NOT NULL, status TEXT NOT NULL,
                 charged INTEGER NOT NULL, request TEXT NOT NULL, response TEXT,
                 result TEXT, error TEXT)""")
-        os.chmod(self.path, 0o600)
-
+    @contextmanager
     def _db(self):
-        return sqlite3.connect(self.path, timeout=30)
+        no_links(self.path)
+        with closing(sqlite3.connect(self.path, timeout=30)) as db:
+            db.execute("PRAGMA synchronous=FULL")
+            with db:
+                yield db
 
     def run(self, bundle, task="summarize", *, allow_ai=False):
         root = Path(bundle).resolve()

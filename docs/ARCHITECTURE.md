@@ -2,6 +2,10 @@
 
 The same Python pipeline serves the CLI, Jupyter and Databricks source-normalization notebook. It reads exported data; it does not acquire live vendor data automatically.
 
+The optional `ocsf.py` layer joins verified timeline references to archived source records using disk-backed SQLite and emits a separate OCSF 1.3.0 export. Packaged schemas have pinned hashes and local references only. Every timeline event is accepted or receives a rejection receipt in quarantine mode; strict failures expose no final output. The export manifest binds the source manifest and the schema lock. `verify-ocsf --bundle` additionally checks source identities, time/class and provenance fields. This leaves the original bundle identity and OCSF-aligned timeline contract intact. See [OCSF export](OCSF_EXPORT.md) for the exact semantic scope.
+
+Databricks publishes OCSF events and rejection receipts separately, keyed by the export-manifest digest and source timeline UUID. A final `published_ocsf_exports` marker controls the `published_ocsf` view. An OCSF task failure does not roll back a previously completed timeline publication. Partial exports require explicit quarantine configuration and retain their counts in the marker.
+
 ## Processing order
 
 1. Copy each source into a private working directory, then hash and parse that snapshot. The source is never rewritten.

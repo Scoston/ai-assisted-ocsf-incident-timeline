@@ -21,6 +21,15 @@ def main(argv=None):
     verify = commands.add_parser("verify")
     verify.add_argument("bundle")
     verify.add_argument("--manifest-sha256")
+    ocsf = commands.add_parser("export-ocsf", help="Export schema-validated core OCSF 1.3.0 events")
+    ocsf.add_argument("bundle")
+    ocsf.add_argument("--output", required=True)
+    ocsf.add_argument("--quarantine", action="store_true")
+    ocsf.add_argument("--manifest-sha256")
+    ocsf_verify = commands.add_parser("verify-ocsf", help="Verify OCSF export hashes and event schemas")
+    ocsf_verify.add_argument("directory")
+    ocsf_verify.add_argument("--manifest-sha256")
+    ocsf_verify.add_argument("--bundle")
     analyze = commands.add_parser("analyze", help="Plan analysis; --allow-ai sends a bounded request")
     analyze.add_argument("bundle")
     analyze.add_argument("--task", choices=["summarize", "correlate", "review"], default="summarize")
@@ -75,6 +84,16 @@ def main(argv=None):
                 "bundle_id": manifest["bundle_id"],
                 "counts": manifest["counts"],
             }
+        elif args.command == "export-ocsf":
+            from timeline_demo.ocsf import export_bundle
+
+            result = export_bundle(
+                args.bundle, args.output, quarantine=args.quarantine, manifest_sha256=args.manifest_sha256
+            )
+        elif args.command == "verify-ocsf":
+            from timeline_demo.ocsf import verify_export
+
+            result = verify_export(args.directory, manifest_sha256=args.manifest_sha256, bundle=args.bundle)
         elif args.command == "analyze":
             from timeline_demo.ai import Harness, load_policy, prepare
 

@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format", "ocsf_version", "mapping_version", "schema_lock_sha256", "case_id", "source_bundle_id", "source_manifest_sha256", "counts", "profiles", "extensions", "model_tokens", "files"],
+  "properties": {
+    "format": {"const": "timeline-ocsf-export-1.0"},
+    "ocsf_version": {"const": "1.3.0"},
+    "mapping_version": {"const": "ocsf-export-1.0.0"},
+    "schema_lock_sha256": {"$ref": "#/$defs/digest"},
+    "source_manifest_sha256": {"$ref": "#/$defs/digest"},
+    "source_bundle_id": {"$ref": "#/$defs/digest"},
+    "case_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"},
+    "profiles": {"type": "array", "maxItems": 0},
+    "extensions": {"type": "array", "maxItems": 0},
+    "model_tokens": {"type": "integer", "const": 0},
+    "counts": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source_events", "exported_events", "rejected_events"],
+      "properties": {
+        "source_events": {"type": "integer", "minimum": 0},
+        "exported_events": {"type": "integer", "minimum": 0},
+        "rejected_events": {"type": "integer", "minimum": 0}
+      }
+    },
+    "files": {
+      "type": "object", "additionalProperties": false,
+      "required": ["ocsf.jsonl", "rejections.jsonl"],
+      "properties": {"ocsf.jsonl": {"$ref": "#/$defs/artifact"}, "rejections.jsonl": {"$ref": "#/$defs/artifact"}}
+    }
+  },
+  "$defs": {
+    "digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "artifact": {
+      "type": "object", "additionalProperties": false, "required": ["sha256", "bytes"],
+      "properties": {"sha256": {"$ref": "#/$defs/digest"}, "bytes": {"type": "integer", "minimum": 0}}
+    }
+  }
+}

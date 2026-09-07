@@ -26,7 +26,10 @@ jobs:
       - name: Verify packaged resource files
         run: |
           python -c "from timeline_demo.ai import load_policy; assert len(load_policy()['tasks']) == 3"
+          python scripts/check_wheel.py dist/*.whl
           timeline verify examples/demo_bundle
+          timeline export-ocsf examples/demo_bundle --output output/ci-ocsf
+          timeline verify-ocsf output/ci-ocsf --bundle examples/demo_bundle
   delta:
     runs-on: ubuntu-latest
     steps:

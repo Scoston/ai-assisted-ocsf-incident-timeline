@@ -9,6 +9,15 @@ variables:
   schema:
     description: Destination schema
     default: incident_timelines
+  ocsf_enabled:
+    description: Enable the pinned OCSF export and publication task (true or false)
+    default: "false"
+  ocsf_export_root:
+    description: Separate writable Unity Catalog Volume directory for derived OCSF exports
+    default: ""
+  ocsf_quarantine:
+    description: Allow partial OCSF publication with rejection receipts (true or false)
+    default: "false"
 
 artifacts:
   timeline_wheel:
@@ -49,7 +58,7 @@ resources:
           retry_on_timeout: false
         - task_key: inspect_published_timeline
           depends_on:
-            - task_key: verify_and_publish
+            - task_key: export_and_publish_ocsf
           existing_cluster_id: ${var.cluster_id}
           notebook_task:
             notebook_path: ./integrations/databricks/inspect_published.py
@@ -60,6 +69,25 @@ resources:
               schema: ${var.schema}
           libraries:
             - whl: ./dist/*.whl
+        - task_key: export_and_publish_ocsf
+          depends_on:
+            - task_key: verify_and_publish
+          existing_cluster_id: ${var.cluster_id}
+          notebook_task:
+            notebook_path: ./integrations/databricks/export_ocsf.py
+            base_parameters:
+              enabled: ${var.ocsf_enabled}
+              quarantine: ${var.ocsf_quarantine}
+              export_root: ${var.ocsf_export_root}
+              bundle_path: "{{job.parameters.bundle_path}}"
+              manifest_sha256: "{{job.parameters.manifest_sha256}}"
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+          libraries:
+            - whl: ./dist/*.whl
+          max_retries: 2
+          min_retry_interval_millis: 30000
+          retry_on_timeout: false
 
 targets:
   dev:

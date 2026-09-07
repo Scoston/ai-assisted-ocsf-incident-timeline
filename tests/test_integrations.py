@@ -109,10 +109,14 @@ def test_databricks_job_wheel_notebook_and_retry_contract():
     cfg = yaml.safe_load((ROOT / "databricks.yml").read_text())
     job = cfg["resources"]["jobs"]["publish_timeline"]
     parsed = JobSettings.from_dict(job)
-    assert len(parsed.tasks) == 2
+    assert len(parsed.tasks) == 3
     assert job["max_concurrent_runs"] == 1
     assert job["tasks"][0]["python_wheel_task"]["entry_point"] == "timeline-databricks"
     assert "manifest_sha256" in json.dumps(job)
+    ocsf = next(task for task in job["tasks"] if task["task_key"] == "export_and_publish_ocsf")
+    assert ocsf["depends_on"] == [{"task_key": "verify_and_publish"}]
+    assert cfg["variables"]["ocsf_enabled"]["default"] == "false"
+    assert cfg["variables"]["ocsf_quarantine"]["default"] == "false"
     path = ROOT / job["tasks"][1]["notebook_task"]["notebook_path"]
     assert path.exists()
 

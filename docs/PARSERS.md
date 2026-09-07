@@ -4,6 +4,8 @@ All parsers use version `2.0.0` and the `timeline-ocsf-aligned-2.0` analytical p
 
 The mappings reference classes in the [OCSF 1.3.0 schema](https://github.com/ocsf/ocsf-schema/tree/v1.3.0). They select a class, not a complete upstream event schema. Unmapped generic events retain `ocsf_class_uid=0` and `metadata.ocsf_mapping_status=unmapped`; the tool does not label arbitrary log entries as process activity.
 
+Version 0.6.0 adds a separate [schema-validated OCSF export](OCSF_EXPORT.md) for all nine mapped core classes. It reads the archived source fields and validates complete emitted events against pinned definitions. A parser can accept a sparse record into the timeline while OCSF export rejects it for missing required objects. Native OCSF export accepts only validated 1.3.0 core events in the advertised classes; project Parquet is still an analytical timeline format.
+
 | Parser | Supported source contract | Time field / numeric unit | Class selection |
 | --- | --- | --- | --- |
 | `cloudtrail` | CloudTrail record, `Records` envelope, or EventBridge `detail` | `eventTime`, zoned ISO | API Activity 6003 |

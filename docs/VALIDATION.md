@@ -4,19 +4,23 @@ Implementation date: 2026-09-07. Baseline: `d8e8169e1c5bb175bc8c5218f005f6f2a9a5
 
 ## Local verification
 
-- Regression suite: 71 passed; one real Spark/Delta test is separately gated by `TIMELINE_TEST_DELTA=1`.
+- Version 0.6.0 regression suite: 115 passed, including 44 OCSF cases; one real Spark/Delta test is separately gated by `TIMELINE_TEST_DELTA=1`.
 - Original synthetic demo: five events ingested, exported and verified successfully.
 - All 21 parser fixtures: UTC conversion, deterministic identity and class/profile behavior checked.
 - Negative inputs: ambiguous timestamps, DST fold/gap, invalid JSON, duplicate keys, non-finite numbers, malformed CSV/XML paths, quarantine, artifact tampering and directory traversal checked.
 - AI harness: offline planning, bounded requests, task routing, durable reservations, concurrency, case isolation, cache hits, failed/incomplete output, invented citations and no evidence mutation checked with test doubles. No paid model requests were made.
 - SDK adapter: upload, repeat upload, pinned download, job parameter/idempotency contract and status behavior checked with test doubles and the installed Databricks SDK types.
 - Tines: export graph/index/resource/credential boundaries checked. Tenant import and expression evaluation remain deployment acceptance steps.
-- Jupyter: all code cells in all three notebooks executed successfully in offline mode. Local kernel startup was blocked by the workspace's socket restrictions, so real Jupyter transport execution is included in GitHub Actions.
+- OCSF: all nine pinned class validators, mapped source contracts, nested constraints, class/activity/type consistency, version/profile rejection, missing required fields, deterministic output, quarantine accounting, source binding, rehashed-invalid exports, duplicate references and symlink boundaries checked. The original five-event bundle exports five validated core events without changing its manifest.
+- Schema generation: exact official catalog hash and `ocsf-json-schema==1.2.0` reproduce all nine packaged definitions. Runtime schema checks use no network or generator dependency. Schema and notice inclusion are checked inside the built wheel.
+- Jupyter: all code cells in all four notebooks executed successfully in offline mode. Local kernel startup was blocked by the workspace's socket restrictions, so real Jupyter transport execution is included in GitHub Actions.
 - Python source lint and distribution build checked. GitHub Actions also performs these checks on Python 3.10 and 3.12.
 
 ## Runtime CI
 
-The `Validate timeline integrations` workflow executes the three notebooks through Jupyter and runs a real Spark 3.5.3 / Delta 3.2.1 insert/replay test on an Ubuntu runner with Java 17. Consult the workflow run associated with the merged commit for the authoritative result; a local test-double pass is not a substitute for this gate.
+The `Validate timeline integrations` workflow executes the four notebooks through Jupyter and runs a real Spark 3.5.3 / Delta 3.2.1 insert/replay test on an Ubuntu runner with Java 17. Version 0.6.0 extends that gate to OCSF events, empty rejection tables, stable event keys and final export markers. Consult the workflow run associated with the merged commit for the authoritative result; a local test-double pass is not a substitute for this gate.
+
+The preceding 0.5.0 implementation passed Python 3.10/3.12, real Jupyter kernels and Delta in [GitHub Actions run 34131970448](https://github.com/Scoston/ai-assisted-ocsf-incident-timeline/actions/runs/34131970448). This is historical evidence; new changes require their own green run.
 
 Local Spark startup could not retrieve its default Maven dependency in this environment, and the same workspace blocks local socket binding. The hosted runtime test is therefore required before merging the implementation.
 

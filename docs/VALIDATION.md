@@ -1,5 +1,9 @@
 # Validation record
 
+## 0.12 follow-up release
+
+Baseline: `d9e88310e5df53dd4f1a54221b678265970e7f5d`, 7 September 2026. Local regression: **313 passed**, one separately gated real Delta test; all **nine notebooks** execute offline. New regressions exercise rolling/migration recovery, source inventory, AI WAL/cache/reservation restoration, malformed usage and GitHub/Kubernetes source contracts. [Synthetic diagnostics](../benchmarks/results/2026-09-07-gap-review-quality.json) report 54/54 timestamp/class assertions across 27 parser fixtures; this is not incident/model accuracy. The existing CI gates execute Python 3.10/3.12, real Jupyter, signed Delta, container/dependency/security checks and main-build attestations. See this release PR for the exact CI result. No live tenant/OIDC/scheduler deployment or paid model invocation was performed.
+
 ## 0.11 enterprise release
 
 - Baseline: `c69f1ba`, 7 September 2026. Local regression: 275 passed, one separately gated real Delta test; all eight notebooks execute offline. CI also executes real notebook kernels, Python 3.10/3.12 and Spark/Delta.

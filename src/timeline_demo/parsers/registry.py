@@ -32,6 +32,31 @@ class Spec:
 
 
 SPECS = {
+    "github_audit": Spec(
+        "GitHub Organization Audit",
+        6003,
+        "@timestamp|created_at",
+        "action",
+        "actor",
+        "repo|org",
+        "actor_ip",
+        "_document_id",
+        status="",
+        unit="ms",
+        version="1.0.0",
+    ),
+    "kubernetes_audit": Spec(
+        "Kubernetes API Audit",
+        6003,
+        "stageTimestamp",
+        "verb",
+        "user.username",
+        "objectRef.uid|objectRef.name|requestURI",
+        "sourceIPs.0",
+        "auditID",
+        "responseStatus.code",
+        version="1.0.0",
+    ),
     "defender_hunting": Spec(
         "Microsoft Defender Advanced Hunting",
         0,
@@ -390,6 +415,23 @@ def normalize_record(raw, parser, evidence_path, raw_file_hash, record_index, as
     if not isinstance(raw, dict):
         raise ValueError("record must be an object")
     record = copy.deepcopy(raw)
+    if parser == "kubernetes_audit":
+        if (
+            record.get("apiVersion") != "audit.k8s.io/v1"
+            or record.get("kind") != "Event"
+            or record.get("stage") not in {"RequestReceived", "ResponseStarted", "ResponseComplete", "Panic"}
+            or record.get("level") not in {"None", "Metadata", "Request", "RequestResponse"}
+            or not isinstance(record.get("auditID"), str)
+            or not record["auditID"]
+            or not isinstance(field(record, "user.username"), str)
+            or not isinstance(record.get("verb"), str)
+            or not record["verb"]
+        ):
+            raise ValueError("Kubernetes input requires an audit.k8s.io/v1 Event")
+        parse_time(record.get("requestReceivedTimestamp"))
+        code = field(record, "responseStatus.code")
+        if code is not None and (type(code) is not int or not 100 <= code <= 599):
+            raise ValueError("invalid Kubernetes response status")
     if parser == "m365_audit" and "AuditData" in record:
         record = (
             _strict_json(record["AuditData"]) if isinstance(record["AuditData"], str) else record["AuditData"]
@@ -464,6 +506,14 @@ def normalize_record(raw, parser, evidence_path, raw_file_hash, record_index, as
             status = "success" if str(status) == "0" else "unknown" if status == "unknown" else "failure"
         elif parser == "gcp_audit":
             status = "success" if str(status) == "0" else "unknown" if status == "unknown" else "failure"
+        elif parser == "kubernetes_audit":
+            status = (
+                "unknown"
+                if status == "unknown" or status is None or status < 200
+                else "success"
+                if status < 400
+                else "failure"
+            )
         event_uuid = sha256_of_text(compact_json([parser, spec.version, raw_hash, child_index]))
         results.append(
             {

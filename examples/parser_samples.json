@@ -23,5 +23,43 @@
   "defender_hunting": {"table": "DeviceProcessEvents", "record": {"Timestamp": "2026-09-01T10:00:00Z", "ActionType": "ProcessCreated", "ReportId": 701, "DeviceId": "device-1", "DeviceName": "workstation-1", "AccountName": "alice", "InitiatingProcessAccountName": "alice", "ProcessId": 700, "FileName": "example.exe"}},
   "azure_log_analytics": {"table": "SecurityEvent", "record": {"TimeGenerated": "2026-09-01T10:00:00Z", "EventID": 4624, "EventRecordId": "701", "Computer": "workstation-1", "TargetUserName": "alice", "IpAddress": "198.51.100.1"}},
   "google_workspace": {"id": {"time": "2026-09-01T10:00:00Z", "uniqueQualifier": "701", "applicationName": "login", "customerId": "Ctest"}, "actor": {"email": "alice@example.test"}, "ipAddress": "198.51.100.1", "events": [{"type": "login", "name": "login_success", "parameters": []}]},
-  "crowdstrike_alert": {"composite_id": "test:alert:701", "timestamp": "2026-09-01T10:00:00Z", "created_timestamp": "2026-09-01T10:00:00Z", "updated_timestamp": "2026-09-01T10:00:00Z", "display_name": "Synthetic endpoint alert", "severity_name": "High", "user_name": "alice", "device": {"hostname": "workstation-1"}, "status": "new"}
+  "crowdstrike_alert": {"composite_id": "test:alert:701", "timestamp": "2026-09-01T10:00:00Z", "created_timestamp": "2026-09-01T10:00:00Z", "updated_timestamp": "2026-09-01T10:00:00Z", "display_name": "Synthetic endpoint alert", "severity_name": "High", "user_name": "alice", "device": {"hostname": "workstation-1"}, "status": "new"},
+  "github_audit": {
+    "@timestamp": 1788256800000,
+    "created_at": 1788256800000,
+    "action": "repo.access",
+    "actor": "synthetic-analyst",
+    "actor_ip": "198.51.100.22",
+    "org": "example-enterprise",
+    "repo": "example-enterprise/application",
+    "_document_id": "synthetic-github-event-1"
+  },
+  "kubernetes_audit": {
+    "apiVersion": "audit.k8s.io/v1",
+    "kind": "Event",
+    "level": "Metadata",
+    "auditID": "00000000-0000-0000-0000-000000000001",
+    "stage": "ResponseComplete",
+    "requestURI": "/api/v1/namespaces/payments/secrets",
+    "verb": "list",
+    "user": {
+      "username": "system:serviceaccount:payments:processor",
+      "groups": [
+        "system:serviceaccounts"
+      ]
+    },
+    "sourceIPs": [
+      "198.51.100.23"
+    ],
+    "objectRef": {
+      "resource": "secrets",
+      "namespace": "payments",
+      "apiVersion": "v1"
+    },
+    "responseStatus": {
+      "code": 403
+    },
+    "requestReceivedTimestamp": "2026-09-01T09:59:59.950000Z",
+    "stageTimestamp": "2026-09-01T10:00:00.000000Z"
+  }
 }

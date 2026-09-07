@@ -1,6 +1,8 @@
-# Enterprise readiness assessment — 0.11.0
+# Enterprise readiness assessment — 0.12.0
 
-Assessment baseline: `c69f1ba` (0.10.0), 7 September 2026. This release implements an enterprise deployment baseline for a read-only incident evidence tool. Production acceptance still depends on tenant permissions, identity configuration, durable storage, operating ownership and live source validation. It is not a certification, completeness guarantee or multi-tenant SaaS service.
+Current release: see the [0.12 follow-up review](GAP_REVIEW.md) for rolling recovery, source inventories, AI ledger recovery and developer infrastructure evidence. The project now provides 19 collectors, 27 parsers and nine notebooks. The controls and production acceptance owners below continue to apply.
+
+Initial assessment baseline: `c69f1ba` (0.10.0), 7 September 2026. This release implements an enterprise deployment baseline for a read-only incident evidence tool. Production acceptance still depends on tenant permissions, identity configuration, durable storage, operating ownership and live source validation. It is not a certification, completeness guarantee or multi-tenant SaaS service.
 
 ## Findings and implemented controls
 

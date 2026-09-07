@@ -69,3 +69,5 @@ Completed priority 2 is bounded to the nine advertised core classes, with no opt
 | Enterprise incident collection and new parser coverage | Implemented in 0.10.0 | Source inventory, read scopes, forwarding/retention, live window/count comparison and representative vendor records |
 
 All planned repository implementation milestones are complete within the documented source and schema contracts. No production keys, credentials, source-specific organization fixtures or paid model outputs were available. Remaining acceptance steps require the operator environment. Use the linked guides to record the actual environment, expected/observed behavior and reviewer approval before enabling those live services.
+
+15. Version 0.12.0 closes follow-up gaps in interrupted rolling windows, concurrent migrations, expected-source monitoring and AI-ledger recovery; adds GitHub organization audit collection and Kubernetes parsing; and provides scheduler templates and a ninth notebook. See the [review and acceptance boundaries](GAP_REVIEW.md).

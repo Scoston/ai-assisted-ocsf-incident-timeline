@@ -1,0 +1,11 @@
+[Unit]
+Description=Schedule incident collection (%i)
+
+[Timer]
+OnCalendar=*:0/5
+RandomizedDelaySec=30
+Persistent=true
+Unit=timeline-collect@%i.service
+
+[Install]
+WantedBy=timers.target

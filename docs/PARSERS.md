@@ -8,6 +8,8 @@ Version 0.6.0 adds a separate [schema-validated OCSF export](OCSF_EXPORT.md) for
 
 | Parser | Supported source contract | Time field / numeric unit | Class selection |
 | --- | --- | --- | --- |
+| `github_audit` | GitHub organization audit array or record | `@timestamp` or `created_at`, milliseconds | API Activity 6003; outcome unknown |
+| `kubernetes_audit` | Native audit.k8s.io/v1 Event or EventList; each stage retained | `stageTimestamp`, zoned ISO | API Activity 6003; numeric response-code outcome |
 | `cloudtrail` | CloudTrail record, `Records` envelope, or EventBridge `detail` | `eventTime`, zoned ISO | API Activity 6003 |
 | `guardduty` | GuardDuty finding / `findings` export | `updatedAt` or `createdAt`, ISO | Detection Finding 2004 |
 | `securityhub` | AWS ASFF finding / `Findings` envelope | `UpdatedAt` or `CreatedAt`, ISO | Detection Finding 2004 |
@@ -34,7 +36,7 @@ Version 0.6.0 adds a separate [schema-validated OCSF export](OCSF_EXPORT.md) for
 | `google_workspace` | Admin Reports activity with `id`, `actor`, `events[]`; every event expanded | `id.time`, ISO | Login 3002; admin/token/drive 6003 |
 | `crowdstrike_alert` | Falcon alerts v2 entity (separate from legacy detection/behavior exports) | `timestamp`, then `created_timestamp`, ISO | Detection Finding 2004 |
 
-Version 0.10.0 supplies 25 parser contracts. New parsers start at 1.0.0. M365 and GuardDuty advance to 2.1.0: suffix-free M365 `CreationTime` is explicitly UTC under the source contract, and GuardDuty captures native `ipAddressV4` fields. Re-ingesting these two sources changes event identities; retained bundles are not rewritten. New OCSF mappings are version `ocsf-export-1.1.0` and retain verification support for 1.0.0 exports.
+Version 0.12.0 supplies 27 parser contracts. New `github_audit` and `kubernetes_audit` parsers are described in [developer infrastructure evidence](DEVELOPER_INCIDENTS.md). New parsers start at 1.0.0. M365 and GuardDuty advance to 2.1.0: suffix-free M365 `CreationTime` is explicitly UTC under the source contract, and GuardDuty captures native `ipAddressV4` fields. Re-ingesting these two sources changes event identities; retained bundles are not rewritten. Current OCSF mappings are version `ocsf-export-1.2.0` and retain verification support for 1.0.0 and 1.1.0 exports.
 
 For query exports use `{"table":"DeviceProcessEvents","record":{...}}` or `{"table":"SecurityEvent","record":{...}}` per row; raw Results/columns/rows arrays are not guessed into a table. See [allowed tables and source clocks](ENTERPRISE_APIS.md). Collection archives both the native API body and projected parser records. A mapped class alone does not guarantee all required OCSF fields exist.
 

@@ -207,6 +207,7 @@ class Harness:
                 key TEXT PRIMARY KEY, case_id TEXT NOT NULL, status TEXT NOT NULL,
                 charged INTEGER NOT NULL, request TEXT NOT NULL, response TEXT,
                 result TEXT, error TEXT)""")
+
     @contextmanager
     def _db(self):
         no_links(self.path)
@@ -263,8 +264,8 @@ class Harness:
                 client = self.client
             response = client.responses.create(**plan["request"])
             usage = response.usage
-            input_tokens, output_tokens = int(usage.input_tokens), int(usage.output_tokens)
-            if min(input_tokens, output_tokens) < 0:
+            input_tokens, output_tokens = usage.input_tokens, usage.output_tokens
+            if any(type(value) is not int or value < 0 for value in (input_tokens, output_tokens)):
                 raise ValueError("invalid usage response")
             charged = input_tokens + output_tokens
             transcript = response.model_dump(mode="json")

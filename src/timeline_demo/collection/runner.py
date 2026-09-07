@@ -32,18 +32,33 @@ def _open(state):
     private_file(state / "collection.sqlite")
     db = sqlite3.connect(state / "collection.sqlite", timeout=1, isolation_level=None)
     db.row_factory = sqlite3.Row
-    db.execute("PRAGMA synchronous=FULL")
-    db.execute(
-        "CREATE TABLE IF NOT EXISTS runs (id TEXT PRIMARY KEY, contract TEXT, start TEXT, end TEXT, case_id TEXT, output TEXT, cursor TEXT, drained INTEGER DEFAULT 0, manifest_sha256 TEXT)"
-    )
-    db.execute(
-        "CREATE TABLE IF NOT EXISTS pages (run_id TEXT, n INTEGER, body_sha TEXT, records_sha TEXT, received INTEGER, included INTEGER, cursor_hash TEXT, next_cursor TEXT, fetched_at TEXT, PRIMARY KEY(run_id,n), UNIQUE(run_id,cursor_hash))"
-    )
-    db.execute(
-        "CREATE TABLE IF NOT EXISTS watermarks (id TEXT PRIMARY KEY, initial_ms INTEGER, through_ms INTEGER)"
-    )
-    if "parser_version" not in {row[1] for row in db.execute("PRAGMA table_info(runs)")}:
-        db.execute("ALTER TABLE runs ADD COLUMN parser_version TEXT")
+    try:
+        db.execute("PRAGMA synchronous=FULL")
+        db.execute("PRAGMA trusted_schema=OFF")
+        # Serialize inspection and migration together: two starting workers must
+        # not both decide to add the same column.
+        db.execute("BEGIN IMMEDIATE")
+        db.execute(
+            "CREATE TABLE IF NOT EXISTS runs (id TEXT PRIMARY KEY, contract TEXT, start TEXT, end TEXT, case_id TEXT, output TEXT, cursor TEXT, drained INTEGER DEFAULT 0, manifest_sha256 TEXT)"
+        )
+        db.execute(
+            "CREATE TABLE IF NOT EXISTS pages (run_id TEXT, n INTEGER, body_sha TEXT, records_sha TEXT, received INTEGER, included INTEGER, cursor_hash TEXT, next_cursor TEXT, fetched_at TEXT, PRIMARY KEY(run_id,n), UNIQUE(run_id,cursor_hash))"
+        )
+        db.execute(
+            "CREATE TABLE IF NOT EXISTS watermarks (id TEXT PRIMARY KEY, initial_ms INTEGER, through_ms INTEGER)"
+        )
+        for table, columns in {
+            "runs": {"parser_version": "TEXT"},
+            "watermarks": {"pending_end_ms": "INTEGER", "contract": "TEXT"},
+        }.items():
+            existing = {row[1] for row in db.execute(f"PRAGMA table_info({table})")}
+            for column, kind in columns.items():
+                if column not in existing:
+                    db.execute(f"ALTER TABLE {table} ADD COLUMN {column} {kind}")
+        db.execute("COMMIT")
+    except BaseException:
+        db.close()  # Also rolls back an incomplete schema migration.
+        raise
     os.chmod(state / "collection.sqlite", 0o600)
     return db
 
@@ -323,10 +338,14 @@ def collect_until(
     window_seconds=3600,
     overlap_seconds=300,
     max_windows=24,
+    settling_seconds=300,
     **budgets,
 ):
     """A scheduler-safe catch-up batch. Checkpoints advance only after verified publication."""
-    initial, stop = parse_time(initial_start)[1], parse_time(until)[1]
+    if type(settling_seconds) is not int or not 0 <= settling_seconds <= 86400:
+        raise ValueError("invalid settling delay")
+    initial = parse_time(initial_start)[1]
+    stop = int(time.time() * 1000) - settling_seconds * 1000 if until == "now" else parse_time(until)[1]
     if initial >= stop or stop > int(datetime.now(timezone.utc).timestamp() * 1000):
         raise ValueError("rolling collection requires a completed, increasing time range")
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,99}", case_prefix):
@@ -340,29 +359,60 @@ def collect_until(
         or max_windows < 1
     ):
         raise ValueError("invalid rolling window policy")
-    key = sha256_of_text(
-        compact_json(
-            {
-                "source": provider.identity,
-                "case_prefix": case_prefix,
-                "output_root": str(Path(output_root).resolve()),
-                "window_seconds": window_seconds,
-                "overlap_seconds": overlap_seconds,
-            }
-        )
+    contract = compact_json(
+        {
+            "source": provider.identity,
+            "case_prefix": case_prefix,
+            "output_root": str(Path(output_root).resolve()),
+            "window_seconds": window_seconds,
+            "overlap_seconds": overlap_seconds,
+        }
     )
-    with closing(_open(state)) as db:
-        db.execute("INSERT OR IGNORE INTO watermarks VALUES (?,?,?)", (key, initial, initial))
-        mark = db.execute("SELECT * FROM watermarks WHERE id=?", (key,)).fetchone()
-        if mark["initial_ms"] != initial:
-            raise ValueError("initial collection boundary changed")
-        through = mark["through_ms"]
+    key = sha256_of_text(contract)
     completed = []
     for _ in range(max_windows):
-        if through >= stop:
-            return {"status": "caught_up", "through": _iso(through), "windows": completed}
-        end = min(through + window_seconds * 1000, stop)
-        start = max(initial, through - overlap_seconds * 1000)
+        with closing(_open(state)) as db:
+            db.execute("BEGIN IMMEDIATE")
+            db.execute(
+                "INSERT OR IGNORE INTO watermarks(id,initial_ms,through_ms) VALUES (?,?,?)",
+                (key, initial, initial),
+            )
+            mark = db.execute("SELECT * FROM watermarks WHERE id=?", (key,)).fetchone()
+            if mark["initial_ms"] != initial or mark["contract"] not in (None, contract):
+                raise ValueError("initial collection boundary or contract changed")
+            through, end = mark["through_ms"], mark["pending_end_ms"]
+            start = max(initial, through - overlap_seconds * 1000)
+            if mark["contract"] is None:
+                # Adopt the one pre-upgrade window, including publication before
+                # an interrupted watermark commit. Never guess among conflicts.
+                candidates = set()
+                for run in db.execute("SELECT * FROM runs WHERE start=?", (_iso(start),)):
+                    old = _strict_json(run["contract"])
+                    boundary = parse_time(run["end"])[1]
+                    case = case_prefix + "-" + str(boundary)
+                    if (
+                        old.get("source") == provider.identity
+                        and old.get("parser") == provider.parser
+                        and run["case_id"] == case
+                        and run["output"] == str((Path(output_root) / case).resolve())
+                        and through < boundary <= through + window_seconds * 1000
+                    ):
+                        candidates.add(boundary)
+                if len(candidates) > 1:
+                    raise ValueError("ambiguous legacy rolling windows; reconcile before resuming")
+                if candidates:
+                    end = candidates.pop()
+            if end is not None and (
+                type(end) is not int or not through < end <= min(stop, through + window_seconds * 1000)
+            ):
+                raise ValueError("end precedes the pending collection window or checkpoint is invalid")
+            if through >= stop:
+                db.execute("COMMIT")
+                return {"status": "caught_up", "through": _iso(through), "windows": completed}
+            if end is None:
+                end = min(through + window_seconds * 1000, stop)
+            db.execute("UPDATE watermarks SET pending_end_ms=?,contract=? WHERE id=?", (end, contract, key))
+            db.execute("COMMIT")  # Freeze the partial boundary before fetching anything.
         case = case_prefix + "-" + str(end)
         result = collect_window(
             provider, state, Path(output_root) / case, case, _iso(start), _iso(end), **budgets
@@ -370,7 +420,8 @@ def collect_until(
         with closing(_open(state)) as db:
             db.execute("BEGIN IMMEDIATE")
             updated = db.execute(
-                "UPDATE watermarks SET through_ms=? WHERE id=? AND through_ms=?", (end, key, through)
+                "UPDATE watermarks SET through_ms=?,pending_end_ms=NULL WHERE id=? AND through_ms=? AND pending_end_ms=?",
+                (end, key, through, end),
             )
             if updated.rowcount != 1:
                 db.execute("ROLLBACK")

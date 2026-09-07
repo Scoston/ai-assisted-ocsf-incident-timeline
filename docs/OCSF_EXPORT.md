@@ -2,7 +2,7 @@
 
 Version 0.6.0 adds a separate, deterministic export of core OCSF 1.3.0 events. The existing `timeline.jsonl` remains the project analytical profile, with its original event identities and evidence references. Exporting does not modify an evidence bundle, call a model or fetch a schema over the network.
 
-Version 0.10.0 adds mapping version `ocsf-export-1.1.0` for the new enterprise parsers; 1.0.0 exports remain verifiable. Query-row wrappers and Workspace child references remain source-bound. Email/URL/registry/generic telemetry and sparse records may stay unmapped or fail required-field validation; review quarantine counts before publication.
+Current mapping version `ocsf-export-1.2.0` includes enterprise and GitHub/Kubernetes parsers; 1.0.0 and 1.1.0 exports remain verifiable. Query-row wrappers and Workspace child references remain source-bound. Email/URL/registry/generic telemetry and sparse records may stay unmapped or fail required-field validation; review quarantine counts before publication.
 
 ## Use the export
 
@@ -99,3 +99,7 @@ The fourth Jupyter notebook demonstrates offline export, schema inspection, sour
 Hashes detect alteration relative to a trusted pin; unsigned manifests can be replaced alongside artifacts. Store independent pins and apply your evidence retention controls. Schema validity and source linkage do not establish source authenticity or the truth of an interpretation. Verification with `--bundle` checks the timeline reference, time and class; it does not independently prove the semantic meaning of every vendor field.
 
 Source scans and event joins use disk-backed SQLite, and export validation accounts for event identities on disk. There are no per-event model calls and no extra AI context. Export consumes local storage/CPU and Databricks compute when enabled. No large-case throughput or memory benchmark is claimed.
+
+## Mapping compatibility in 0.12
+
+New exports use `ocsf-export-1.2.0`, adding GitHub/Kubernetes vendor attribution for API Activity. Existing 1.0.0 and 1.1.0 exports retain verification support. New exports belong in a new output directory; retained evidence and parser identities are unchanged.

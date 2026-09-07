@@ -1,0 +1,32 @@
+[Unit]
+Description=Read-only incident collection (%i)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=timeline
+Group=timeline
+WorkingDirectory=/srv/timeline
+EnvironmentFile=/etc/timeline/collectors/%i.env
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/opt/timeline/venv/bin/timeline collect-until --config /etc/timeline/collectors/%i.json --state /srv/timeline/state/%i --output /srv/timeline/bundles/%i --case-id ${CASE_PREFIX} --start ${INITIAL_START} --end now --settling-seconds 300 --window-seconds 300 --overlap-seconds 60 --max-windows 24 --max-pages 100
+TimeoutStartSec=15min
+UMask=0077
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+ReadWritePaths=/srv/timeline/state/%i /srv/timeline/bundles/%i
+MemoryMax=2G
+TasksMax=64
+LimitNOFILE=1024
+
+# Install only after configuring and testing one source. This unit performs no
+# automatic response actions. Retain its state and journal under approved policy.

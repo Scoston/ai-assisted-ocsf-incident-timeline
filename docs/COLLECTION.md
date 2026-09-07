@@ -1,6 +1,6 @@
 # Checkpointed collection
 
-Version 0.10.0 supplies 18 bounded collector types and 25 parser contracts. A parser does not imply a live collector. Collection, ingestion and verification use zero model tokens. Start with the [enterprise coverage assessment](COLLECTOR_COVERAGE.md).
+Version 0.12.0 supplies 19 bounded collector types and 27 parser contracts. A parser does not imply a live collector. Collection, ingestion and verification use zero model tokens. Start with the [enterprise coverage assessment](COLLECTOR_COVERAGE.md).
 
 ## Source contracts
 
@@ -21,7 +21,7 @@ Databricks uses `INLINE` JSON results, typed time parameters, async status polli
 
 ## Install and collect a fixed window
 
-The four original contracts above remain supported. The 14 additions, configuration examples, permissions, table choices, source clocks and API limits are documented in [enterprise API contracts](ENTERPRISE_APIS.md).
+The four original contracts above remain supported. The enterprise additions, configuration examples, permissions, table choices, source clocks and API limits are documented in [enterprise API contracts](ENTERPRISE_APIS.md).
 
 ```bash
 python -m pip install -e '.[collection,databricks]'
@@ -43,13 +43,15 @@ For a page-budget stop or transient request failure, repeat the identical comman
 timeline collect-until --config collector.json --state collector-state --output output/continuous --case-id tenant-a --start 2026-09-01T00:00:00Z --end 2026-09-01T12:00:00Z --window-seconds 3600 --overlap-seconds 300 --max-windows 24
 ```
 
+Use `--end now --settling-seconds 300` for a clock-relative end, sampled once per invocation. The delay applies only to `now`; explicit end timestamps are used unchanged. The pending window end is committed before any fetch, so a later invocation with an extended end resumes that exact window first. An end earlier than the pending boundary fails before network access. [Systemd templates and setup](OPERATIONS.md#scheduled-acquisition) are included.
+
 Schedule this command with your existing scheduler on a persistent collector host. Keep `--start`, case prefix, source configuration, output root and window policy fixed; advance `--end` to a closed boundary behind current time by an operator-selected ingestion lag. Each successful window is published and verified before a compare-and-swap watermark advances. `paused` means the invocation reached its window count; repeat it to catch up. Concurrent invocations sharing state serialize page requests and reject conflicting watermark changes.
 
 Overlap reduces exposure to short delays but cannot prove complete collection. Records arriving after the overlap, source-side retention loss, mutable offset pagination and service filtering can still leave gaps. Reconcile source counts, monitor watermark lag and run wider backfills when needed. Repeated records remain attributable across bundles; consumers can deduplicate on `event_uuid` while retaining occurrence receipts. No scheduler is started automatically.
 
 ## Durability, receipts and recovery
 
-Use a durable local filesystem supporting SQLite locks, hard links and atomic directory operations. Do not place the state database on a Unity Catalog Volume, DBFS or an unverified network filesystem. Back up the database and blob directory together using a consistent filesystem snapshot while idle. Keep state and output directories disjoint.
+Use a durable local filesystem supporting SQLite locks, hard links and atomic directory operations. Do not place the state database on a Unity Catalog Volume, DBFS or an unverified network filesystem. Use `timeline-ops backup` for a consistent snapshot of the database and its committed blobs; see [recovery](OPERATIONS.md). Keep state and output directories disjoint.
 
 Each received page is saved and fsynced in a content-addressed store before its cursor is committed with SQLite `synchronous=FULL`. The final bundle archives projected input records plus raw decoded HTTP response bodies under `attachments/collection-pages/`; `attachments/collection.json` records response/projection hashes, fetch times, boundaries and excluded counts. Ordinary manifest verification covers every attachment. These receipts demonstrate captured bytes and drained pagination, not source authenticity or completeness.
 
@@ -59,4 +61,4 @@ After collection, use the existing Databricks upload and Tines reference workflo
 
 ## Acceptance record
 
-Offline regressions cover the 18 source contracts, interrupted paging, replay, cursor cycles, window boundaries, hash alteration, budgets, throttling and SQL truncation. Before scheduling production collection, record the authenticated account/region/tenant, permissions and retention; compare a representative fixed window against the source UI/export, then exercise denial, interruption, expired cursors and late arrivals. No live collector credentials were available for this implementation.
+Offline regressions cover the 19 source contracts, interrupted paging, replay, cursor cycles, window boundaries, hash alteration, budgets, throttling and SQL truncation. Before scheduling production collection, record the authenticated account/region/tenant, permissions and retention; compare a representative fixed window against the source UI/export, then exercise denial, interruption, expired cursors and late arrivals. No live collector credentials were available for this implementation.

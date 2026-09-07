@@ -60,3 +60,7 @@ Offline tests establish budget, cache, concurrency, citation and failure behavio
 ## Measured coverage and output evaluation
 
 The synthetic scale suite shows why token limits require explicit coverage: four repeated action groups can represent 100,000 event counts with a small request, while distinct actions cause most events to be omitted. Group counts do not mean the model saw every underlying record. Inspect `coverage` before using an interpretation. High-cardinality sources need a narrower investigation window or a targeted source export; no automatic extra model calls are made. Use the source-bound analyst scorer to measure claim precision/recall and citation faithfulness on saved outputs. See [actual measurements and review protocol](EVALUATION.md).
+
+## Durable usage operations
+
+Use `timeline-ops ledger-usage`, `ledger-backup` and `ledger-restore` for read-only accounting and verified SQLite-aware recovery. Unknown reservations remain charged, and completed cached analyses still avoid a new call. Restore only with original writers fenced and dispatch history reconciled. See [commands and recovery boundaries](OPERATIONS.md#ai-usage-and-recovery).

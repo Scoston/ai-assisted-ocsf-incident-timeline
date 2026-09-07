@@ -1,0 +1,9 @@
+{
+  "source": "splunk",
+  "source_id": "kubernetes-production-audit",
+  "host": "https://splunk.example.test:8089",
+  "index": "kubernetes_audit",
+  "sourcetype": "kube:apiserver:audit",
+  "parser": "kubernetes_audit",
+  "format": "json"
+}

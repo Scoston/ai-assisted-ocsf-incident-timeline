@@ -31,7 +31,16 @@ def read_state(state):
         yield db
 
 
-def _inspect(db, state, *, verify_blobs=False, verify_bundles=False, stale_seconds=3600, now=None):
+def _inspect(
+    db,
+    state,
+    *,
+    verify_blobs=False,
+    verify_bundles=False,
+    stale_seconds=3600,
+    now=None,
+    expected_sources=None,
+):
     now = time.time() if now is None else now
     if type(stale_seconds) is not int or stale_seconds < 1:
         raise ValueError("positive staleness threshold required")
@@ -110,6 +119,12 @@ def _inspect(db, state, *, verify_blobs=False, verify_bundles=False, stale_secon
         source_status.append({"source_hash": source, "last_page_age_seconds": age})
     if not sources:
         issues.append("no_sources_collected")
+    missing = sorted(set(expected_sources or []) - set(sources))
+    for source in missing:
+        if not isinstance(source, str) or not DIGEST.fullmatch(source):
+            raise ValueError("invalid expected source digest")
+        issues.append("missing_source:" + source)
+        source_status.append({"source_hash": source, "last_page_age_seconds": None})
     watermarks = []
     for mark in db.execute("SELECT * FROM watermarks ORDER BY id"):
         if (
@@ -118,6 +133,15 @@ def _inspect(db, state, *, verify_blobs=False, verify_bundles=False, stale_secon
             or mark["through_ms"] < mark["initial_ms"]
         ):
             raise ValueError("invalid collector watermark")
+        if "pending_end_ms" in mark.keys() and mark["pending_end_ms"] is not None:
+            if type(mark["pending_end_ms"]) is not int or not (
+                mark["through_ms"] < mark["pending_end_ms"] <= mark["through_ms"] + 86400000
+            ):
+                raise ValueError("invalid pending window")
+        if "contract" in mark.keys() and mark["contract"] is not None:
+            if sha256_of_text(mark["contract"]) != mark["id"]:
+                raise ValueError("watermark contract hash mismatch")
+            _strict_json(mark["contract"])
         watermarks.append({"id": mark["id"], "lag_seconds": max(0, int(now - mark["through_ms"] / 1000))})
         if now - mark["through_ms"] / 1000 > stale_seconds:
             issues.append("lagging_watermark:" + mark["id"])
@@ -133,6 +157,7 @@ def _inspect(db, state, *, verify_blobs=False, verify_bundles=False, stale_secon
             "received_records": received,
             "included_records": included,
             "sources": source_status,
+            "missing_sources": len(missing),
             "watermarks": watermarks,
             "model_tokens": 0,
         },
@@ -156,6 +181,7 @@ def prometheus(report):
         "pages",
         "received_records",
         "included_records",
+        "missing_sources",
     ):
         lines += [f"# TYPE timeline_collection_{key} gauge", f"timeline_collection_{key} {int(report[key])}"]
     for source in report["sources"]:
@@ -166,6 +192,53 @@ def prometheus(report):
     for mark in report["watermarks"]:
         lines.append(f'timeline_watermark_lag_seconds{{watermark="{mark["id"]}"}} {mark["lag_seconds"]}')
     return "\n".join(lines) + "\n"
+
+
+def inventory(configs):
+    """Fingerprint exact configurations without credentials, SDK setup or network I/O."""
+    from timeline_demo.collection.enterprise import SOURCES
+
+    hashes = set()
+    for config in configs:
+        if (
+            not isinstance(config, dict)
+            or config.get("source")
+            not in SOURCES | {"cloudtrail", "entra_signin", "tines_audit", "databricks_audit"}
+            or not isinstance(config.get("source_id"), str)
+            or not config["source_id"]
+            or "collector_version" in config
+        ):
+            raise ValueError("invalid inventory source configuration")
+        hashes.add(sha256_of_text(compact_json({"collector_version": "1.0.0", **config})))
+    if not 1 <= len(hashes) <= 10000:
+        raise ValueError("inventory requires 1 to 10000 unique sources")
+    return {"version": "1.0", "source_hashes": sorted(hashes)}
+
+
+def _document(path):
+    path = no_links(path)
+    if not path.is_file():
+        raise ValueError("operational document must be a regular file")
+    with path.open("rb") as stream:
+        raw = stream.read(1024**2 + 1)
+    if len(raw) > 1024**2:
+        raise ValueError("operational document exceeds size limit")
+    return _strict_json(raw)
+
+
+def load_inventory(path):
+    value = _document(path)
+    if (
+        not isinstance(value, dict)
+        or set(value) != {"version", "source_hashes"}
+        or value["version"] != "1.0"
+        or not isinstance(value["source_hashes"], list)
+        or not 1 <= len(value["source_hashes"]) <= 10000
+        or any(not isinstance(x, str) or not DIGEST.fullmatch(x) for x in value["source_hashes"])
+        or len(set(value["source_hashes"])) != len(value["source_hashes"])
+    ):
+        raise ValueError("invalid expected source inventory")
+    return value["source_hashes"]
 
 
 def backup(state, output):
@@ -199,7 +272,10 @@ def backup(state, output):
             "published_bundles": published,
             "published_bundles_included": False,
         }
-        (root / "snapshot.json").write_text(compact_json(record) + "\n", encoding="utf-8")
+        encoded = (compact_json(record) + "\n").encode("utf-8")
+        if len(encoded) > 8 * 1024**2:
+            raise ValueError("snapshot manifest exceeds restore limit")
+        (root / "snapshot.json").write_bytes(encoded)
         publish_tree(root, target)
     return {
         "status": "backed_up",
@@ -254,6 +330,8 @@ def restore(snapshot, state, snapshot_sha256):
         (root / "blobs").mkdir(parents=True, mode=0o700)
         for name in entries:
             shutil.copyfile(source / name, root / name)
+            if file_hash(root / name) != entries[name]["sha256"]:
+                raise ValueError("snapshot changed while restoring")
         with read_state(root) as db:
             report, _, published = _inspect(db, root, verify_blobs=True, verify_bundles=True)
         if published != manifest.get("published_bundles"):
@@ -263,7 +341,7 @@ def restore(snapshot, state, snapshot_sha256):
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="Collector health, monitoring and verified recovery")
+    parser = argparse.ArgumentParser(description="Collector and AI ledger monitoring and verified recovery")
     commands = parser.add_subparsers(dest="command", required=True)
     check = commands.add_parser("health")
     check.add_argument("--state", required=True)
@@ -271,6 +349,18 @@ def main(argv=None):
     check.add_argument("--verify-blobs", action="store_true")
     check.add_argument("--verify-bundles", action="store_true")
     check.add_argument("--format", choices=["json", "prometheus"], default="json")
+    check.add_argument("--inventory", help="Expected source hashes produced by the inventory command")
+    expected = commands.add_parser("inventory")
+    expected.add_argument("--config", action="append", required=True)
+    usage = commands.add_parser("ledger-usage")
+    usage.add_argument("--ledger", required=True)
+    ledger_save = commands.add_parser("ledger-backup")
+    ledger_save.add_argument("--ledger", required=True)
+    ledger_save.add_argument("--output", required=True)
+    ledger_recover = commands.add_parser("ledger-restore")
+    ledger_recover.add_argument("--snapshot", required=True)
+    ledger_recover.add_argument("--snapshot-sha256", required=True)
+    ledger_recover.add_argument("--output", required=True, help="New directory for the restored usage.sqlite")
     save = commands.add_parser("backup")
     save.add_argument("--state", required=True)
     save.add_argument("--output", required=True)
@@ -286,14 +376,27 @@ def main(argv=None):
                 stale_seconds=args.stale_seconds,
                 verify_blobs=args.verify_blobs,
                 verify_bundles=args.verify_bundles,
+                expected_sources=load_inventory(args.inventory) if args.inventory else None,
             )
             print(prometheus(result) if args.format == "prometheus" else json.dumps(result), end="\n")
             return 0 if result["healthy"] else 1
-        result = (
-            backup(args.state, args.output)
-            if args.command == "backup"
-            else restore(args.snapshot, args.state, args.snapshot_sha256)
-        )
+        if args.command == "inventory":
+            result = inventory([_document(path) for path in args.config])
+        elif args.command.startswith("ledger-"):
+            from timeline_demo.ledger_ops import ledger_usage, ledger_backup, ledger_restore
+
+            if args.command == "ledger-usage":
+                result = ledger_usage(args.ledger)
+            elif args.command == "ledger-backup":
+                result = ledger_backup(args.ledger, args.output)
+            else:
+                result = ledger_restore(args.snapshot, args.output, args.snapshot_sha256)
+        else:
+            result = (
+                backup(args.state, args.output)
+                if args.command == "backup"
+                else restore(args.snapshot, args.state, args.snapshot_sha256)
+            )
         print(json.dumps(result))
         return 0
     except (OSError, ValueError, KeyError, TypeError, sqlite3.Error):

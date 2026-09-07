@@ -1,0 +1,47 @@
+[
+  {
+    "name": "positive candidates",
+    "text": "198.51.100.10 example.test https://example.test/path alice@example.test aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "expected": {
+      "ips": [
+        "198.51.100.10"
+      ],
+      "domains": [
+        "example.test"
+      ],
+      "urls": [
+        "https://example.test/path"
+      ],
+      "emails": [
+        "alice@example.test"
+      ],
+      "sha256": [
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      ]
+    }
+  },
+  {
+    "name": "invalid IPv4 and plain words",
+    "text": "999.1.2.3 256.0.0.1 1.2.3 ordinary words",
+    "expected": {
+      "ips": [],
+      "domains": [],
+      "urls": [],
+      "emails": [],
+      "sha256": []
+    }
+  },
+  {
+    "name": "IPv6 coverage probe",
+    "text": "2001:db8::10",
+    "expected": {
+      "ips": [
+        "2001:db8::10"
+      ],
+      "domains": [],
+      "urls": [],
+      "emails": [],
+      "sha256": []
+    }
+  }
+]

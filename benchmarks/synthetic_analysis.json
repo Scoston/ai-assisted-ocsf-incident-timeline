@@ -1,0 +1,42 @@
+{
+  "analysis": {
+    "summary": "Synthetic scorer demonstration with a deliberately unsupported claim and repetition.",
+    "findings": [
+      {
+        "interpretation": "A ListBuckets API activity was recorded.",
+        "evidence_refs": [
+          "e1"
+        ],
+        "confidence": "low",
+        "next_step": "Review the archived CloudTrail record."
+      },
+      {
+        "interpretation": "This event proves data exfiltration.",
+        "evidence_refs": [
+          "e1"
+        ],
+        "confidence": "high",
+        "next_step": "Review the evidence."
+      },
+      {
+        "interpretation": "ListBuckets was recorded.",
+        "evidence_refs": [
+          "e1"
+        ],
+        "confidence": "low",
+        "next_step": "Review the source."
+      }
+    ],
+    "limitations": [
+      "This is a handwritten test output, not a model response."
+    ]
+  },
+  "receipt": {
+    "bundle_id": "92cd4c47f9c64a52b9ec0713dacd1a8bf8d6558debdadca376e3207e27d7eab1",
+    "evidence_refs": {
+      "e1": "636ad2330e0d9792be266261c6eadcbaeb5431d39841ddee4bf908283b5ac1c5"
+    },
+    "model": "synthetic-handwritten-fixture",
+    "task": "summarize"
+  }
+}

@@ -39,6 +39,7 @@ def write(name, cells):
 
 def main():
     build_ocsf_notebook()
+    build_evaluation_notebook()
     write(
         "01_offline_investigation.ipynb",
         [
@@ -163,6 +164,38 @@ def build_ocsf_notebook():
                 "## Databricks publication\nOn a configured Databricks cluster, generate the export into a separate Unity Catalog Volume directory, then call `publish_ocsf_export(spark, export_dir, source_bundle, catalog, schema)`. Both paths must be accessible to Spark workers. The function verifies the source binding, inserts events and rejection receipts, then writes a final marker. Query `published_ocsf` for completed exports and inspect `published_ocsf_exports` for rejection counts. See `docs/OCSF_EXPORT.md` for a runnable Volume example and Tines completion implications. A successful export with quarantine enabled may be partial.",
             ),
             ("code", "assert file_hash(bundle/'audit_manifest.json') == source_pin\nwork.cleanup()"),
+        ],
+    )
+
+
+def build_evaluation_notebook():
+    write(
+        "05_evaluation.ipynb",
+        [
+            (
+                "md",
+                "# Coverage and analyst-reviewed evaluation\nInspect offline scale measurements and a deliberately imperfect handwritten analysis. No provider call is made; these metrics are not measurements of real model quality.",
+            ),
+            (
+                "code",
+                "from pathlib import Path\nimport json\nroot = Path.cwd()\nif not (root/'benchmarks').exists():\n    root = root.parent\nfrom timeline_demo.evaluation import score_review",
+            ),
+            (
+                "code",
+                "measurements = json.loads((root/'benchmarks/results/2026-09-07-scale-ipv6.json').read_text())\n[{k: row[k] for k in ('shape', 'unique_events', 'ingest_seconds', 'process_peak_rss_mib', 'ai_coverage', 'ai_input_token_upper_bound')} for row in measurements['runs']]",
+            ),
+            (
+                "md",
+                "A group count represents source events, but the prompt only retains first/last examples. Distinct groups can exceed the input budget. Inspect omitted events; narrow the investigation scope before drawing conclusions.",
+            ),
+            (
+                "code",
+                "analysis = json.loads((root/'benchmarks/synthetic_analysis.json').read_text())\nlabels = json.loads((root/'benchmarks/synthetic_review.json').read_text())\nreport = score_review(analysis, root/'examples/demo_bundle', labels)\nassert report['citation_reference_validity'] == 1.0\nassert report['citation_faithfulness'] < 1.0\nassert report['duplicate_claims'] == 1\nreport",
+            ),
+            (
+                "md",
+                "The second finding has a real citation but an unsupported interpretation. The third repeats a credited claim. An analyst must supply every support/matching judgment. The scorer binds those judgments to the exact analysis and source bundle; it does not establish reviewer identity or judgment quality. Summary and next-step prose require separate review. See docs/EVALUATION.md.",
+            ),
         ],
     )
 

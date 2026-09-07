@@ -1,7 +1,11 @@
 from __future__ import annotations
 import re
+from ipaddress import IPv6Address
 
-IP_RE = re.compile(r"\b(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)\b")
+IP_RE = re.compile(
+    r"(?<![A-Za-z0-9_.:])(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)(?![A-Za-z0-9_.:])"
+)
+IPV6_RE = re.compile(r"(?<![A-Za-z0-9_.:%])[a-fA-F0-9:.]{2,45}(?![A-Za-z0-9_.:%])")
 DOMAIN_RE = re.compile(r"\b(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}\b")
 URL_RE = re.compile(r"https?://[^\s\"'>]+")
 SHA256_RE = re.compile(r"\b[a-fA-F0-9]{64}\b")
@@ -9,8 +13,17 @@ EMAIL_RE = re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b")
 
 
 def extract_iocs_from_text(text: str):
+    ips = set(IP_RE.findall(text))
+    for value in IPV6_RE.findall(text):
+        if value.count(":") < 2:
+            continue
+        try:
+            address = IPv6Address(value.rstrip("."))
+            ips.add("::ffff:" + str(address.ipv4_mapped) if address.ipv4_mapped else str(address))
+        except ValueError:
+            pass
     return {
-        "ips": sorted(set(IP_RE.findall(text))),
+        "ips": sorted(ips),
         "domains": sorted(set(DOMAIN_RE.findall(text))),
         "urls": sorted(set(URL_RE.findall(text))),
         "sha256": sorted(set(SHA256_RE.findall(text))),

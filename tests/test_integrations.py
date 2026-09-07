@@ -117,8 +117,13 @@ def test_databricks_job_wheel_notebook_and_retry_contract():
     assert ocsf["depends_on"] == [{"task_key": "verify_and_publish"}]
     assert cfg["variables"]["ocsf_enabled"]["default"] == "false"
     assert cfg["variables"]["ocsf_quarantine"]["default"] == "false"
-    path = ROOT / job["tasks"][1]["notebook_task"]["notebook_path"]
-    assert path.exists()
+    assert {task["python_wheel_task"]["entry_point"] for task in job["tasks"]} == {
+        "timeline-databricks",
+        "timeline-databricks-ocsf",
+        "timeline-databricks-inspect",
+    }
+    assert all("notebook_task" not in task for task in job["tasks"])
+    assert (ROOT / "integrations/databricks/inspect_published.py").exists()
 
 
 def test_sdk_round_trip_and_pinned_download(bundle, tmp_path):

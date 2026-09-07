@@ -13,6 +13,6 @@ Install with `python -m pip install -e '.[notebooks,ai,databricks,signing]'`, th
 
 Notebooks use temporary synthetic case directories and clean them up. Change the paths for retained investigations. A real AI ledger must persist outside temporary directories and outside the evidence bundle. The optional live examples may incur provider and compute charges.
 
-The Databricks source notebooks in `integrations/databricks/` use workspace `spark` and `dbutils` objects. They are deployed/imported into Databricks, while these six `.ipynb` files also work in local Jupyter. The optional OCSF job task and its strict/quarantine behavior are covered in the [OCSF guide](../docs/OCSF_EXPORT.md).
+The Databricks source notebooks in `integrations/databricks/` use workspace `spark` and `dbutils` objects. Import them into Databricks for interactive analyst use; the deployed job uses positional wheel tasks to protect its configured policy from job parameter pushdown. These six `.ipynb` files also work in local Jupyter. The optional OCSF job task and its strict/quarantine behavior are covered in the [OCSF guide](../docs/OCSF_EXPORT.md).
 
 Regenerate clean notebook sources with `python scripts/build_notebooks.py`. Verify offline cells with `python scripts/check_notebooks.py`, or use `--kernel` to execute them through Jupyter. Saved notebooks contain no execution output, credentials or real evidence.

@@ -72,7 +72,9 @@ Set these deployment variables in `databricks.yml` for a job that requires signe
 | `trust_store_path` | `/Volumes/<catalog>/<schema>/<policy_volume>/trust-v1.json` |
 | `trust_store_sha256` | Independently recorded policy hash |
 
-Place the public policy in a separate read-only location. Grant job identity read access; restrict policy/pin and job-definition changes to authorized maintainers. The cryptography runtime dependency is included in the deployed tasks. The four policy fields are deployment literals, not incoming job parameters, so the supplied Tines story only forwards the existing bundle path and manifest pin. Callers with job-management permissions remain inside this trust boundary.
+Place the public policy in a separate read-only location. Grant job identity read access; restrict policy/pin and job-definition changes to authorized maintainers. The cryptography runtime dependency is included in the deployed tasks. All three deployed tasks use positional wheel parameters: the four policy fields are deployment literals, and only the existing bundle path and manifest pin reference job parameters. Callers with job-management permissions remain inside this trust boundary.
+
+Databricks automatically pushes job parameters into notebook/key-value tasks and gives job values precedence. Positional wheel parameters receive only explicit references, which is why export and inspection enforcement are wheel tasks. The interactive source notebooks remain analyst tools and are not the scheduled policy boundary. [Databricks parameter precedence](https://docs.databricks.com/aws/en/jobs/job-parameters), [positional task parameters](https://docs.databricks.com/aws/en/jobs/task-parameters).
 
 ```bash
 timeline databricks-upload output/case-001 --volume-root /Volumes/main/ir/evidence/bundles --signature attestations/case-001.sig.json --signature-root /Volumes/main/ir/evidence/signatures-v1 --trust-store trust-v1.json --trust-store-sha256 TRUST_SHA256
@@ -80,7 +82,7 @@ timeline databricks-upload output/case-001 --volume-root /Volumes/main/ir/eviden
 
 The adapter verifies locally and uploads `<bundle_id>.sig.json` to the fixed signature root without overwriting. Conflicting sidecars fail; use a new signature root for key rotation. It then uploads bundle artifacts with the manifest last. Policy deployment is a separate operator-controlled action. Uploading a signature does not configure remote trust automatically.
 
-The publication task verifies trust before Spark writes and rechecks source bytes/policy before its final marker. The OCSF task rechecks the source signature before export and before publication. It does not hold a private key or automatically sign the derived export. To publish a separately signed OCSF export, call `publish_ocsf_export(..., signature=path, trust_store=path, trust_store_sha256=pin, require_signature=True)` after signing/uploading that export; its signature is independently verified.
+The publication task verifies trust before Spark writes and rechecks source bytes/policy before its final marker. The OCSF task rechecks the source signature before export and before publication; final inspection also verifies configured source trust. It does not hold a private key or automatically sign the derived export. To publish a separately signed OCSF export, call `publish_ocsf_export(..., signature=path, trust_store=path, trust_store_sha256=pin, require_signature=True)` after signing/uploading that export; its signature is independently verified.
 
 Published source paths must be immutable during processing: restrict writer permissions and apply your retention controls. Checks before and after Spark reads detect persistent changes; they are not an atomic filesystem snapshot against a writer that changes and restores files during the read.
 

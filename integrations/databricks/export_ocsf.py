@@ -1,38 +1,29 @@
 # Databricks notebook source
-# Attach the project wheel. The deployed job skips this task unless explicitly enabled.
-from pathlib import Path
-import re
-from timeline_demo.core.manifest import verify_bundle
-from timeline_demo.integrations.databricks import publish_ocsf_export, volume_path, job_signature_options
-from timeline_demo.ocsf import MAPPING_VERSION, export_bundle, verify_export
-from timeline_demo.parsers.common import compact_json, file_hash
-from timeline_demo.signing import enforce_signature
+# Interactive analyst adapter. Scheduled enforcement uses positional wheel tasks.
+from timeline_demo.integrations.databricks import job_signature_options, run_ocsf_job, volume_path
+from timeline_demo.parsers.common import compact_json
 
+for name, default in {
+    "enabled": "false",
+    "quarantine": "false",
+    "require_signature": "false",
+    "bundle_path": "",
+    "manifest_sha256": "",
+    "export_root": "",
+    "catalog": "",
+    "schema": "",
+    "signature_root": "",
+    "trust_store": "",
+    "trust_store_sha256": "",
+}.items():
+    dbutils.widgets.text(name, default)
 
-dbutils.widgets.text("require_signature", "false")
-dbutils.widgets.text("signature_root", "")
-dbutils.widgets.text("trust_store", "")
-dbutils.widgets.text("trust_store_sha256", "")
-dbutils.widgets.text("enabled", "false")
-dbutils.widgets.text("quarantine", "false")
-dbutils.widgets.text("bundle_path", "")
-dbutils.widgets.text("manifest_sha256", "")
-dbutils.widgets.text("export_root", "")
-dbutils.widgets.text("catalog", "")
-dbutils.widgets.text("schema", "")
-
-if dbutils.widgets.get("enabled") not in {"true", "false"}:
-    raise ValueError("enabled must be true or false")
 if dbutils.widgets.get("enabled") == "false":
     dbutils.notebook.exit('{"status":"skipped","reason":"OCSF export is disabled"}')
 
-# COMMAND ----------
-
 source = volume_path(dbutils.widgets.get("bundle_path"))
 source_pin = dbutils.widgets.get("manifest_sha256")
-if not re.fullmatch(r"[a-f0-9]{64}", source_pin):
-    raise ValueError("a pinned source manifest SHA-256 is required")
-source_signature_options = job_signature_options(
+options = job_signature_options(
     source,
     source_pin,
     dbutils.widgets.get("require_signature"),
@@ -40,31 +31,15 @@ source_signature_options = job_signature_options(
     dbutils.widgets.get("trust_store"),
     dbutils.widgets.get("trust_store_sha256"),
 )
-manifest = verify_bundle(source, source_pin)
-export_root = volume_path(dbutils.widgets.get("export_root"))
-quarantine = dbutils.widgets.get("quarantine")
-if quarantine not in {"true", "false"}:
-    raise ValueError("quarantine must be true or false")
-destination = Path(export_root) / (manifest["bundle_id"] + "-" + MAPPING_VERSION)
-if destination.resolve().is_relative_to(Path(source).resolve()):
-    raise ValueError("OCSF export must be outside the evidence bundle")
-if destination.exists():
-    report = verify_export(destination, bundle=source)
-else:
-    report = export_bundle(source, destination, manifest_sha256=source_pin, quarantine=quarantine == "true")
-if report["counts"]["rejected_events"] and quarantine != "true":
-    raise ValueError("strict OCSF publication rejects an existing partial export")
-
-# COMMAND ----------
-# Recheck source trust after export work. The derived export is not automatically signed.
-
-enforce_signature(source, expected_manifest_sha256=source_pin, **source_signature_options)
-result = publish_ocsf_export(
+result = run_ocsf_job(
     spark,
-    destination,
     source,
+    source_pin,
     dbutils.widgets.get("catalog"),
     dbutils.widgets.get("schema"),
-    expected_export_sha256=file_hash(destination / "export_manifest.json"),
+    volume_path(dbutils.widgets.get("export_root")),
+    enabled=dbutils.widgets.get("enabled"),
+    quarantine=dbutils.widgets.get("quarantine"),
+    signature_options=options,
 )
-dbutils.notebook.exit(compact_json({"status": "published", **result}))
+dbutils.notebook.exit(compact_json(result))

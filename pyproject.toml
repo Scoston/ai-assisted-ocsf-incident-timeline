@@ -27,6 +27,8 @@ timeline = "timeline_demo.cli:main"
 timeline-sign = "timeline_demo.signing:main"
 timeline-evaluate = "timeline_demo.evaluation:main"
 timeline-databricks = "timeline_demo.integrations.databricks:job_main"
+timeline-databricks-ocsf = "timeline_demo.integrations.databricks:ocsf_job_main"
+timeline-databricks-inspect = "timeline_demo.integrations.databricks:inspect_job_main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

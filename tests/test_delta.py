@@ -11,7 +11,7 @@ pytestmark = pytest.mark.skipif(
 def test_delta_publication_and_replay(bundle, tmp_path):
     from delta import configure_spark_with_delta_pip
     from pyspark.sql import SparkSession
-    from timeline_demo.integrations.databricks import publish_bundle, publish_ocsf_export
+    from timeline_demo.integrations.databricks import publish_bundle, publish_ocsf_export, inspect_publication
     from timeline_demo.ocsf import export_bundle
     from timeline_demo.signing import generate_keypair, public_entry, write_trust, sign_artifact
 
@@ -72,6 +72,18 @@ def test_delta_publication_and_replay(bundle, tmp_path):
         assert len(row.event_uuid) == 64
         assert spark.table("spark_catalog.timeline_test.ocsf_rejections").count() == 0
         assert spark.table("spark_catalog.timeline_test.signature_verifications").count() == 2
+        from timeline_demo.parsers.common import file_hash
+
+        inspected = inspect_publication(
+            spark,
+            bundle,
+            file_hash(bundle / "audit_manifest.json"),
+            "spark_catalog",
+            "timeline_test",
+            signature_options=options,
+        )
+        assert inspected["status"] == "publication_verified"
+        assert inspected["signature_verification"]["key_id"] == key_id
         assert result["signature_verification"]["key_id"] == key_id
         policy["keys"][key_id]["status"] = "revoked"
         revoked = tmp_path / "revoked.json"

@@ -83,13 +83,26 @@ resources:
           depends_on:
             - task_key: export_and_publish_ocsf
           existing_cluster_id: ${var.cluster_id}
-          notebook_task:
-            notebook_path: ./integrations/databricks/inspect_published.py
-            base_parameters:
-              bundle_path: "{{job.parameters.bundle_path}}"
-              manifest_sha256: "{{job.parameters.manifest_sha256}}"
-              catalog: ${var.catalog}
-              schema: ${var.schema}
+          python_wheel_task:
+            package_name: forensic_timeline_ai_demo
+            entry_point: timeline-databricks-inspect
+            parameters:
+              - --bundle-path
+              - "{{job.parameters.bundle_path}}"
+              - --manifest-sha256
+              - "{{job.parameters.manifest_sha256}}"
+              - --require-signature
+              - ${var.require_signature}
+              - --signature-root
+              - ${var.signature_root}
+              - --trust-store
+              - ${var.trust_store_path}
+              - --trust-store-sha256
+              - ${var.trust_store_sha256}
+              - --catalog
+              - ${var.catalog}
+              - --schema
+              - ${var.schema}
           libraries:
             - whl: ./dist/*.whl
             - pypi:
@@ -98,20 +111,32 @@ resources:
           depends_on:
             - task_key: verify_and_publish
           existing_cluster_id: ${var.cluster_id}
-          notebook_task:
-            notebook_path: ./integrations/databricks/export_ocsf.py
-            base_parameters:
-              require_signature: ${var.require_signature}
-              signature_root: ${var.signature_root}
-              trust_store: ${var.trust_store_path}
-              trust_store_sha256: ${var.trust_store_sha256}
-              enabled: ${var.ocsf_enabled}
-              quarantine: ${var.ocsf_quarantine}
-              export_root: ${var.ocsf_export_root}
-              bundle_path: "{{job.parameters.bundle_path}}"
-              manifest_sha256: "{{job.parameters.manifest_sha256}}"
-              catalog: ${var.catalog}
-              schema: ${var.schema}
+          python_wheel_task:
+            package_name: forensic_timeline_ai_demo
+            entry_point: timeline-databricks-ocsf
+            parameters:
+              - --bundle-path
+              - "{{job.parameters.bundle_path}}"
+              - --manifest-sha256
+              - "{{job.parameters.manifest_sha256}}"
+              - --require-signature
+              - ${var.require_signature}
+              - --signature-root
+              - ${var.signature_root}
+              - --trust-store
+              - ${var.trust_store_path}
+              - --trust-store-sha256
+              - ${var.trust_store_sha256}
+              - --catalog
+              - ${var.catalog}
+              - --schema
+              - ${var.schema}
+              - --enabled
+              - ${var.ocsf_enabled}
+              - --quarantine
+              - ${var.ocsf_quarantine}
+              - --export-root
+              - ${var.ocsf_export_root}
           libraries:
             - whl: ./dist/*.whl
             - pypi:

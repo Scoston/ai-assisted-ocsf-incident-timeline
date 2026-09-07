@@ -280,9 +280,13 @@ def test_deployment_policy_is_fixed_and_derives_sidecar_from_verified_identity(b
     cfg = yaml.safe_load((Path(__file__).resolve().parents[1] / "databricks.yml").read_text())
     job = cfg["resources"]["jobs"]["publish_timeline"]
     assert {p["name"] for p in job["parameters"]} == {"bundle_path", "manifest_sha256"}
-    parameters = job["tasks"][0]["python_wheel_task"]["parameters"]
-    assert "${var.trust_store_sha256}" in parameters
-    assert "${var.require_signature}" in parameters
+    for task in job["tasks"]:
+        parameters = task["python_wheel_task"]["parameters"]
+        assert "${var.trust_store_sha256}" in parameters
+        assert "${var.require_signature}" in parameters
+        assert "notebook_task" not in task
+        dynamic = [value for value in parameters if "{{job.parameters." in value]
+        assert set(dynamic) == {"{{job.parameters.bundle_path}}", "{{job.parameters.manifest_sha256}}"}
     calls = []
     monkeypatch.setattr("timeline_demo.signing.enforce_signature", lambda *a, **kw: calls.append(kw))
     result = job_signature_options(
@@ -346,3 +350,29 @@ def test_keys_use_owner_only_permissions_on_posix(signer):
     if os.name == "posix":
         assert stat.S_IMODE(Path(signer["private_key"]).stat().st_mode) == 0o600
         assert stat.S_IMODE(Path(signer["private_key"]).parent.stat().st_mode) == 0o700
+
+
+def test_disabled_export_entry_does_not_initialize_spark(capsys):
+    from timeline_demo.integrations.databricks import ocsf_job_main, run_ocsf_job
+
+    assert run_ocsf_job(None, None, None, None, None, None)["status"] == "skipped"
+    assert (
+        ocsf_job_main(
+            [
+                "--bundle-path",
+                "",
+                "--manifest-sha256",
+                "",
+                "--catalog",
+                "",
+                "--schema",
+                "",
+                "--enabled",
+                "false",
+            ]
+        )
+        == 0
+    )
+    assert json.loads(capsys.readouterr().out)["status"] == "skipped"
+    with pytest.raises(ValueError, match="true or false"):
+        run_ocsf_job(None, None, None, None, None, None, enabled="yes")

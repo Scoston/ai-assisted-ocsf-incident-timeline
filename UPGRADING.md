@@ -2,7 +2,7 @@
 
 ## From 0.8 to 0.9
 
-Install `.[signing]` for local signature operations and reinstall the wheel for the new CLI. Existing bundles and parser/event identities remain unchanged; signatures are detached. Unsigned verification/publication defaults remain compatible. Configure `require_signature=true` plus the fixed sidecar root, trust policy path and independent pin when deploying a required-signature Databricks job. Redeploy both the job definition and wheel; uploading a signature alone does not enable enforcement.
+Install `.[signing]` for local signature operations and reinstall the wheel for the new CLI. Existing bundles and parser/event identities remain unchanged; signatures are detached. Unsigned verification/publication defaults remain compatible. Configure `require_signature=true` plus the fixed sidecar root, trust policy path and independent pin when deploying a required-signature Databricks job. Redeploy both the job definition and wheel; uploading a signature alone does not enable enforcement. The deployed export/inspection tasks now use positional wheel entry points to avoid notebook parameter overrides. Interactive notebooks remain available for analyst use.
 
 Signed publications add the insert-only `signature_verifications` table. Revocation blocks new checks under the updated policy, while historical receipts and published data remain retained. Update consumers to the current policy and pin through your controlled deployment process. See [signing and rotation](docs/SIGNING.md).
 

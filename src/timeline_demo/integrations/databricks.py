@@ -472,7 +472,83 @@ def job_signature_options(bundle, manifest_pin, required, signature_root, trust_
     return options
 
 
-def job_main():
+def run_ocsf_job(
+    spark,
+    bundle,
+    manifest_pin,
+    catalog,
+    schema,
+    export_root,
+    *,
+    enabled="false",
+    quarantine="false",
+    signature_options=None,
+):
+    """Shared export task logic; deployment uses positional wheel parameters."""
+    from timeline_demo.ocsf import MAPPING_VERSION, export_bundle, verify_export
+    from timeline_demo.signing import enforce_signature
+
+    if enabled not in {"true", "false"} or quarantine not in {"true", "false"}:
+        raise ValueError("enabled and quarantine must be true or false")
+    if enabled == "false":
+        return {"status": "skipped", "reason": "OCSF export is disabled"}
+    options = signature_options or {}
+    enforce_signature(bundle, expected_manifest_sha256=manifest_pin, **options)
+    manifest = verify_bundle(bundle, manifest_pin)
+    destination = Path(export_root) / (manifest["bundle_id"] + "-" + MAPPING_VERSION)
+    if destination.resolve().is_relative_to(Path(bundle).resolve()):
+        raise ValueError("OCSF export must be outside the evidence bundle")
+    if destination.exists():
+        report = verify_export(destination, bundle=bundle)
+    else:
+        report = export_bundle(
+            bundle, destination, manifest_sha256=manifest_pin, quarantine=quarantine == "true"
+        )
+    if report["counts"]["rejected_events"] and quarantine != "true":
+        raise ValueError("strict OCSF publication rejects an existing partial export")
+    enforce_signature(bundle, expected_manifest_sha256=manifest_pin, **options)
+    return {
+        "status": "published",
+        **publish_ocsf_export(
+            spark,
+            destination,
+            bundle,
+            catalog,
+            schema,
+            expected_export_sha256=file_hash(destination / "export_manifest.json"),
+        ),
+    }
+
+
+def inspect_publication(spark, bundle, manifest_pin, catalog, schema, *, signature_options=None):
+    from timeline_demo.signing import enforce_signature
+
+    options = signature_options or {}
+    attestation = enforce_signature(bundle, expected_manifest_sha256=manifest_pin, **options)
+    manifest = verify_bundle(bundle, manifest_pin)
+    from pyspark.sql import functions as F
+
+    table = f"`{identifier(catalog)}`.`{identifier(schema)}`.published_timeline"
+    count = (
+        spark.table(table)
+        .where((F.col("case_id") == manifest["case_id"]) & (F.col("bundle_id") == manifest["bundle_id"]))
+        .count()
+    )
+    if count != manifest["counts"]["event_count"]:
+        raise ValueError("published event count differs from source manifest")
+    verify_bundle(bundle, manifest_pin)
+    if attestation is not None:
+        attestation = enforce_signature(bundle, expected_manifest_sha256=manifest_pin, **options)
+    return {
+        "status": "publication_verified",
+        "case_id": manifest["case_id"],
+        "bundle_id": manifest["bundle_id"],
+        "event_count": count,
+        "signature_verification": attestation,
+    }
+
+
+def _job_parser(ocsf=False):
     parser = argparse.ArgumentParser()
     parser.add_argument("--bundle-path", required=True)
     parser.add_argument("--manifest-sha256", required=True)
@@ -482,11 +558,20 @@ def job_main():
     parser.add_argument("--signature-root", default="")
     parser.add_argument("--trust-store", default="")
     parser.add_argument("--trust-store-sha256", default="")
-    args = parser.parse_args()
+    if ocsf:
+        parser.add_argument("--enabled", choices=["true", "false"], default="false")
+        parser.add_argument("--quarantine", choices=["true", "false"], default="false")
+        parser.add_argument("--export-root", default="")
+    return parser
+
+
+def _job_options(args):
     volume_path(args.bundle_path)
+    identifier(args.catalog)
+    identifier(args.schema)
     if not re.fullmatch(r"[a-f0-9]{64}", args.manifest_sha256):
         raise ValueError("manifest SHA-256 is required")
-    options = job_signature_options(
+    return job_signature_options(
         args.bundle_path,
         args.manifest_sha256,
         args.require_signature,
@@ -494,6 +579,11 @@ def job_main():
         args.trust_store,
         args.trust_store_sha256,
     )
+
+
+def job_main(argv=None):
+    args = _job_parser().parse_args(argv)
+    options = _job_options(args)
     from pyspark.sql import SparkSession
 
     spark = SparkSession.builder.getOrCreate()
@@ -501,6 +591,45 @@ def job_main():
         spark, args.bundle_path, args.catalog, args.schema, args.manifest_sha256, **options
     )
     print(compact_json(result))
+    return 0
+
+
+def ocsf_job_main(argv=None):
+    args = _job_parser(ocsf=True).parse_args(argv)
+    if args.enabled == "false":
+        print(compact_json({"status": "skipped", "reason": "OCSF export is disabled"}))
+        return 0
+    options = _job_options(args)
+    volume_path(args.export_root)
+    from pyspark.sql import SparkSession
+
+    spark = SparkSession.builder.getOrCreate()
+    result = run_ocsf_job(
+        spark,
+        args.bundle_path,
+        args.manifest_sha256,
+        args.catalog,
+        args.schema,
+        args.export_root,
+        enabled=args.enabled,
+        quarantine=args.quarantine,
+        signature_options=options,
+    )
+    print(compact_json(result))
+    return 0
+
+
+def inspect_job_main(argv=None):
+    args = _job_parser().parse_args(argv)
+    options = _job_options(args)
+    from pyspark.sql import SparkSession
+
+    spark = SparkSession.builder.getOrCreate()
+    result = inspect_publication(
+        spark, args.bundle_path, args.manifest_sha256, args.catalog, args.schema, signature_options=options
+    )
+    print(compact_json(result))
+    return 0
 
 
 if __name__ == "__main__":

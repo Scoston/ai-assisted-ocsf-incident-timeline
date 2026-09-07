@@ -23,7 +23,7 @@ databricks bundle deploy -t dev --profile timeline-dev --var cluster_id=YOUR_CLU
 
 Set `DATABRICKS_CONFIG_PROFILE=timeline-dev` for SDK commands using that profile. The root `databricks.yml` builds and attaches the wheel, defines `publish_timeline`, limits concurrent runs to one, and retries deterministic publication tasks twice. Notebook/wheel task syntax follows [Databricks' bundle task documentation](https://docs.databricks.com/aws/en/dev-tools/bundles/job-task-types).
 
-The first task requires a Volume bundle path and pinned manifest SHA-256, verifies it, and publishes the tables. The optional `export_and_publish_ocsf` task runs next. The final inspection notebook reads the committed timeline view, checks the event count and displays at most 200 events. These tasks invoke no AI model.
+The first task requires a Volume bundle path and pinned manifest SHA-256, verifies it, and publishes the tables. The optional `export_and_publish_ocsf` task runs next. The final inspection wheel task rechecks configured signer policy and the committed timeline count. The separate interactive inspection notebook displays at most 200 events for an analyst. These tasks invoke no AI model.
 
 OCSF publication is disabled by default. Enable it with bundle variables `ocsf_enabled=true,ocsf_export_root=/Volumes/main/incident_timelines/evidence/ocsf,ocsf_quarantine=false`, in addition to your existing cluster/catalog/schema variables. This adds a strict, schema-validated export for nine pinned OCSF 1.3.0 classes. Configure a separate writable derived-output directory; see [OCSF setup, replay and partial-publication semantics](../../docs/OCSF_EXPORT.md). Remove older local wheels before deploying through `dist/*.whl`.
 

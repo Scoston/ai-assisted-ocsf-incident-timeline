@@ -32,6 +32,8 @@ def census():
     value = catalog()
     return {
         "version": value["upstream_version"],
+        "dependencies_validated": True,
+        "native_dependency_versions": value["native_dependency_versions"],
         "entries": [e["id"] for e in value["entries"]],
         "source_hashes": value["source_hashes"],
     }

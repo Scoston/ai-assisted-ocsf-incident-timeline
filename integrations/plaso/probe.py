@@ -4,15 +4,22 @@ import hashlib
 import inspect
 import json
 import sys
+from contextlib import redirect_stdout
 from pathlib import Path
 
 import plaso
+import dfvfs
+import dfdatetime
+from plaso import dependencies
 from plaso.parsers import manager
 from plaso.parsers.cookie_plugins import manager as cookies
 from plaso.storage import factory
 
 
 def inventory():
+    with redirect_stdout(sys.stderr):
+        if not dependencies.CheckDependencies(verbose_output=False):
+            raise ValueError("incompatible Plaso native dependencies")
     entries = []
     root = Path(plaso.__file__).resolve().parent.parent
     for parser in manager.ParsersManager.GetParserObjects().values():
@@ -26,6 +33,8 @@ def inventory():
     }
     return {
         "version": plaso.__version__,
+        "dependencies_validated": True,
+        "native_dependency_versions": {"dfvfs": dfvfs.__version__, "dfdatetime": dfdatetime.__version__},
         "entries": sorted(entries),
         "source_hashes": hashes,
         "module_path": str(Path(inspect.getfile(manager)).resolve()),

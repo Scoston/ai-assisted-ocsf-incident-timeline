@@ -39,8 +39,10 @@ def check_inventory(actual):
     if (
         not isinstance(actual, dict)
         or actual.get("version") != expected["upstream_version"]
+        or actual.get("dependencies_validated") is not True
         or actual.get("entries") != [e["id"] for e in expected["entries"]]
         or actual.get("source_hashes") != expected["source_hashes"]
+        or actual.get("native_dependency_versions") != expected["native_dependency_versions"]
     ):
         raise ValueError("Plaso backend does not match the complete pinned parser inventory")
     return {

@@ -3,6 +3,14 @@
   "upstream_version": "20260720",
   "upstream_commit": "00fcc6e7f95a002c85464f0dfd193396bd7d86d3",
   "upstream_url": "https://github.com/log2timeline/plaso",
+  "native_dependency_versions": {
+    "dfvfs": "20260731",
+    "dfdatetime": "20260730"
+  },
+  "native_dependency_sha256": {
+    "dfvfs": "8c22117b3361bb0fdf0f5931752eba33ad6c1d225fe3e1aabebe804faab3ec78",
+    "dfdatetime": "a6c5f4303714d78c70da15020fb705617d0b79c5f8e5942bc943090d861ec2bd"
+  },
   "release_commit": "4ea03ef9a48dad5284c371ac9b537a184b3eea9c",
   "base_image": "log2timeline/plaso@sha256:a8d42e64dcd3af2dffed8ddb25d34f34def69b672eec97ea9af62885c9332950",
   "source_archive_sha256": "6fb3d63469b0b112b56ad08249bd344b48b4268b75b51fd122a35037f9f0e0c5",

@@ -16,7 +16,7 @@ Regenerate locks using Python 3.12 and `pip-tools==7.6.1`:
 
 ```bash
 pip-compile --extra collection --extra signing --extra ai --extra databricks --extra ui --extra parquet --generate-hashes --strip-extras --no-emit-index-url --no-emit-trusted-host --output-file requirements/runtime-py312-linux.txt pyproject.toml
-pip-compile --generate-hashes --no-emit-index-url --no-emit-trusted-host --output-file requirements/build-py312.txt requirements/build.in
+pip-compile --allow-unsafe --generate-hashes --no-emit-index-url --no-emit-trusted-host --output-file requirements/build-py312.txt requirements/build.in
 ```
 
 Review dependency changes and licenses; run CI before accepting updates. Dependabot proposes updates, but operators still regenerate and review the deployment locks. CI audits both locks with `pip-audit`, produces CycloneDX inventories, runs CodeQL, builds the wheel and exercises it inside an unprivileged offline container. No audit suppressions are included. A clean advisory scan is a point-in-time result, not proof of vulnerability absence; scan the final container/host with your organization's OS vulnerability tooling too.

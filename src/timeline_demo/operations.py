@@ -41,7 +41,7 @@ def _inspect(db, state, *, verify_blobs=False, verify_bundles=False, stale_secon
     if not {"runs", "pages", "watermarks"} <= tables:
         raise ValueError("unsupported collection database")
     issues, sources, blobs, published = [], {}, set(), []
-    runs = db.execute("SELECT * FROM runs").fetchall()
+    runs = db.execute("SELECT * FROM runs ORDER BY id").fetchall()
     if db.execute("SELECT count(*) FROM pages WHERE run_id NOT IN (SELECT id FROM runs)").fetchone()[0]:
         raise ValueError("orphan checkpoint pages")
     pages_count = received = included = pending = 0

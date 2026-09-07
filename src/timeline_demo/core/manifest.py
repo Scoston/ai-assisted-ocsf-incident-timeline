@@ -34,7 +34,7 @@ def safe_member(root, name):
     path = Path(root).joinpath(*rel.parts)
     if not path.resolve().is_relative_to(Path(root).resolve()):
         raise ValueError("bundle member escapes root")
-    if any(p.is_symlink() for p in [path, *path.parents] if p != Path(root).parent):
+    if any(p.is_symlink() for p in [path, *path.parents]):
         raise ValueError("symlinks are not allowed in bundles")
     return path
 

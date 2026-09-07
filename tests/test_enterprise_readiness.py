@@ -66,6 +66,13 @@ def test_nested_manifest_attachment_is_hashed(bundle):
     assert "attachments/audit_manifest.json" in verify_bundle(bundle)["files"]
 
 
+def test_bundle_parent_symlink_rejected(bundle, tmp_path):
+    alias = tmp_path / "parent-alias"
+    alias.symlink_to(tmp_path)
+    with pytest.raises(ValueError, match="symlink"):
+        verify_bundle(alias / "bundle")
+
+
 @pytest.mark.parametrize("limit", ["max_records", "max_events", "max_input_bytes", "max_iocs", "max_inputs"])
 def test_limits_abort_without_publishing(tmp_path, cloudtrail, limit):
     raw = tmp_path / "raw.json"

@@ -2,7 +2,7 @@
 
 ## 0.11 enterprise release
 
-- Baseline: `c69f1ba`, 7 September 2026. Local regression: 274 passed, one separately gated real Delta test; all eight notebooks execute offline. CI also executes real notebook kernels, Python 3.10/3.12 and Spark/Delta.
+- Baseline: `c69f1ba`, 7 September 2026. Local regression: 275 passed, one separately gated real Delta test; all eight notebooks execute offline. CI also executes real notebook kernels, Python 3.10/3.12 and Spark/Delta.
 - Added malformed-manifest/special-file/permissions/resource-limit checks, checkpoint version boundaries, read-only health, interrupted and completed snapshot recovery, altered snapshot rejection, OIDC principal/expiry/cross-case denial and required trusted evidence.
 - Databricks SDK doubles verify local normalization, manifest-last uploads, recovery of partial OCSF uploads and conflict rejection. Live driver disk, OAuth/UC grants and Volume operations remain acceptance requirements.
 - Both hash-locked runtime and build dependency scans found no known vulnerabilities on 7 September 2026. CI repeats audits and produces CycloneDX inventories. Advisory results are time-specific.

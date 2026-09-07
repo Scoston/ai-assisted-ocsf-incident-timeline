@@ -56,3 +56,7 @@ AI results always require human review. Schema validation proves structure, not 
 ## Quality evaluation
 
 Offline tests establish budget, cache, concurrency, citation and failure behavior. They use test doubles and **do not measure model accuracy**. Build a reviewed set of representative incidents with expected evidence references, known ambiguity, benign alternatives and prompt-injection text. Measure unsupported-claim rate, citation support, omitted-critical-event rate, reviewer acceptance, actual tokens and cost. Enable a more expensive route only when that evaluation shows a useful improvement.
+
+## Measured coverage and output evaluation
+
+The synthetic scale suite shows why token limits require explicit coverage: four repeated action groups can represent 100,000 event counts with a small request, while distinct actions cause most events to be omitted. Group counts do not mean the model saw every underlying record. Inspect `coverage` before using an interpretation. High-cardinality sources need a narrower investigation window or a targeted source export; no automatic extra model calls are made. Use the source-bound analyst scorer to measure claim precision/recall and citation faithfulness on saved outputs. See [actual measurements and review protocol](EVALUATION.md).

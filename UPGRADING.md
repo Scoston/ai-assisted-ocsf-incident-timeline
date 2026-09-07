@@ -1,5 +1,9 @@
 # Upgrading
 
+## From 0.7 to 0.8
+
+The offline evaluator adds no runtime dependencies or model calls. Event IDs and parser versions are unchanged. Re-ingestion can add normalized IPv6 candidates to `extracted_iocs.json`, changing artifact and bundle hashes; old bundles remain verifiable. IPv6 zone identifiers are outside the candidate contract. Review the [published measurements and scoring rules](docs/EVALUATION.md).
+
 ## From 0.6 to 0.7
 
 Install `.[collection,databricks]` to collect all four supported APIs. Keep collector state on a durable local filesystem separate from bundle output; preserve it when upgrading. The initial collector state format is 1.0.0.

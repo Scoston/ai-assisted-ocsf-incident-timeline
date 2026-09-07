@@ -22,6 +22,10 @@ jobs:
       - run: ruff check src tests scripts streamlit_timeline_ui integrations/databricks
       - run: pytest -q
       - run: python scripts/check_notebooks.py --kernel
+      - name: Check evaluation contracts and small scale workloads
+        run: |
+          python scripts/evaluate_quality.py --output /tmp/quality.json
+          python scripts/benchmark.py --sizes 100 --output /tmp/scale.json
       - run: python -m build
       - name: Verify packaged resource files
         run: |

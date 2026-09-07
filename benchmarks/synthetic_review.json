@@ -1,0 +1,27 @@
+{
+  "version": "1.0",
+  "reviewer": "Codex synthetic fixture author; not an independent analyst review",
+  "bundle_id": "92cd4c47f9c64a52b9ec0713dacd1a8bf8d6558debdadca376e3207e27d7eab1",
+  "analysis_sha256": "70fb6ce2950d898e2bf2959ed8e8e5d2bc4ec1bb9fefa0633b042764342244b7",
+  "expected_claim_ids": [
+    "list-buckets",
+    "get-object"
+  ],
+  "findings": [
+    {
+      "finding_index": 0,
+      "matched_claim_id": "list-buckets",
+      "supported_by_citations": true
+    },
+    {
+      "finding_index": 1,
+      "matched_claim_id": null,
+      "supported_by_citations": false
+    },
+    {
+      "finding_index": 2,
+      "matched_claim_id": "list-buckets",
+      "supported_by_citations": true
+    }
+  ]
+}

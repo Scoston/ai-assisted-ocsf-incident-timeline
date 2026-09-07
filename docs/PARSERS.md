@@ -56,3 +56,7 @@ Confirm the output module and timestamp fields in your installed version with `p
 ## Adding a source
 
 Define the supported export shape and time semantics, add a registry mapping or dedicated reader when needed, preserve the archived raw source, and add representative positive, malformed and multi-record fixtures. Do not substitute the current time, invent a time zone, suppress unknown fields in the source evidence, or treat an artifact catalog entry as implemented code.
+
+## IOC candidate extraction
+
+The separate deterministic extractor supports validated unscoped IPv4/IPv6 literals, domain-like strings, URLs, emails and SHA-256-shaped strings. IPv6 values use compressed notation; IPv4-mapped IPv6 uses a dotted IPv4 suffix consistently across supported Python versions. Zone identifiers, defanging, URL punctuation repair, IDN normalization and threat classification are outside this contract. Candidate presence does not make an address malicious. [Synthetic precision/recall probes](EVALUATION.md) are intentionally small and do not establish production detection quality.

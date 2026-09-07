@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.8.0 — 2026-09-07
+
+- Added isolated synthetic scale benchmarks with exact source hashes, hardware/resource limits, runtime, peak RSS, source/artifact sizes, AI coverage and token upper bounds.
+- Added parser and IOC truth fixtures, published measured results and a source-bound analyst-review scorer with separate claim precision/recall and citation faithfulness. No paid model evaluation is represented by the handwritten fixtures.
+- The quality probe identified missing IPv6 extraction; added validated unscoped IPv6 candidates and stable IPv4-mapped formatting, with before/after diagnostic results.
+- Added `timeline-evaluate`, an offline evaluation notebook, regression cases, CI smoke workloads and guidance for deploying/evaluating model routes.
+
 ## 0.7.0 — 2026-09-07
 
 - Added Tines audit, Entra sign-in, regional CloudTrail event-history and Databricks system audit collectors with fixed read-only queries and credential references.

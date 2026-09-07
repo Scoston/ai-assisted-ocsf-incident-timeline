@@ -1,0 +1,90 @@
+{
+  "fixture_sha256": "100a4ff2222cf0f87a1d12af4a8764c1a54c3e92cd25f86ae932500eac662fab",
+  "scope": "Minimal synthetic field contracts, authored from the input fixture. Not organization-specific or held-out accuracy.",
+  "expected": {
+    "cloudtrail": {
+      "epoch_ms": 1788256800000,
+      "ocsf_class_uid": 6003
+    },
+    "guardduty": {
+      "epoch_ms": 1788256800000,
+      "ocsf_class_uid": 2004
+    },
+    "securityhub": {
+      "epoch_ms": 1788256800000,
+      "ocsf_class_uid": 2004
+    },
+    "vpc_flow": {
+      "epoch_ms": 1788256800000,
+      "ocsf_class_uid": 4001
+    },
+    "entra_signin": {
+      "epoch_ms": 1788256800000,
+      "ocsf_class_uid": 3002
+    },
+    "entra_audit": {
+      "epoch_ms": 1788256800000,
+      "ocsf_class_uid": 6003
+    },
+    "azure_activity": {
+      "epoch_ms": 1788256800000,
+      "ocsf_class_uid": 6003
+    },
+    "m365_audit": {
+      "epoch_ms": 1788256800000,
+      "ocsf_class_uid": 6003
+    },
+    "defender_alert": {
+      "epoch_ms": 1788256800000,
+      "ocsf_class_uid": 2004
+    },
+    "crowdstrike_detection": {
+      "epoch_ms": 1788256800000,
+      "ocsf_class_uid": 2004
+    },
+    "gcp_audit": {
+      "epoch_ms": 1788256800000,
+      "ocsf_class_uid": 6003
+    },
+    "okta": {
+      "epoch_ms": 1788256800000,
+      "ocsf_class_uid": 3002
+    },
+    "windows_event": {
+      "epoch_ms": 1788256800000,
+      "ocsf_class_uid": 3002
+    },
+    "syslog": {
+      "epoch_ms": 1788256800000,
+      "ocsf_class_uid": 0
+    },
+    "zeek": {
+      "epoch_ms": 1788256800000,
+      "ocsf_class_uid": 4001
+    },
+    "suricata": {
+      "epoch_ms": 1788256800000,
+      "ocsf_class_uid": 2004
+    },
+    "plaso": {
+      "epoch_ms": 1788256800000,
+      "ocsf_class_uid": 1001
+    },
+    "ocsf": {
+      "epoch_ms": 1788256800000,
+      "ocsf_class_uid": 6003
+    },
+    "tines_audit": {
+      "epoch_ms": 1788256800000,
+      "ocsf_class_uid": 6003
+    },
+    "databricks_audit": {
+      "epoch_ms": 1788256800000,
+      "ocsf_class_uid": 6003
+    },
+    "ai_agent": {
+      "epoch_ms": 1788256800000,
+      "ocsf_class_uid": 6003
+    }
+  }
+}

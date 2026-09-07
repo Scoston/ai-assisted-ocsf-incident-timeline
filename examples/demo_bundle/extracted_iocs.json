@@ -1,0 +1,1 @@
+{"domains":["contoso.com","evil.example","s3.amazonaws.com","svc.backup"],"emails":["svc-backup@contoso.com"],"ips":["198.51.100.10"],"sha256":[],"urls":["https://evil.example/path"]}

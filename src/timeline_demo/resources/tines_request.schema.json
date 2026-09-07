@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract_version", "case_id", "bundle_id", "bundle_path", "manifest_sha256", "idempotency_key"],
+  "properties": {
+    "contract_version": {"const": "1.0"},
+    "case_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"},
+    "bundle_id": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "bundle_path": {"type": "string", "pattern": "^/Volumes/[A-Za-z_][A-Za-z0-9_]*/[A-Za-z_][A-Za-z0-9_]*/[A-Za-z_][A-Za-z0-9_]*/[A-Za-z0-9_./-]+$"},
+    "manifest_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "idempotency_key": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  }
+}

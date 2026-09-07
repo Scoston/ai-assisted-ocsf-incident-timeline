@@ -1,0 +1,71 @@
+bundle:
+  name: ai-assisted-ocsf-incident-timeline
+
+variables:
+  cluster_id:
+    description: Existing Unity Catalog enabled cluster (Runtime 15.4 LTS or newer)
+  catalog:
+    description: Destination Unity Catalog catalog
+  schema:
+    description: Destination schema
+    default: incident_timelines
+
+artifacts:
+  timeline_wheel:
+    type: whl
+    path: .
+    build: python -m build --wheel
+
+resources:
+  jobs:
+    publish_timeline:
+      name: incident-timeline-publish
+      max_concurrent_runs: 1
+      timeout_seconds: 1800
+      parameters:
+        - name: bundle_path
+          default: ""
+        - name: manifest_sha256
+          default: ""
+      tasks:
+        - task_key: verify_and_publish
+          existing_cluster_id: ${var.cluster_id}
+          python_wheel_task:
+            package_name: forensic_timeline_ai_demo
+            entry_point: timeline-databricks
+            parameters:
+              - --bundle-path
+              - "{{job.parameters.bundle_path}}"
+              - --manifest-sha256
+              - "{{job.parameters.manifest_sha256}}"
+              - --catalog
+              - ${var.catalog}
+              - --schema
+              - ${var.schema}
+          libraries:
+            - whl: ./dist/*.whl
+          max_retries: 2
+          min_retry_interval_millis: 30000
+          retry_on_timeout: false
+        - task_key: inspect_published_timeline
+          depends_on:
+            - task_key: verify_and_publish
+          existing_cluster_id: ${var.cluster_id}
+          notebook_task:
+            notebook_path: ./integrations/databricks/inspect_published.py
+            base_parameters:
+              bundle_path: "{{job.parameters.bundle_path}}"
+              manifest_sha256: "{{job.parameters.manifest_sha256}}"
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+          libraries:
+            - whl: ./dist/*.whl
+
+targets:
+  dev:
+    default: true
+    mode: development
+  prod:
+    mode: production
+    workspace:
+      root_path: /Workspace/Shared/.bundles/${bundle.name}/${bundle.target}

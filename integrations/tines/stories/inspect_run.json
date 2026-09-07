@@ -1,0 +1,121 @@
+{
+  "schema_version": 18,
+  "standard_lib_version": 41,
+  "action_runtime_version": 6,
+  "name": "Timeline - Inspect existing run",
+  "description": "AI incident timeline integration. Disabled until tenant credentials, paths and runbooks are configured. No containment or AI action is executed.",
+  "guid": "8841fed3272c5679af5c77914daebeca",
+  "agents": [
+    {
+      "name": "Receive run",
+      "type": "Agents::WebhookAgent",
+      "guid": "daef189e44315d49bb422c0163b562d5",
+      "disabled": true,
+      "options": {
+        "path": "timeline-run-status",
+        "secret": "REPLACE_WITH_RANDOM_SECRET",
+        "verbs": "post",
+        "include_headers": true
+      },
+      "description": "Configure tenant resources and enable after acceptance testing.",
+      "monitoring": {
+        "monitor_failures": true,
+        "monitor_all_events": false,
+        "monitor_no_events_emitted": null
+      }
+    },
+    {
+      "name": "Validate run",
+      "type": "Agents::TriggerAgent",
+      "guid": "bb3298aed9565160b884a9c28e75795f",
+      "disabled": true,
+      "options": {
+        "rules": [
+          {
+            "path": "<<receive_run.body.run_id>>",
+            "value": "^[0-9]+$",
+            "type": "regex"
+          }
+        ],
+        "must_match": 1
+      },
+      "description": "Configure tenant resources and enable after acceptance testing.",
+      "monitoring": {
+        "monitor_failures": true,
+        "monitor_all_events": false,
+        "monitor_no_events_emitted": null
+      }
+    },
+    {
+      "name": "Read existing run",
+      "type": "Agents::HTTPRequestAgent",
+      "guid": "5a11585f2f7455429ec73ecfe1f35d4e",
+      "disabled": true,
+      "options": {
+        "url": "<<RESOURCE.databricks_host>>/api/2.2/jobs/runs/get?run_id=<<receive_run.body.run_id>>",
+        "method": "get",
+        "content_type": "json",
+        "headers": {
+          "Authorization": "Bearer <<CREDENTIAL.databricks_token>>"
+        },
+        "log_error_on_status": [
+          "400-599"
+        ]
+      },
+      "description": "Configure tenant resources and enable after acceptance testing.",
+      "monitoring": {
+        "monitor_failures": true,
+        "monitor_all_events": false,
+        "monitor_no_events_emitted": null
+      }
+    },
+    {
+      "name": "Run status receipt",
+      "type": "Agents::EventTransformationAgent",
+      "guid": "9ee87cf8350b58059c09d08ac5be1024",
+      "disabled": true,
+      "options": {
+        "mode": "message_only",
+        "payload": {
+          "run_id": "=receive_run.body.run_id",
+          "http_status": "=read_existing_run.status",
+          "state": "=read_existing_run.body.state",
+          "run_url": "=read_existing_run.body.run_page_url",
+          "human_review_required": true
+        }
+      },
+      "description": "Configure tenant resources and enable after acceptance testing.",
+      "monitoring": {
+        "monitor_failures": true,
+        "monitor_all_events": false,
+        "monitor_no_events_emitted": null
+      }
+    }
+  ],
+  "links": [
+    {
+      "source": 0,
+      "receiver": 1
+    },
+    {
+      "source": 1,
+      "receiver": 2
+    },
+    {
+      "source": 2,
+      "receiver": 3
+    }
+  ],
+  "diagram_notes": [],
+  "diagram_layout": "{\"daef189e44315d49bb422c0163b562d5\": [150, 0], \"bb3298aed9565160b884a9c28e75795f\": [500, 0], \"5a11585f2f7455429ec73ecfe1f35d4e\": [850, 0], \"9ee87cf8350b58059c09d08ac5be1024\": [150, 160]}",
+  "keep_events_for": 86400,
+  "send_to_story_enabled": false,
+  "synchronous_webhooks_enabled": false,
+  "entry_agent_guid": "daef189e44315d49bb422c0163b562d5",
+  "exit_agent_guids": [
+    "9ee87cf8350b58059c09d08ac5be1024"
+  ],
+  "tags": [],
+  "resources": [],
+  "credentials": []
+}

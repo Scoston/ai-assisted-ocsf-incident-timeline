@@ -1,0 +1,11 @@
+{
+  "policy_version": "2026-09-07.1",
+  "max_case_tokens": 24000,
+  "max_case_calls": 3,
+  "max_groups": 1000,
+  "tasks": {
+    "summarize": {"model": "gpt-5.6-luna", "reasoning_effort": "none", "max_input_tokens": 6000, "max_output_tokens": 700, "input_usd_per_million": 0.20, "output_usd_per_million": 1.20},
+    "correlate": {"model": "gpt-5.6-terra", "reasoning_effort": "low", "max_input_tokens": 7000, "max_output_tokens": 1200, "input_usd_per_million": 2.00, "output_usd_per_million": 12.00},
+    "review": {"model": "gpt-6-astra", "reasoning_effort": "low", "max_input_tokens": 7000, "max_output_tokens": 1500, "input_usd_per_million": 10.00, "output_usd_per_million": 50.00}
+  }
+}

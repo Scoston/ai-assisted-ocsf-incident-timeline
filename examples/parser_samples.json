@@ -1,0 +1,23 @@
+{
+  "cloudtrail": {"eventTime":"2026-09-01T10:00:00Z","eventName":"AssumeRole","eventID":"1"},
+  "guardduty": {"updatedAt":"2026-09-01T10:00:00Z","type":"UnauthorizedAccess:IAMUser/InstanceCredentialExfiltration","severity":8,"id":"2"},
+  "securityhub": {"UpdatedAt":"2026-09-01T10:00:00Z","Title":"Synthetic finding","Id":"3","Severity":{"Label":"HIGH"}},
+  "vpc_flow": {"start":1788256800,"action":"ACCEPT","srcaddr":"198.51.100.10","interface-id":"eni-example"},
+  "entra_signin": {"createdDateTime":"2026-09-01T10:00:00Z","id":"5","status":{"errorCode":0},"userPrincipalName":"alice@example.test"},
+  "entra_audit": {"activityDateTime":"2026-09-01T10:00:00Z","activityDisplayName":"Add member to role","id":"6","result":"success"},
+  "azure_activity": {"eventTimestamp":"2026-09-01T10:00:00Z","operationName":{"value":"Microsoft.Compute/virtualMachines/write"},"eventDataId":"7"},
+  "m365_audit": {"CreationTime":"2026-09-01T10:00:00Z","Operation":"FileAccessed","Id":"8"},
+  "defender_alert": {"createdDateTime":"2026-09-01T10:00:00Z","title":"Suspicious PowerShell","id":"9","severity":"high"},
+  "crowdstrike_detection": {"created_timestamp":"2026-09-01T10:00:00Z","detection_id":"10","behaviors":[{"name":"Synthetic process detection","severity":8}]},
+  "gcp_audit": {"timestamp":"2026-09-01T10:00:00Z","insertId":"11","protoPayload":{"methodName":"storage.objects.get","authenticationInfo":{"principalEmail":"alice@example.test"}}},
+  "okta": {"published":"2026-09-01T10:00:00Z","eventType":"user.session.start","uuid":"12","outcome":{"result":"SUCCESS"}},
+  "windows_event": {"TimeCreated":"2026-09-01T10:00:00Z","EventID":4624,"EventRecordID":"13","EventData":{"TargetUserName":"alice"}},
+  "syslog": {"timestamp":"2026-09-01T10:00:00Z","app":"sshd","pri":84,"hostname":"host-1","message":"Accepted login"},
+  "zeek": {"ts":1788256800,"uid":"15","_path":"conn","id.orig_h":"198.51.100.10"},
+  "suricata": {"timestamp":"2026-09-01T10:00:00Z","event_type":"alert","flow_id":16,"alert":{"signature":"Synthetic signature","severity":1}},
+  "plaso": {"timestamp":1788256800000000,"message":"Synthetic filesystem event","data_type":"fs:stat","event_identifier":"17"},
+  "ocsf": {"time":1788256800000,"class_uid":6003,"activity_name":"Read","metadata":{"uid":"18"},"severity_id":2},
+  "tines_audit": {"created_at":"2026-09-01T10:00:00Z","operation_name":"Story updated","id":"19","user_email":"alice@example.test"},
+  "databricks_audit": {"event_time":"2026-09-01T10:00:00Z","action_name":"runNow","request_id":"20","user_identity":{"email":"alice@example.test"}},
+  "ai_agent": {"timestamp":"2026-09-01T10:00:00Z","action":"tool.call","tool_name":"read_alert","agent_id":"agent-1","event_id":"21","status":"success"}
+}

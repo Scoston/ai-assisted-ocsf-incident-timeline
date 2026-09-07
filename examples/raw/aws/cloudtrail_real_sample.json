@@ -1,0 +1,43 @@
+{
+  "Records": [
+    {
+      "eventVersion": "1.09",
+      "userIdentity": {
+        "type": "IAMUser",
+        "principalId": "AIDA...",
+        "arn": "arn:aws:iam::111122223333:user/svc.backup",
+        "accountId": "111122223333",
+        "userName": "svc.backup"
+      },
+      "eventTime": "2026-04-08T13:00:02Z",
+      "eventSource": "s3.amazonaws.com",
+      "eventName": "ListBuckets",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "198.51.100.10",
+      "eventID": "aws-evt-001",
+      "eventCategory": "Management",
+      "managementEvent": true
+    },
+    {
+      "eventVersion": "1.09",
+      "userIdentity": {
+        "type": "IAMUser",
+        "arn": "arn:aws:iam::111122223333:user/svc.backup",
+        "userName": "svc.backup"
+      },
+      "eventTime": "2026-04-08T13:02:17Z",
+      "eventSource": "s3.amazonaws.com",
+      "eventName": "GetObject",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "198.51.100.10",
+      "eventID": "aws-evt-002",
+      "eventCategory": "Data",
+      "managementEvent": false,
+      "resources": [
+        {
+          "ARN": "arn:aws:s3:::claims-prod"
+        }
+      ]
+    }
+  ]
+}

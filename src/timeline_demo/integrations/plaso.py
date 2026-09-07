@@ -354,6 +354,7 @@ def ingest_native(
                 "--parsers=" + ",".join(names),
                 "--timezone=" + timezone,
                 "--partitions=all",
+                "--archives=all",
                 "--vss-stores=all",
                 "--storage-file=" + storage,
             ]

@@ -179,6 +179,7 @@ def test_native_bridge_archives_evidence_and_checks_every_parser(tmp_path):
     assert (tmp_path / "bundle/attachments/plaso/collection.plaso").read_bytes() == b"synthetic-storage"
     args = next(args for phase, _, args in backend.commands if phase == "extract")
     assert "--preferred-year=2026" in args
+    assert "--archives=all" in args
     selected = next(a for a in args if a.startswith("--parsers=")).split("=", 1)[1].split(",")
     assert set(selected) == {e["name"] for e in catalog()["entries"] if e["kind"] == "parser"}
     assert "--include-all" in backend.commands[-1][2]

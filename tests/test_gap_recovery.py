@@ -154,13 +154,27 @@ def test_ai_restore_rejects_corruption_and_never_overwrites(bundle, tmp_path, fa
 
 def test_ai_wal_backup_keeps_pending_reservation(bundle, tmp_path):
     ledger = tmp_path / "usage.sqlite"
-    harness = Harness(ledger, client=FakeClient(failure=TimeoutError()))
-    with pytest.raises(TimeoutError):
-        harness.run(bundle, allow_ai=True)
-    with closing(sqlite3.connect(ledger)) as db:
+    # Simulate a process stopping after the atomic reservation, before a response.
+    from timeline_demo.ai import prepare
+    from timeline_demo.ai_audit import record_call, local_principal
+
+    harness = Harness(ledger)
+    harness._initialize()
+    plan = prepare(bundle)
+    with harness._db() as db:
         db.execute("PRAGMA journal_mode=WAL")
-        db.execute("UPDATE calls SET status='pending',error=NULL")
-        db.commit()
+        db.execute(
+            "INSERT INTO calls(key,case_id,status,charged,request) VALUES(?,?,?,?,?)",
+            (
+                plan["cache_key"],
+                plan["identity"]["case_id"],
+                "pending",
+                plan["reserved_tokens"],
+                compact_json(plan["identity"]),
+            ),
+        )
+        record_call(db, plan["cache_key"], "reserved", initiator=local_principal())
+    with closing(sqlite3.connect(ledger)):
         saved = ledger_backup(ledger, tmp_path / "snapshot")
     result = ledger_restore(tmp_path / "snapshot", tmp_path / "recovered", saved["snapshot_sha256"])
     assert result["usage"]["cases"][0]["pending"] == 1
@@ -176,7 +190,7 @@ def test_invalid_provider_usage_keeps_reservation(bundle, tmp_path, value):
     response = FakeResponse()
     response.usage = SimpleNamespace(input_tokens=value, output_tokens=80)
     ledger = tmp_path / "usage.sqlite"
-    with pytest.raises(ValueError, match="invalid usage"):
+    with pytest.raises(ValueError, match="invalid.*usage|usage.*invalid"):
         Harness(ledger, client=FakeClient(response)).run(bundle, allow_ai=True)
     report = ledger_usage(ledger)["cases"][0]
     assert report["failed"] == 1 and report["known_usage_tokens"] == 0

@@ -18,16 +18,11 @@ class FakeResponse:
     def __init__(self, bad_ref=False, status=None):
         self.output_text = json.dumps(
             {
-                "summary": "Observed an API action.",
-                "findings": [
-                    {
-                        "interpretation": "API activity requires contextual review.",
-                        "evidence_refs": ["invented" if bad_ref else "e1"],
-                        "confidence": "low",
-                        "next_step": "Review the source record.",
-                    }
+                "observations": [
+                    {"chunk_ref": "invented" if bad_ref else "c1", "field": "count", "value": "1"}
                 ],
-                "limitations": ["Limited evidence."],
+                "hypotheses": [],
+                "abstain": False,
             }
         )
         if status:
@@ -38,7 +33,7 @@ class FakeResponse:
             "id": self.id,
             "status": self.status,
             "output_text": self.output_text,
-            "usage": {"input_tokens": 120, "output_tokens": 80},
+            "usage": vars(self.usage),
         }
 
 
@@ -153,15 +148,16 @@ def test_concurrent_cache_requests_dispatch_once(bundle, tmp_path):
 
     with ThreadPoolExecutor(max_workers=2) as pool:
         results = list(pool.map(lambda _: run(), range(2)))
-    assert "completed" in results and len(client.calls) == 1
+    assert "awaiting_review" in results and len(client.calls) == 1
 
 
 def test_edited_cache_rejected(bundle, tmp_path):
     path = tmp_path / "ledger.sqlite"
     harness = Harness(path, client=FakeClient())
-    result = harness.run(bundle, allow_ai=True)
-    altered = copy.deepcopy(result)
-    altered["analysis"]["findings"][0]["evidence_refs"] = ["invented"]
+    harness.run(bundle, allow_ai=True)
+    with sqlite3.connect(path) as db:
+        altered = copy.deepcopy(json.loads(db.execute("select result from calls").fetchone()[0]))
+    altered["candidate"]["observations"][0]["chunk_ref"] = "invented"
     with sqlite3.connect(path) as db:
         db.execute("update calls set result=?", (json.dumps(altered),))
     with pytest.raises(ValueError):

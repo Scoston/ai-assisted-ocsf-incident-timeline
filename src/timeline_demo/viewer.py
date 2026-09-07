@@ -56,7 +56,11 @@ def load_access_policy(path, expected_sha256):
         if (
             not case
             or not isinstance(entry, dict)
-            or set(entry) != {"bundle", "manifest_sha256", "signature"}
+            or set(entry)
+            not in (
+                {"bundle", "manifest_sha256", "signature"},
+                {"bundle", "manifest_sha256", "signature", "ai"},
+            )
             or any(
                 not isinstance(entry[k], str) or not Path(entry[k]).is_absolute()
                 for k in ("bundle", "signature")
@@ -65,6 +69,19 @@ def load_access_policy(path, expected_sha256):
             or not DIGEST.fullmatch(entry["manifest_sha256"])
         ):
             raise ValueError("invalid viewer case")
+        if "ai" in entry:
+            ai = entry["ai"]
+            if (
+                not isinstance(ai, dict)
+                or set(ai) != {"ledger", "review_policy", "review_policy_sha256"}
+                or any(
+                    not isinstance(ai[k], str) or not Path(ai[k]).is_absolute()
+                    for k in ("ledger", "review_policy")
+                )
+                or not isinstance(ai["review_policy_sha256"], str)
+                or not DIGEST.fullmatch(ai["review_policy_sha256"])
+            ):
+                raise ValueError("invalid viewer AI configuration")
     return policy
 
 
@@ -111,3 +128,22 @@ def audit_access(claims, outcome, bundle_id=None):
             }
         )
     )
+
+
+def ai_settings(policy, claims, case):
+    """AI storage paths come only from the pinned viewer deployment policy."""
+    if case not in authorized_cases(policy, claims):
+        raise PermissionError("AI case access denied")
+    return policy["cases"][case].get("ai")
+
+
+def oidc_principal(claims):
+    return "oidc:" + hashlib.sha256(compact_json([claims["iss"], claims["sub"]]).encode()).hexdigest()
+
+
+def ai_review_access(settings, claims, case):
+    from timeline_demo.ai_audit import load_review_policy
+
+    policy = load_review_policy(settings["review_policy"], settings["review_policy_sha256"])
+    principal = oidc_principal(claims)
+    return principal, any(r["principal"] == principal and case in r["cases"] for r in policy["reviewers"])

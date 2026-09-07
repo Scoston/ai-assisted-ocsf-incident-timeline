@@ -29,7 +29,7 @@ Databricks publishes OCSF events and rejection receipts separately, keyed by the
 | `quarantine.jsonl` | Record-level errors and archived source references |
 | `extracted_iocs.json` | Deduplicated indicator candidates; extraction does not assert maliciousness |
 | `audit_manifest.json` | Counts, versions, input provenance, trust boundaries and file hashes |
-| External AI ledger / analysis JSON | Minimized request, model response, usage, citations and review-required interpretation |
+| External AI ledger / audit export | Exact minimized request/response, usage, content-addressed chunk lineage, verification, action hash chains and human decisions; accepted output is loaded through the approval gate |
 
 ## Databricks publication
 
@@ -41,7 +41,7 @@ A publication marker is inserted after the evidence tables. The `published_timel
 
 The harness verifies bundle integrity before reading. It sends bounded groups and representative examples, not full source files. Actor/asset/IP values become case-specific pseudonyms, and selected activity text is truncated with basic secret-pattern redaction. This is data minimization, not guaranteed de-identification. The saved transcript and analysis remain sensitive.
 
-No tools, web browsing or containment functions are exposed to the model. Its schema and citation references are validated, but a valid reference can still support a mistaken interpretation. Human review remains mandatory. The evidence directory is kept separate from the analysis ledger and output files.
+No tools, web browsing or containment functions are exposed to the model. Exact field/value witnesses are checked before candidate prose enters an explicitly labeled review workspace. Application templates render factual observations. Hypotheses require a case-authorized human assessment of every claim before normal presentation; a valid quote cannot prove semantic support. See [AI evidence and review](AI_EVIDENCE_AND_REVIEW.md). The evidence directory is kept separate from the analysis ledger and output files.
 
 ## Limits and failure behavior
 

@@ -1,5 +1,7 @@
 # AI harness, task routing and token control
 
+**0.14.0:** see the [evidence and human-review workflow](AI_EVIDENCE_AND_REVIEW.md) for mandatory approval, chunk IDs, audit export, external AI and migration.
+
 The default workflow uses no model. Parsing, timestamp conversion, hashes, validation, ordering, deduplication, IOC extraction, Tines orchestration and Databricks publication are deterministic.
 
 ## Models by task
@@ -21,18 +23,18 @@ The configured standard input/output rates per million tokens are $0.20/$1.20 fo
 ## Token-saving behavior
 
 - No model call per alert or event; no automatic multi-agent loop, model fallback or escalation.
-- Group by source, activity, status and severity. Send first/last representative examples with short `e1`-style references. Report counts and omitted coverage.
+- Group by source, activity, status and severity. Send first/last representative examples with short `e1`-style references and `c1` chunk aliases resolving to full content-addressed IDs. Report counts and omitted coverage.
 - Prioritize high-severity groups, then chronology. Default group inventory is capped at 1,000; input packing applies a separate request bound. Omitted groups may contain important evidence, so limited coverage is visible in every receipt.
 - Exclude raw files, record hashes, metadata and full user/asset/IP identities from the request. Use case-specific pseudonyms. Activity text gets basic redaction and truncation; this does not guarantee removal of sensitive data.
 - Send compact JSON with a small output schema. Count all request content, including schema and instructions.
 - Use a conservative UTF-8 byte bound plus 256 framing tokens, rather than assuming four characters per token. Provider usage is recorded and checked against the reservation. This bound trades some usable context for predictable limits; it is not exact tokenizer measurement.
 - Cap model output, including reasoning tokens where applicable. [OpenAI documents output-token limits and reasoning usage](https://developers.openai.com/api/docs/guides/reasoning).
-- Cache successful results by case, bundle, task, model, full policy, prompt version, minimized request and reference mapping. Unchanged cache hits consume zero new model tokens.
+- Cache evidence-checked candidates by case, bundle, task, model, full policy, prompt version, minimized request and chunk mapping. A cache hit is still unapproved until a separate recorded human decision passes the current publication gate. Unchanged cache hits consume zero new model tokens.
 
 ## Execution and audit
 
 ```bash
-# Local plan only: shows model, coverage and token reservations.
+# Local plan only: audits planning and shows model, coverage and token reservations.
 timeline analyze output/demo-001 --task summarize
 
 # Explicit paid call, with the ledger outside the evidence bundle.
@@ -47,11 +49,11 @@ Provide `OPENAI_API_KEY` through your process environment or secret manager. In 
 
 The ledger reserves a call and its maximum tokens in a transaction **before** dispatch. A second concurrent request for the same key either receives the cached result or an explicit pending/failed status; it cannot dispatch another copy. API retries are disabled. A timeout retains the reservation because the provider may have processed the request. A response with known usage is charged even if it fails validation. Failed or pending requests require investigation; they do not automatically retry or switch models.
 
-Requests use the Responses API, `store=false`, no model tools and [strict structured output](https://developers.openai.com/api/docs/guides/structured-outputs). The response must complete, satisfy the local schema and cite only provided references. Refusals, incomplete responses, invalid JSON and invented references fail closed. The evidence bundle is verified again after a successful model response.
+Requests use the Responses API, `store=false`, no model tools and [strict structured output](https://developers.openai.com/api/docs/guides/structured-outputs). The response must complete, satisfy the local schema and copy exact field/value witnesses from provided chunks. Fixed application templates render observations; arbitrary interpretation remains a hypothesis requiring claim-level human assessment. Refusals, incomplete responses, invalid JSON and invented references fail closed. The evidence bundle is verified again after a successful model response.
 
-The receipt records case/bundle identity, request hash, prompt/policy versions, task/model, input/output usage, selected coverage, evidence-reference mapping and provider response ID. The ledger also retains the minimized request and provider response for reconstruction. Treat that database as sensitive; configure access, retention and backup appropriately. `store=false` is not a guarantee of zero provider retention; verify your organization's approved API data controls.
+The receipt records case/bundle identity, source manifest pin, request hash, prompt/policy versions, task/model, input/output usage, selected coverage, evidence-reference and chunk-ID mappings, provider response ID and the verifier report. Normal execution returns no candidate prose. The ledger also retains the minimized request and provider response for reconstruction. Treat that database as sensitive; configure access, retention and backup appropriately. `store=false` is not a guarantee of zero provider retention; verify your organization's approved API data controls.
 
-AI results always require human review. Schema validation proves structure, not truth. A citation can be syntactically valid while its interpretation is wrong. ATT&CK hypotheses or containment decisions need supporting evidence and analyst judgment; the model is given no containment tool or delegated production authority.
+AI results always require a separately recorded, case-authorized human decision bound to the result hash, evidence, current pinned policy and every claim. The reviewer acknowledges coverage and provides a reason. Later rejection or policy changes block new presentation. Schema validation proves structure, not truth. A citation can be syntactically valid while its interpretation is wrong. ATT&CK hypotheses or containment decisions need supporting evidence and analyst judgment; the model is given no containment tool or delegated production authority.
 
 ## Quality evaluation
 

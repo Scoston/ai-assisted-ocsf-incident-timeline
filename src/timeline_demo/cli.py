@@ -227,7 +227,7 @@ def main(argv=None):
             if attestation is not None:
                 result = {**result, "signature_verification": attestation}
         elif args.command == "analyze":
-            from timeline_demo.ai import Harness, load_policy, prepare
+            from timeline_demo.ai import Harness, load_policy
 
             root = Path(args.bundle).resolve()
             if Path(args.ledger).resolve().is_relative_to(root) or (
@@ -237,17 +237,14 @@ def main(argv=None):
             if args.output and Path(args.output).exists():
                 raise FileExistsError("analysis output already exists")
             policy = load_policy(args.policy)
-            if args.allow_ai:
-                result = Harness(args.ledger, policy=policy).run(args.bundle, args.task, allow_ai=True)
-            else:
-                plan = prepare(args.bundle, args.task, policy)
-                result = {
-                    "status": "planned",
-                    **{
-                        k: plan[k]
-                        for k in ("model", "task", "coverage", "input_token_bound", "reserved_tokens")
-                    },
-                }
+            try:
+                result = Harness(args.ledger, policy=policy).run(
+                    args.bundle, args.task, allow_ai=args.allow_ai
+                )
+            except Exception:
+                raise ValueError(
+                    "AI action failed; inspect the protected ledger for evidence and provider status"
+                ) from None
             if args.output:
                 from timeline_demo.core.storage import no_links
 

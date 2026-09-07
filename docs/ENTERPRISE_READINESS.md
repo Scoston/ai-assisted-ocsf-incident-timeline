@@ -1,6 +1,6 @@
 # Enterprise readiness assessment — 0.12.0
 
-Current release: see the [0.12 follow-up review](GAP_REVIEW.md) for rolling recovery, source inventories, AI ledger recovery and developer infrastructure evidence. The project now provides 19 collectors, 27 parsers and nine notebooks. The controls and production acceptance owners below continue to apply.
+Current release **0.14.0** adds [AI evidence verification, audit chains and enforced human review](AI_EVIDENCE_AND_REVIEW.md). See the [0.12 follow-up review](GAP_REVIEW.md) for rolling recovery, source inventories, AI ledger recovery and developer infrastructure evidence. The project now provides 19 collectors, 27 parsers and nine notebooks. The controls and production acceptance owners below continue to apply.
 
 Initial assessment baseline: `c69f1ba` (0.10.0), 7 September 2026. This release implements an enterprise deployment baseline for a read-only incident evidence tool. Production acceptance still depends on tenant permissions, identity configuration, durable storage, operating ownership and live source validation. It is not a certification, completeness guarantee or multi-tenant SaaS service.
 
@@ -31,7 +31,7 @@ The existing 18 collectors, 25 parser contracts, nine pinned OCSF classes, Tines
 | Recovery and availability | Restore state, published bundles and independent pins on replacement infrastructure; stop the original writer; measure recovery time and data loss | Platform operations/evidence custodian |
 | Data governance | Encryption/KMS, approved regions, immutable evidence storage, retention and legal-hold decisions, least privilege and access-log retention | Data governance and security |
 | Databricks/Tines | Production service principals, fixed job policy, Volume grants, signer trust, replay/partial failure and committed-view checks | Automation and data platform owners |
-| AI egress | Approved provider/data scope, minimized requests, durable ledger, case-budget enforcement and independently reviewed task quality | AI security and incident response |
+| AI egress and review | Approved provider/data scope, durable ledger, independently pinned reviewer policy, case assignments, separation of duties, protected audit exports and representative claim-faithfulness evaluation | AI security and incident response |
 | Capacity and support | Representative incident workload, disk quotas, collector lag thresholds, patch owner, alert delivery and support escalation | Service owner |
 
 The connected GitHub App excludes administration access. Main was unprotected during this assessment. The supplied ruleset is a concrete admin deliverable; adding it to git does **not** enable protection. No tenant credentials, identity provider, KMS policy, WORM retention policy or external scheduler was configured by this release.

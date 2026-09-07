@@ -63,3 +63,7 @@ Each finding matches at most one atomic reference claim. Split compound claims i
 For each configured route (`summarize`, `correlate`, `review`), use the same reviewed case set and frozen prompt/policy version. Record model ID, observed input/output usage, omissions, refusal/error rate, latency and analyst disagreement. Use actual provider usage to compare cost. Enable the smallest route meeting your case-specific quality threshold; no route should be promoted because of the synthetic scorer's demonstration scores. See [model policy and budgets](AI_HARNESS.md).
 
 The [evaluation notebook](../notebooks/05_evaluation.ipynb) walks through coverage and the scorer without any provider request.
+
+## Evidence-gated analyses in 0.14.0
+
+The legacy `timeline-evaluate` fixtures and schema remain readable for historical finding-level comparisons. They do not confer approval on a saved analysis. New actions use exact observation witnesses and a separate hypothesis protocol; `timeline-ai inspect` exposes the per-claim verifier result and `timeline-ai review` records the human assessment. Do not describe field-equality pass rates as semantic accuracy. The new test suite deliberately shows that a valid but irrelevant citation still needs human adjudication and cannot authorize publication on its own. Use representative source-bound human labels before selecting more expensive routes. See [research, tests and workflow](AI_EVIDENCE_AND_REVIEW.md).

@@ -20,6 +20,7 @@ def main():
             if not archive.read(prefix + name):
                 raise ValueError("missing schema license/notice")
         archive.read("timeline_demo/resources/ocsf_export_manifest.schema.json")
+        archive.read("timeline_demo/resources/evidence_analysis.schema.json")
         catalog = json.loads(archive.read("timeline_demo/resources/plaso_catalog.json"))
         assert len(catalog["entries"]) == 249
         archive.read("timeline_demo/resources/plaso_NOTICE.txt")

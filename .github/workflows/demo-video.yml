@@ -16,6 +16,8 @@ jobs:
   capture:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
@@ -34,3 +36,13 @@ jobs:
           path: output/demo-video/capture/
           if-no-files-found: error
           retention-days: 30
+      - name: Publish synthetic capture for video production
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          zip -j output/viewer-capture.zip output/demo-video/capture/*
+          if ! gh release view demo-v0.13.0 >/dev/null 2>&1; then
+            gh release create demo-v0.13.0 --target "$GITHUB_SHA" --prerelease --latest=false --title 'v0.13.0 feature demo — production preview' --notes 'Synthetic viewer capture for the narrated feature demo. The completed video, captions and transcript will be added after review. No tenant data or credentials are included.'
+          fi
+          gh release upload demo-v0.13.0 "output/viewer-capture.zip#Synthetic viewer capture"

@@ -59,3 +59,11 @@ Tines supports secret, team and tenant webhook authentication and signed request
 Exercise a valid synthetic bundle, duplicate payload, modified manifest, missing required field, unauthorized Volume path, expired credential, failed job, active job beyond the polling cap and interrupted polling. Confirm no success receipt appears for failure paths. Compare the published count to the manifest and download/verify the original bundle. Verify source evidence and AI findings remain separate in the case workflow.
 
 No live Tines tenant import or execution was performed during repository implementation. Credential placeholders and all disabled flags are intentional deployment requirements.
+
+## Signed evidence implications (0.9.0)
+
+Deploy the Databricks job with `require_signature=true` and a fixed signature root, read-only signer policy and independently configured policy hash. The story's reference-only payload remains contract 1.0; it cannot provide a signer key, trust file or enforcement override. Production policy is controlled through the job definition, whose management permissions must be restricted.
+
+Upload the verified signature sidecar before submitting the bundle reference. A missing, altered, unknown or revoked signer fails the required-signature publication gate and follows the existing story failure path. A success receipt describes that configured job run; it is not a trusted timestamp or proof of source completeness. Recheck current signer policy for current trust decisions; historical Delta verification rows are retained after revocation. Key rotation uses a new sidecar root and reviewed policy/pin deployment. Tines stores no private signing key. [Signer lifecycle and Databricks setup](../../docs/SIGNING.md).
+
+All three scheduled Databricks tasks use positional wheel parameters. Only the bundle path and manifest pin are dynamic job references; signer policy, export mode and destination remain configured task values. Interactive notebooks are separate analyst tools.

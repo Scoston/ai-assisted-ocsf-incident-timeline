@@ -40,6 +40,7 @@ def write(name, cells):
 def main():
     build_ocsf_notebook()
     build_evaluation_notebook()
+    build_signing_notebook()
     write(
         "01_offline_investigation.ipynb",
         [
@@ -196,6 +197,36 @@ def build_evaluation_notebook():
                 "md",
                 "The second finding has a real citation but an unsupported interpretation. The third repeats a credited claim. An analyst must supply every support/matching judgment. The scorer binds those judgments to the exact analysis and source bundle; it does not establish reviewer identity or judgment quality. Summary and next-step prose require separate review. See docs/EVALUATION.md.",
             ),
+        ],
+    )
+
+
+def build_signing_notebook():
+    write(
+        "06_signed_manifests.ipynb",
+        [
+            (
+                "md",
+                "# Signed manifests and explicit signer trust\nGenerate temporary demonstration keys, sign a synthetic bundle and verify it with a separately pinned trust policy. Keys are deleted on cleanup. Production keys need an approved secret workflow; never reuse this demonstration passphrase.",
+            ),
+            ("code", SETUP),
+            (
+                "code",
+                "from timeline_demo.signing import generate_keypair, public_entry, write_trust, sign_artifact, verify_signature\nfrom timeline_demo.parsers.common import file_hash\npassword = b'synthetic-notebook-password-only'\nkeys = generate_keypair(workdir/'keys', password)\nkey_id, entry = public_entry(keys['public_key'])\npolicy = {'version':'1.0', 'keys':{key_id:entry}}\ntrust = workdir/'trust-v1.json'\ntrust_pin = write_trust(trust, policy)['trust_store_sha256']\nsignature = workdir/'bundle.sig.json'\nsource_pin = file_hash(bundle/'audit_manifest.json')\nsign_artifact(bundle, keys['private_key'], password, signature, trust, trust_pin)\nverify_signature(bundle, signature, trust, trust_pin)",
+            ),
+            (
+                "md",
+                "The trust policy and its hash must be obtained through an independent, controlled channel. The signature contains a key fingerprint, not a self-authorizing public key. No trusted signing time, source authenticity or completeness is asserted.",
+            ),
+            (
+                "code",
+                "policy['keys'][key_id]['status'] = 'verify_only'\nretired = workdir/'trust-v2.json'\nretired_pin = write_trust(retired, policy)['trust_store_sha256']\nassert verify_signature(bundle, signature, retired, retired_pin)['key_status'] == 'verify_only'\npolicy['keys'][key_id]['status'] = 'revoked'\nrevoked = workdir/'trust-v3.json'\nrevoked_pin = write_trust(revoked, policy)['trust_store_sha256']\ntry:\n    verify_signature(bundle, signature, revoked, revoked_pin)\nexcept ValueError as error:\n    print(type(error).__name__, str(error))\nelse:\n    raise AssertionError('Revoked signer was accepted')\nassert file_hash(bundle/'audit_manifest.json') == source_pin",
+            ),
+            (
+                "md",
+                "A verify_only key can verify historical attestations, but this signing command refuses to create new ones. Without a trusted timestamp, verification cannot establish when a signature was made. A compromised key must be revoked; revoked signatures are rejected regardless of claimed age. Historical Delta verification receipts remain audit records, not current authorization. See docs/SIGNING.md for rotation and Databricks/Tines deployment.",
+            ),
+            ("code", "work.cleanup()"),
         ],
     )
 

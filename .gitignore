@@ -12,3 +12,7 @@ output/
 analysis/
 *.sqlite*
 .databricks/
+
+# Signing material created locally; never commit private keys.
+keys/
+*.pem

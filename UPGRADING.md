@@ -1,5 +1,11 @@
 # Upgrading
 
+## From 0.8 to 0.9
+
+Install `.[signing]` for local signature operations and reinstall the wheel for the new CLI. Existing bundles and parser/event identities remain unchanged; signatures are detached. Unsigned verification/publication defaults remain compatible. Configure `require_signature=true` plus the fixed sidecar root, trust policy path and independent pin when deploying a required-signature Databricks job. Redeploy both the job definition and wheel; uploading a signature alone does not enable enforcement. The deployed export/inspection tasks now use positional wheel entry points to avoid notebook parameter overrides. Interactive notebooks remain available for analyst use.
+
+Signed publications add the insert-only `signature_verifications` table. Revocation blocks new checks under the updated policy, while historical receipts and published data remain retained. Update consumers to the current policy and pin through your controlled deployment process. See [signing and rotation](docs/SIGNING.md).
+
 ## From 0.7 to 0.8
 
 The offline evaluator adds no runtime dependencies or model calls. Event IDs and parser versions are unchanged. Re-ingestion can add normalized IPv6 candidates to `extracted_iocs.json`, changing artifact and bundle hashes; old bundles remain verifiable. IPv6 zone identifiers are outside the candidate contract. Review the [published measurements and scoring rules](docs/EVALUATION.md).

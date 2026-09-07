@@ -23,7 +23,7 @@ databricks bundle deploy -t dev --profile timeline-dev --var cluster_id=YOUR_CLU
 
 Set `DATABRICKS_CONFIG_PROFILE=timeline-dev` for SDK commands using that profile. The root `databricks.yml` builds and attaches the wheel, defines `publish_timeline`, limits concurrent runs to one, and retries deterministic publication tasks twice. Notebook/wheel task syntax follows [Databricks' bundle task documentation](https://docs.databricks.com/aws/en/dev-tools/bundles/job-task-types).
 
-The first task requires a Volume bundle path and pinned manifest SHA-256, verifies it, and publishes the tables. The optional `export_and_publish_ocsf` task runs next. The final inspection notebook reads the committed timeline view, checks the event count and displays at most 200 events. These tasks invoke no AI model.
+The first task requires a Volume bundle path and pinned manifest SHA-256, verifies it, and publishes the tables. The optional `export_and_publish_ocsf` task runs next. The final inspection wheel task rechecks configured signer policy and the committed timeline count. The separate interactive inspection notebook displays at most 200 events for an analyst. These tasks invoke no AI model.
 
 OCSF publication is disabled by default. Enable it with bundle variables `ocsf_enabled=true,ocsf_export_root=/Volumes/main/incident_timelines/evidence/ocsf,ocsf_quarantine=false`, in addition to your existing cluster/catalog/schema variables. This adds a strict, schema-validated export for nine pinned OCSF 1.3.0 classes. Configure a separate writable derived-output directory; see [OCSF setup, replay and partial-publication semantics](../../docs/OCSF_EXPORT.md). Remove older local wheels before deploying through `dist/*.whl`.
 
@@ -96,3 +96,7 @@ Use `notebooks/03_ai_harness.ipynb` for planning or explicit analysis. Install t
 Validate/deploy against your workspace, run the synthetic case, compare count and hashes, replay the same request, interrupt a publication stage and retry, deny a required permission, and alter one copied artifact. Confirm that failed attempts do not appear as completed cases and that restoring a bundle requires its pinned manifest hash.
 
 SDK tests and local contract validation are included. They do not establish your workspace permissions, billing settings, storage durability or live notebook compatibility. The repository's GitHub CI separately exercises a local Spark/Delta runtime; live Databricks acceptance requires your configured workspace.
+
+## Required signer verification
+
+Version 0.9.0 adds signed sidecar upload, verification before writes and final publication, and insert-only `signature_verifications` receipts. Configure `require_signature`, `signature_root`, `trust_store_path` and `trust_store_sha256` as deployment variables; they are not incoming job parameters. The OCSF task verifies the source signer but does not automatically sign its derived output. Historical receipts remain historical after revocation. [Exact setup, rotation and signed-export publication](../../docs/SIGNING.md).

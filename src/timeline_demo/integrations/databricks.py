@@ -84,6 +84,28 @@ class DatabricksClient:
                     raise ValueError("remote bundle conflict: " + name)
         return remote
 
+    def upload_signature(self, bundle, signature, volume_root, trust_store, trust_store_sha256):
+        from timeline_demo.signing import verify_signature, _read
+        from databricks.sdk.errors import ResourceAlreadyExists
+        from io import BytesIO
+
+        receipt = verify_signature(bundle, signature, trust_store, trust_store_sha256)
+        body = _read(signature, 8192)
+        if hashlib.sha256(body).hexdigest() != receipt["signature_sha256"]:
+            raise ValueError("signature changed after verification")
+        root = volume_path(volume_root.rstrip("/"))
+        remote = root + "/" + receipt["artifact_id"] + ".sig.json"
+        self.workspace.files.create_directory(root)
+        try:
+            self.workspace.files.upload(remote, BytesIO(body), overwrite=False)
+        except ResourceAlreadyExists:
+            response = self.workspace.files.download(remote)
+            with response.contents as stream:
+                existing = stream.read(8193)
+            if existing != body:
+                raise ValueError("remote signature conflicts; use a new signature root for rotation")
+        return remote
+
     def download_bundle(self, remote_bundle, output_dir, expected_manifest_sha256):
         from timeline_demo.core.manifest import safe_member
 
@@ -145,6 +167,7 @@ TABLE_SCHEMAS = {
     "ingestion_receipts": "case_id STRING, bundle_id STRING, receipt_id STRING, record_json STRING",
     "quarantine": "case_id STRING, bundle_id STRING, receipt_id STRING, record_json STRING",
     "analysis": "case_id STRING, bundle_id STRING, request_hash STRING, human_review_required BOOLEAN, record_json STRING",
+    "signature_verifications": "case_id STRING, bundle_id STRING, artifact_id STRING, key_id STRING, trust_store_sha256 STRING, signature_sha256 STRING, record_json STRING",
     "published_bundles": "case_id STRING, bundle_id STRING, manifest_sha256 STRING, manifest_json STRING",
     "ocsf_events": "case_id STRING, bundle_id STRING, export_id STRING, event_uuid STRING, class_uid BIGINT, type_uid BIGINT, time BIGINT, record_json STRING",
     "ocsf_rejections": "case_id STRING, bundle_id STRING, export_id STRING, event_uuid STRING, record_json STRING",
@@ -165,10 +188,34 @@ def _merge(spark, table, schema, frame, keys):
         spark.catalog.dropTempView(view)
 
 
-def publish_bundle(spark, bundle, catalog, schema, expected_manifest_sha256=None):
+def publish_bundle(
+    spark,
+    bundle,
+    catalog,
+    schema,
+    expected_manifest_sha256=None,
+    *,
+    signature=None,
+    trust_store=None,
+    trust_store_sha256=None,
+    require_signature=False,
+):
+    from timeline_demo.signing import enforce_signature
+
+    attestation = enforce_signature(
+        bundle,
+        signature=signature,
+        trust_store=trust_store,
+        trust_store_sha256=trust_store_sha256,
+        require_signature=require_signature,
+        expected_manifest_sha256=expected_manifest_sha256,
+    )
+    source_pin = (attestation["manifest_sha256"] if attestation else expected_manifest_sha256) or file_hash(
+        Path(bundle) / "audit_manifest.json"
+    )
+    manifest = verify_bundle(bundle, source_pin)
     from pyspark.sql import functions as F
 
-    manifest = verify_bundle(bundle, expected_manifest_sha256)
     prefix = f"`{identifier(catalog)}`.`{identifier(schema)}`"
     spark.sql(f"CREATE SCHEMA IF NOT EXISTS {prefix}")
     spark.conf.set("spark.sql.session.timeZone", "UTC")
@@ -228,12 +275,24 @@ def publish_bundle(spark, bundle, catalog, schema, expected_manifest_sha256=None
     spark.sql(
         f"CREATE TABLE IF NOT EXISTS {prefix}.analysis ({TABLE_SCHEMAS['analysis']}) USING DELTA TBLPROPERTIES ('delta.appendOnly' = 'true')"
     )
+    # Spark reads are lazy; recheck source bytes and current pinned policy before the marker.
+    verify_bundle(bundle, source_pin)
+    if attestation is not None:
+        attestation = enforce_signature(
+            bundle,
+            signature=signature,
+            trust_store=trust_store,
+            trust_store_sha256=trust_store_sha256,
+            require_signature=True,
+            expected_manifest_sha256=source_pin,
+        )
+        _publish_attestation(spark, prefix, base, attestation)
     # Publication marker is last; readers use a view joined to it to exclude partial runs.
     frame = spark.createDataFrame(
         [
             {
                 **base,
-                "manifest_sha256": file_hash(Path(bundle) / "audit_manifest.json"),
+                "manifest_sha256": source_pin,
                 "manifest_json": compact_json(manifest),
             }
         ],
@@ -254,20 +313,67 @@ def publish_bundle(spark, bundle, catalog, schema, expected_manifest_sha256=None
         "bundle_id": base["bundle_id"],
         "event_count": manifest["counts"]["event_count"],
         "table": catalog + "." + schema + ".published_timeline",
+        "signature_verification": attestation,
     }
 
 
-def publish_ocsf_export(spark, export_dir, bundle, catalog, schema, expected_export_sha256=None):
+def _publish_attestation(spark, prefix, base, attestation):
+    row = {
+        "case_id": base["case_id"],
+        "bundle_id": base["bundle_id"],
+        **{
+            key: attestation[key]
+            for key in ("artifact_id", "key_id", "trust_store_sha256", "signature_sha256")
+        },
+        "record_json": compact_json(attestation),
+    }
+    frame = spark.createDataFrame([row], TABLE_SCHEMAS["signature_verifications"])
+    _merge(
+        spark,
+        prefix + ".signature_verifications",
+        TABLE_SCHEMAS["signature_verifications"],
+        frame,
+        ["case_id", "bundle_id", "artifact_id", "key_id", "trust_store_sha256", "signature_sha256"],
+    )
+
+
+def publish_ocsf_export(
+    spark,
+    export_dir,
+    bundle,
+    catalog,
+    schema,
+    expected_export_sha256=None,
+    *,
+    signature=None,
+    trust_store=None,
+    trust_store_sha256=None,
+    require_signature=False,
+):
     """Publish a validated, source-bound OCSF export with a separate final marker.
 
     Paths must be readable by Spark workers (for Databricks use a UC Volume).
     This does not run a model, create a second raw bundle or alter source tables.
     """
-    from pyspark.sql import functions as F
+    from timeline_demo.signing import enforce_signature
     from timeline_demo.ocsf import verify_export
 
-    report = verify_export(export_dir, manifest_sha256=expected_export_sha256, bundle=bundle)
-    export_id = file_hash(Path(export_dir) / "export_manifest.json")
+    attestation = enforce_signature(
+        export_dir,
+        signature=signature,
+        trust_store=trust_store,
+        trust_store_sha256=trust_store_sha256,
+        require_signature=require_signature,
+        kind="ocsf-export",
+        source_bundle=bundle,
+        expected_manifest_sha256=expected_export_sha256,
+    )
+    from pyspark.sql import functions as F
+
+    export_id = (attestation["manifest_sha256"] if attestation else expected_export_sha256) or file_hash(
+        Path(export_dir) / "export_manifest.json"
+    )
+    report = verify_export(export_dir, manifest_sha256=export_id, bundle=bundle)
     prefix = f"`{identifier(catalog)}`.`{identifier(schema)}`"
     spark.sql(f"CREATE SCHEMA IF NOT EXISTS {prefix}")
     base = {"case_id": report["case_id"], "bundle_id": report["source_bundle_id"], "export_id": export_id}
@@ -286,6 +392,18 @@ def publish_ocsf_export(spark, export_dir, bundle, catalog, schema, expected_exp
         _merge(spark, prefix + "." + table, TABLE_SCHEMAS[table], rows.select(*fields), keys)
     # Spark reads are lazy; verify again after all inserts and before making them visible.
     verify_export(export_dir, manifest_sha256=export_id, bundle=bundle)
+    if attestation is not None:
+        attestation = enforce_signature(
+            export_dir,
+            signature=signature,
+            trust_store=trust_store,
+            trust_store_sha256=trust_store_sha256,
+            require_signature=True,
+            kind="ocsf-export",
+            source_bundle=bundle,
+            expected_manifest_sha256=export_id,
+        )
+        _publish_attestation(spark, prefix, base, attestation)
     marker = spark.createDataFrame(
         [{**base, "manifest_json": compact_json(report)}], TABLE_SCHEMAS["published_ocsf_exports"]
     )
@@ -295,7 +413,12 @@ def publish_ocsf_export(spark, export_dir, bundle, catalog, schema, expected_exp
     spark.sql(
         f"CREATE OR REPLACE VIEW {prefix}.published_ocsf AS SELECT e.* FROM {prefix}.ocsf_events e INNER JOIN {prefix}.published_ocsf_exports p ON e.case_id=p.case_id AND e.bundle_id=p.bundle_id AND e.export_id=p.export_id"
     )
-    return {**base, "counts": report["counts"], "table": catalog + "." + schema + ".published_ocsf"}
+    return {
+        **base,
+        "counts": report["counts"],
+        "table": catalog + "." + schema + ".published_ocsf",
+        "signature_verification": attestation,
+    }
 
 
 def publish_analysis(spark, result, catalog, schema):
@@ -327,21 +450,186 @@ def publish_analysis(spark, result, catalog, schema):
     )
 
 
-def job_main():
+def job_signature_options(bundle, manifest_pin, required, signature_root, trust_store, trust_pin):
+    # Policy comes from deployment literals, never incoming Tines job parameters.
+    if required not in {"true", "false"}:
+        raise ValueError("require_signature must be true or false")
+    if required == "false" and not any((signature_root, trust_store, trust_pin)):
+        return {}
+    if not all((signature_root, trust_store, trust_pin)):
+        raise ValueError("signature enforcement requires complete deployment policy")
+    manifest = verify_bundle(bundle, manifest_pin)
+    signature = volume_path(signature_root.rstrip("/")) + "/" + manifest["bundle_id"] + ".sig.json"
+    options = {
+        "signature": signature,
+        "trust_store": volume_path(trust_store),
+        "trust_store_sha256": trust_pin,
+        "require_signature": True,
+    }
+    from timeline_demo.signing import enforce_signature
+
+    enforce_signature(bundle, expected_manifest_sha256=manifest_pin, **options)
+    return options
+
+
+def run_ocsf_job(
+    spark,
+    bundle,
+    manifest_pin,
+    catalog,
+    schema,
+    export_root,
+    *,
+    enabled="false",
+    quarantine="false",
+    signature_options=None,
+):
+    """Shared export task logic; deployment uses positional wheel parameters."""
+    from timeline_demo.ocsf import MAPPING_VERSION, export_bundle, verify_export
+    from timeline_demo.signing import enforce_signature
+
+    if enabled not in {"true", "false"} or quarantine not in {"true", "false"}:
+        raise ValueError("enabled and quarantine must be true or false")
+    if enabled == "false":
+        return {"status": "skipped", "reason": "OCSF export is disabled"}
+    options = signature_options or {}
+    enforce_signature(bundle, expected_manifest_sha256=manifest_pin, **options)
+    manifest = verify_bundle(bundle, manifest_pin)
+    destination = Path(export_root) / (manifest["bundle_id"] + "-" + MAPPING_VERSION)
+    if destination.resolve().is_relative_to(Path(bundle).resolve()):
+        raise ValueError("OCSF export must be outside the evidence bundle")
+    if destination.exists():
+        report = verify_export(destination, bundle=bundle)
+    else:
+        report = export_bundle(
+            bundle, destination, manifest_sha256=manifest_pin, quarantine=quarantine == "true"
+        )
+    if report["counts"]["rejected_events"] and quarantine != "true":
+        raise ValueError("strict OCSF publication rejects an existing partial export")
+    enforce_signature(bundle, expected_manifest_sha256=manifest_pin, **options)
+    return {
+        "status": "published",
+        **publish_ocsf_export(
+            spark,
+            destination,
+            bundle,
+            catalog,
+            schema,
+            expected_export_sha256=file_hash(destination / "export_manifest.json"),
+        ),
+    }
+
+
+def inspect_publication(spark, bundle, manifest_pin, catalog, schema, *, signature_options=None):
+    from timeline_demo.signing import enforce_signature
+
+    options = signature_options or {}
+    attestation = enforce_signature(bundle, expected_manifest_sha256=manifest_pin, **options)
+    manifest = verify_bundle(bundle, manifest_pin)
+    from pyspark.sql import functions as F
+
+    table = f"`{identifier(catalog)}`.`{identifier(schema)}`.published_timeline"
+    count = (
+        spark.table(table)
+        .where((F.col("case_id") == manifest["case_id"]) & (F.col("bundle_id") == manifest["bundle_id"]))
+        .count()
+    )
+    if count != manifest["counts"]["event_count"]:
+        raise ValueError("published event count differs from source manifest")
+    verify_bundle(bundle, manifest_pin)
+    if attestation is not None:
+        attestation = enforce_signature(bundle, expected_manifest_sha256=manifest_pin, **options)
+    return {
+        "status": "publication_verified",
+        "case_id": manifest["case_id"],
+        "bundle_id": manifest["bundle_id"],
+        "event_count": count,
+        "signature_verification": attestation,
+    }
+
+
+def _job_parser(ocsf=False):
     parser = argparse.ArgumentParser()
     parser.add_argument("--bundle-path", required=True)
     parser.add_argument("--manifest-sha256", required=True)
     parser.add_argument("--catalog", required=True)
     parser.add_argument("--schema", required=True)
-    args = parser.parse_args()
+    parser.add_argument("--require-signature", choices=["true", "false"], default="false")
+    parser.add_argument("--signature-root", default="")
+    parser.add_argument("--trust-store", default="")
+    parser.add_argument("--trust-store-sha256", default="")
+    if ocsf:
+        parser.add_argument("--enabled", choices=["true", "false"], default="false")
+        parser.add_argument("--quarantine", choices=["true", "false"], default="false")
+        parser.add_argument("--export-root", default="")
+    return parser
+
+
+def _job_options(args):
     volume_path(args.bundle_path)
+    identifier(args.catalog)
+    identifier(args.schema)
     if not re.fullmatch(r"[a-f0-9]{64}", args.manifest_sha256):
         raise ValueError("manifest SHA-256 is required")
+    return job_signature_options(
+        args.bundle_path,
+        args.manifest_sha256,
+        args.require_signature,
+        args.signature_root,
+        args.trust_store,
+        args.trust_store_sha256,
+    )
+
+
+def job_main(argv=None):
+    args = _job_parser().parse_args(argv)
+    options = _job_options(args)
     from pyspark.sql import SparkSession
 
     spark = SparkSession.builder.getOrCreate()
-    result = publish_bundle(spark, args.bundle_path, args.catalog, args.schema, args.manifest_sha256)
+    result = publish_bundle(
+        spark, args.bundle_path, args.catalog, args.schema, args.manifest_sha256, **options
+    )
     print(compact_json(result))
+    return 0
+
+
+def ocsf_job_main(argv=None):
+    args = _job_parser(ocsf=True).parse_args(argv)
+    if args.enabled == "false":
+        print(compact_json({"status": "skipped", "reason": "OCSF export is disabled"}))
+        return 0
+    options = _job_options(args)
+    volume_path(args.export_root)
+    from pyspark.sql import SparkSession
+
+    spark = SparkSession.builder.getOrCreate()
+    result = run_ocsf_job(
+        spark,
+        args.bundle_path,
+        args.manifest_sha256,
+        args.catalog,
+        args.schema,
+        args.export_root,
+        enabled=args.enabled,
+        quarantine=args.quarantine,
+        signature_options=options,
+    )
+    print(compact_json(result))
+    return 0
+
+
+def inspect_job_main(argv=None):
+    args = _job_parser().parse_args(argv)
+    options = _job_options(args)
+    from pyspark.sql import SparkSession
+
+    spark = SparkSession.builder.getOrCreate()
+    result = inspect_publication(
+        spark, args.bundle_path, args.manifest_sha256, args.catalog, args.schema, signature_options=options
+    )
+    print(compact_json(result))
+    return 0
 
 
 if __name__ == "__main__":

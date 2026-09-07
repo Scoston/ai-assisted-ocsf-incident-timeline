@@ -1,0 +1,5 @@
+{
+  "source": "entra_signin",
+  "source_id": "replace-with-tenant-label",
+  "token_env": "GRAPH_ACCESS_TOKEN"
+}

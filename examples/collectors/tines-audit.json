@@ -1,0 +1,6 @@
+{
+  "source": "tines_audit",
+  "source_id": "replace-with-tenant-label",
+  "host": "https://replace-with-tenant.tines.com",
+  "token_env": "TINES_API_TOKEN"
+}

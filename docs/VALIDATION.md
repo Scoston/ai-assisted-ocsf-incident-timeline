@@ -4,7 +4,8 @@ Implementation date: 2026-09-07. Baseline: `d8e8169e1c5bb175bc8c5218f005f6f2a9a5
 
 ## Local verification
 
-- Version 0.6.0 regression suite: 115 passed, including 44 OCSF cases; one real Spark/Delta test is separately gated by `TIMELINE_TEST_DELTA=1`.
+- Version 0.7.0 regression suite: 130 passed, including 15 collection and 44 OCSF cases; one real Spark/Delta test is separately gated by `TIMELINE_TEST_DELTA=1`.
+- Collection: interruption/resume, cursor cycles, timestamp boundaries, watermark advancement, page/record/byte limits, raw page integrity, HTTP throttling/redirects, SDK pagination and SQL result truncation checked with test doubles. Live permissions, source retention and late-arrival coverage remain acceptance steps.
 - Original synthetic demo: five events ingested, exported and verified successfully.
 - All 21 parser fixtures: UTC conversion, deterministic identity and class/profile behavior checked.
 - Negative inputs: ambiguous timestamps, DST fold/gap, invalid JSON, duplicate keys, non-finite numbers, malformed CSV/XML paths, quarantine, artifact tampering and directory traversal checked.

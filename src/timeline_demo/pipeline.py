@@ -13,7 +13,7 @@ from pathlib import Path
 from importlib.resources import files
 from jsonschema import Draft202012Validator
 
-from timeline_demo.core.manifest import verify_bundle, write_manifest
+from timeline_demo.core.manifest import safe_member, verify_bundle, write_manifest
 from timeline_demo.core.timeline_builder import PREFERRED_FIELD_ORDER, csv_value
 from timeline_demo.enrichment.ioc_extractor import extract_iocs_from_text
 from timeline_demo.parsers.common import compact_json, file_hash
@@ -31,7 +31,9 @@ class Input:
     path: str | Path
 
 
-def run_pipeline(inputs, output_dir, case_id, *, quarantine=False, assume_timezone=None, parquet=False):
+def run_pipeline(
+    inputs, output_dir, case_id, *, quarantine=False, assume_timezone=None, parquet=False, attachments=None
+):
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,127}", case_id):
         raise ValueError("case_id must be 1-128 letters, numbers, dots, dashes or underscores")
     inputs = list(inputs)
@@ -77,6 +79,7 @@ def run_pipeline(inputs, output_dir, case_id, *, quarantine=False, assume_timezo
                 provenance.append(
                     {
                         "parser": item.parser,
+                        "parser_version": SPECS[item.parser].version,
                         "input_index": input_index,
                         "original_name": source.name,
                         "evidence_path": evidence_name,
@@ -155,6 +158,14 @@ def run_pipeline(inputs, output_dir, case_id, *, quarantine=False, assume_timezo
         )
         if parquet:
             export_parquet(bundle)
+        for name, source in (attachments or {}).items():
+            if not name.startswith("attachments/"):
+                raise ValueError("supporting artifacts must be under attachments/")
+            destination = safe_member(bundle, name)
+            if destination.exists():
+                raise ValueError("supporting artifact collision")
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(source, destination)
         write_manifest(
             {
                 "case_id": case_id,

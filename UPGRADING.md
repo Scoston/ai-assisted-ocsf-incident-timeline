@@ -1,5 +1,11 @@
 # Upgrading
 
+## From 0.6 to 0.7
+
+Install `.[collection,databricks]` to collect all four supported APIs. Keep collector state on a durable local filesystem separate from bundle output; preserve it when upgrading. The initial collector state format is 1.0.0.
+
+Only the Tines audit parser changes to 2.1.0 to include native `request_ip`; re-ingesting Tines records intentionally produces new event IDs. Other parser identities remain 2.0.0. New manifest inputs include parser versions, so re-ingestion may produce a different bundle ID; historical bundles still verify without rewriting. Overlapping windows retain repeated receipts across bundles, so use event IDs when querying across collections. See [collection operations](docs/COLLECTION.md).
+
 ## From 0.5 to 0.6
 
 Reinstall the package and redeploy the Databricks bundle to obtain the optional OCSF task. Existing evidence bundles, timeline fields, parser versions and event identities remain compatible. OCSF export writes to a separate new directory; it does not rewrite an existing bundle or convert project Parquet in place.

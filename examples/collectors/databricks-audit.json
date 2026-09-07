@@ -1,0 +1,6 @@
+{
+  "source": "databricks_audit",
+  "source_id": "replace-with-workspace-label",
+  "host": "https://replace-with-workspace.cloud.databricks.com",
+  "warehouse_id": "0123456789abcdef"
+}

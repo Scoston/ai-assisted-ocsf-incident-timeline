@@ -41,6 +41,7 @@ def main():
     build_ocsf_notebook()
     build_evaluation_notebook()
     build_signing_notebook()
+    build_enterprise_notebook()
     write(
         "01_offline_investigation.ipynb",
         [
@@ -225,6 +226,89 @@ def build_signing_notebook():
             (
                 "md",
                 "A verify_only key can verify historical attestations, but this signing command refuses to create new ones. Without a trusted timestamp, verification cannot establish when a signature was made. A compromised key must be revoked; revoked signatures are rejected regardless of claimed age. Historical Delta verification receipts remain audit records, not current authorization. See docs/SIGNING.md for rotation and Databricks/Tines deployment.",
+            ),
+            ("code", "work.cleanup()"),
+        ],
+    )
+
+
+def build_enterprise_notebook():
+    write(
+        "07_enterprise_collection.ipynb",
+        [
+            (
+                "md",
+                "# Enterprise collection and late delivery\nInspect available source configurations and collect a simulated M365 feed. This notebook uses synthetic responses, makes no network request and consumes zero model tokens. It demonstrates why content-delivery windows differ from event timestamps; live permissions and source counts need tenant acceptance.",
+            ),
+            (
+                "code",
+                """from pathlib import Path
+import json
+import tempfile
+from timeline_demo.collection import collect_window
+from timeline_demo.collection.enterprise import M365
+from timeline_demo.parsers.common import compact_json
+from timeline_demo.pipeline import read_timeline
+from timeline_demo.core.manifest import verify_bundle
+root = Path.cwd()
+if not (root/'examples').exists():
+    root = root.parent
+configs = [json.loads(p.read_text()) for p in sorted((root/'examples/collectors').glob('*.json'))]
+assert len({c['source'] for c in configs}) == 18
+[(c['source_id'], c['source'], c.get('table', c.get('content_type', ''))) for c in configs]""",
+            ),
+            (
+                "md",
+                "The response below delivers an August event in a September content window. All three source responses are archived before their cursors advance. A completed replay verifies the existing bundle and performs no new request.",
+            ),
+            (
+                "code",
+                """class SyntheticFeed:
+    host = 'https://manage.office.com'
+    def __init__(self):
+        self.calls = 0
+        tenant = '00000000-0000-0000-0000-000000000000'
+        self.responses = [
+            [{'contentType':'Audit.Exchange', 'status':'enabled'}],
+            [{'contentType':'Audit.Exchange', 'contentCreated':'2026-09-01T10:15:00Z',
+              'contentUri':self.host + '/api/v1.0/' + tenant + '/activity/feed/audit/synthetic-1'}],
+            [{'Id':'synthetic-mail-1', 'CreationTime':'2026-08-31T23:00:00',
+              'Operation':'New-InboxRule', 'UserId':'alice@example.test', 'ClientIP':'198.51.100.1'}],
+        ]
+    def request(self, method, path, **kwargs):
+        assert method == 'GET'
+        self.calls += 1
+        value = self.responses.pop(0)
+        result = compact_json(value).encode(), value
+        return (*result, {}) if kwargs.get('headers') else result
+
+work = tempfile.TemporaryDirectory()
+workdir = Path(work.name)
+configuration = json.loads((root/'examples/collectors/m365-exchange.json').read_text())
+http = SyntheticFeed()
+provider = M365(configuration, http)
+arguments = (provider, workdir/'state', workdir/'bundle', 'late-mail-demo',
+             '2026-09-01T10:00:00Z', '2026-09-01T11:00:00Z')
+result = collect_window(*arguments, sleep=lambda _: None)
+assert result['collection']['included_records'] == 1
+assert result['collection']['model_tokens'] == 0
+assert result['collection']['source_completeness_proven'] is False
+result['collection']""",
+            ),
+            (
+                "code",
+                """events = list(read_timeline(workdir/'bundle'))
+assert events[0]['time_utc'].startswith('2026-08-31T23:00:00')
+assert events[0]['timezone_assumption'] == 'UTC'
+assert collect_window(*arguments, sleep=lambda _: None)['manifest_sha256'] == result['manifest_sha256']
+assert http.calls == 3
+manifest = verify_bundle(workdir/'bundle', result['manifest_sha256'])
+assert len([name for name in manifest['files'] if name.startswith('attachments/collection-pages/')]) == 3
+[(e['time_utc'], e['activity_name'], e['user_name']) for e in events]""",
+            ),
+            (
+                "md",
+                "For retained investigations, choose durable state and bundle paths, refresh credentials through existing identity tooling, and follow docs/ENTERPRISE_APIS.md. Publish only verified bundles through the Databricks/Tines reference workflow. Review OCSF rejection counts and the AI harness's omitted coverage separately; drained pagination alone is not proof of complete source acquisition.",
             ),
             ("code", "work.cleanup()"),
         ],

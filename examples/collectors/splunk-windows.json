@@ -1,0 +1,9 @@
+{
+  "source": "splunk",
+  "host": "https://splunk.example.test:8089",
+  "index": "windows",
+  "sourcetype": "windows:json",
+  "parser": "windows_event",
+  "format": "json",
+  "source_id": "example-splunk-windows"
+}

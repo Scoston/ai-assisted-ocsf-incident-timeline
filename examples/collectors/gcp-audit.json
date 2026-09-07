@@ -1,0 +1,5 @@
+{
+  "source": "gcp_audit",
+  "project_id": "example-project",
+  "source_id": "example-gcp-audit"
+}

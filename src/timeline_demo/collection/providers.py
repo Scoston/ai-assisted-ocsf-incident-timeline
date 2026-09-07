@@ -21,9 +21,10 @@ class Page:
     body: bytes
     records: list
     cursor: dict | None
+    selection: list[bool] | None = None
 
 
-def origin(host):
+def origin(host, ports=(443,)):
     parts = urlsplit(host)
     if (
         parts.scheme != "https"
@@ -33,25 +34,27 @@ def origin(host):
         or parts.path not in {"", "/"}
         or parts.query
         or parts.fragment
-        or parts.port not in {None, 443}
+        or parts.port not in {None, *ports}
     ):
         raise ValueError("collector host must be an HTTPS origin without credentials or a path")
     return host.rstrip("/")
 
 
 class Http:
-    def __init__(self, host, headers, *, session=None, sleep=time.sleep):
+    def __init__(self, host, headers, *, session=None, sleep=time.sleep, ports=(443,)):
         if session is None:
             import requests
 
             session = requests.Session()
-        self.host, self.headers, self.session, self.sleep = origin(host), headers, session, sleep
+        self.host, self.headers, self.session, self.sleep = origin(host, ports), headers, session, sleep
 
-    def request(self, method, path, *, body=None):
+    def request(self, method, path, *, body=None, form=None, statuses=(200,), array=False, headers=False):
         import requests
 
-        if not path.startswith("/") or path.startswith("//"):
+        if not path.startswith("/") or path.startswith("//") or "#" in path:
             raise ValueError("collector request must use a local API path")
+        if form is not None and body is not None:
+            raise ValueError("choose a JSON or form request body")
         for attempt in range(4):
             try:
                 response = self.session.request(
@@ -59,6 +62,7 @@ class Http:
                     self.host + path,
                     headers=self.headers(),
                     json=body,
+                    **({"data": form} if form is not None else {}),
                     timeout=(10, 30),
                     allow_redirects=False,
                     stream=True,
@@ -87,17 +91,31 @@ class Http:
                         raise ValueError("Retry-After exceeds this invocation's wait budget; retry later")
                     self.sleep(delay)
                     continue
-                if response.status_code != 200:
+                if response.status_code not in statuses:
                     raise ValueError(f"collector HTTP {response.status_code}; no checkpoint was advanced")
                 data = bytearray()
-                for part in response.iter_content(65536):
-                    data.extend(part)
-                    if len(data) > MAX_PAGE_BYTES:
-                        raise ValueError("collector page exceeds 16 MiB; narrow the window")
+                try:
+                    for part in response.iter_content(65536):
+                        data.extend(part)
+                        if len(data) > MAX_PAGE_BYTES:
+                            raise ValueError("collector page exceeds 16 MiB; narrow the window")
+                except requests.RequestException:
+                    raise ValueError("collector response interrupted; no checkpoint was advanced") from None
                 raw = bytes(data)
                 value = _strict_json(raw)
-                if not isinstance(value, dict):
-                    raise ValueError("collector response must be a JSON object")
+                if not isinstance(value, list if array else dict):
+                    raise ValueError("collector response has an unexpected JSON type")
+                if headers:
+                    # Retain only pagination headers; never return cookies/authentication headers.
+                    return (
+                        raw,
+                        value,
+                        {
+                            k.lower(): v
+                            for k, v in response.headers.items()
+                            if k.lower() in {"link", "nextpageuri"}
+                        },
+                    )
                 return raw, value
         raise ValueError("collector retries exhausted")
 
@@ -315,6 +333,10 @@ class CloudTrail:
 
 
 def make_provider(config):
+    from .enterprise import SOURCES, make_enterprise_provider
+
+    if isinstance(config, dict) and config.get("source") in SOURCES:
+        return make_enterprise_provider(config)
     if not isinstance(config, dict) or config.get("source") not in {
         "cloudtrail",
         "entra_signin",

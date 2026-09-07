@@ -126,6 +126,8 @@ def _finalize(db, state, run, provider):
         "pages": entries,
         "model_tokens": 0,
     }
+    if hasattr(provider, "window_basis"):
+        report["window_basis"] = provider.window_basis
     data = (compact_json(report) + "\n").encode()
     digest = _blob(state, data)
     attachments["attachments/collection.json"] = _checked_blob(state, digest)
@@ -173,7 +175,7 @@ def collect_window(
     now_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
     if not 0 < end_ms - start_ms <= 86400000 or end_ms > now_ms:
         raise ValueError("collection requires a completed window of at most 24 hours")
-    if provider.parser == "cloudtrail" and start_ms < now_ms - 90 * 86400000:
+    if provider.identity.get("source") == "cloudtrail" and start_ms < now_ms - 90 * 86400000:
         raise ValueError("CloudTrail event history only covers the last 90 days")
     if any(type(v) is not int or v < 1 for v in (max_pages, max_records, max_bytes)):
         raise ValueError("positive collection budgets are required")
@@ -230,11 +232,22 @@ def collect_window(
                 ):
                     raise ValueError("collector page has invalid records")
                 spec = SPECS[provider.parser]
-                included = [
-                    record
-                    for record in page.records
-                    if start_ms <= parse_time(field(record, spec.time), spec.unit)[1] < end_ms
-                ]
+                if page.selection is not None:
+                    if len(page.selection) != len(page.records) or any(
+                        type(x) is not bool for x in page.selection
+                    ):
+                        raise ValueError("collector envelope selection does not match its records")
+                    included = [record for record, selected in zip(page.records, page.selection) if selected]
+                elif hasattr(provider, "includes"):
+                    included = [
+                        record for record in page.records if provider.includes(record, start_ms, end_ms)
+                    ]
+                else:
+                    included = [
+                        record
+                        for record in page.records
+                        if start_ms <= parse_time(field(record, spec.time), spec.unit)[1] < end_ms
+                    ]
                 data = "".join(compact_json(record) + "\n" for record in included).encode()
                 if sum(p["received"] for p in prior) + len(page.records) > max_records:
                     raise ValueError(

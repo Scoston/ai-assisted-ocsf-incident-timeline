@@ -13,6 +13,7 @@ import xml.etree.ElementTree as ET
 MAX_RECORD_BYTES = 4 * 1024 * 1024
 MAX_JSON_BYTES = 32 * 1024 * 1024
 WRAPPERS = ("Records", "records", "value", "resources", "Findings", "findings", "items")
+VPC_HEADER = object()
 
 
 def _strict_json(text):
@@ -124,38 +125,46 @@ def iter_records(path, parser=None):
             if not line.strip():
                 continue
             try:
-                if parser == "syslog" and not line.lstrip().startswith("{"):
-                    match = re.fullmatch(
-                        r"<(\d{1,3})>1 (\S+) (\S+) (\S+) (\S+) (\S+) (-|(?:\[(?:[^\]\\]|\\.)*\])+)(?: (.*))?\s*",
-                        line,
-                    )
-                    if not match or int(match[1]) > 191:
-                        raise ValueError("expected RFC 5424 version 1 syslog")
-                    value = dict(
-                        zip(
-                            (
-                                "pri",
-                                "timestamp",
-                                "hostname",
-                                "app",
-                                "pid",
-                                "msgid",
-                                "structured_data",
-                                "message",
-                            ),
-                            match.groups(),
-                        )
-                    )
-                elif parser == "vpc_flow" and not line.lstrip().startswith("{"):
-                    fields = line.split()
-                    if fields[:2] == ["version", "account-id"]:
-                        continue
-                    keys = "version account-id interface-id srcaddr dstaddr srcport dstport protocol packets bytes start end action log-status".split()
-                    if len(fields) != len(keys):
-                        raise ValueError("expected AWS default 14-field VPC flow format")
-                    value = dict(zip(keys, fields))
-                else:
-                    value = _strict_json(line)
+                value = decode_line(line, parser)
+                if value is VPC_HEADER:
+                    continue
                 yield _row(index, value)
             except (ValueError, TypeError) as exc:
                 yield index, None, str(exc)
+
+
+def decode_line(line, parser):
+    """Decode one explicit source line; a sentinel denotes a VPC export header."""
+    if parser == "syslog" and not line.lstrip().startswith("{"):
+        match = re.fullmatch(
+            r"<(\d{1,3})>1 (\S+) (\S+) (\S+) (\S+) (\S+) (-|(?:\[(?:[^\]\\]|\\.)*\])+)(?: (.*))?\s*",
+            line,
+        )
+        if not match or int(match[1]) > 191:
+            raise ValueError("expected RFC 5424 version 1 syslog")
+        value = dict(
+            zip(
+                (
+                    "pri",
+                    "timestamp",
+                    "hostname",
+                    "app",
+                    "pid",
+                    "msgid",
+                    "structured_data",
+                    "message",
+                ),
+                match.groups(),
+            )
+        )
+    elif parser == "vpc_flow" and not line.lstrip().startswith("{"):
+        fields = line.split()
+        if fields[:2] == ["version", "account-id"]:
+            return VPC_HEADER
+        keys = "version account-id interface-id srcaddr dstaddr srcport dstport protocol packets bytes start end action log-status".split()
+        if len(fields) != len(keys):
+            raise ValueError("expected AWS default 14-field VPC flow format")
+        value = dict(zip(keys, fields))
+    else:
+        value = _strict_json(line)
+    return value

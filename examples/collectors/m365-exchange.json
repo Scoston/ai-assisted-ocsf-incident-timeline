@@ -1,0 +1,6 @@
+{
+  "source": "m365_audit",
+  "tenant_id": "00000000-0000-0000-0000-000000000000",
+  "content_type": "Audit.Exchange",
+  "source_id": "example-m365-exchange"
+}

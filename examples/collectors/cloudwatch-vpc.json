@@ -1,0 +1,8 @@
+{
+  "source": "cloudwatch_logs",
+  "region": "us-east-1",
+  "log_group": "/example/vpc-flow",
+  "parser": "vpc_flow",
+  "format": "text",
+  "source_id": "example-cloudwatch-vpc"
+}

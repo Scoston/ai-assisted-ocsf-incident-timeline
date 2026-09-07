@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.10.0 — 2026-09-07
+
+- Evaluated enterprise incident coverage and added 14 collectors: Entra audit, M365 audit feeds, Defender alerts/hunting, Okta, Azure Activity/Monitor Logs, GCP Audit, Workspace audit, GuardDuty, Security Hub CSPM, CloudWatch Logs, Falcon alerts and Splunk.
+- Added explicit source clocks, header pagination, durable list/detail and async-search checkpoints, bounded fixed queries and partial/truncated-result rejection. Late mailbox events and alert updates retain native event timestamps. Collection still consumes zero model tokens.
+- Added four parsers, complete Workspace child-event expansion, native GuardDuty SDK projections and source-UTC M365 handling. M365/GuardDuty parser identities advance to 2.1.0; new OCSF mappings use 1.1.0 with historical export verification retained.
+- Added eight Azure Monitor table choices including workload/noninteractive sign-ins, 14 Defender hunting tables, source-specific configuration examples, enterprise coverage/incident recipes, permissions/retention guidance and a seventh offline Jupyter notebook.
+- Expanded API-contract, recovery, truncation, source-boundary and OCSF regression coverage. Live enterprise tenant acceptance remains external to the synthetic test suite.
+
 ## 0.9.0 — 2026-09-07
 
 - Added detached Ed25519 signatures for exact evidence/OCSF manifests, encrypted key generation and strictly parsed signer policies with required independent hashes.

@@ -1,0 +1,5 @@
+{
+  "source": "defender_hunting",
+  "table": "DeviceProcessEvents",
+  "source_id": "example-defender-processes"
+}

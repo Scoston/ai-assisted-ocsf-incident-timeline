@@ -69,6 +69,13 @@ def main(argv=None):
     tines.add_argument("bundle")
     tines.add_argument("--remote-bundle", required=True)
     tines.add_argument("--job-id", type=int, required=True)
+    for command in (verify, ocsf_verify, upload):
+        command.add_argument("--signature")
+        command.add_argument("--trust-store")
+        command.add_argument("--trust-store-sha256")
+        if command is not upload:
+            command.add_argument("--require-signature", action="store_true")
+    upload.add_argument("--signature-root")
     args = parser.parse_args(argv)
     try:
         if args.command == "parsers":
@@ -121,11 +128,22 @@ def main(argv=None):
         elif args.command == "verify":
             from timeline_demo.core.manifest import verify_bundle
 
+            from timeline_demo.signing import enforce_signature
+
+            attestation = enforce_signature(
+                args.bundle,
+                signature=args.signature,
+                trust_store=args.trust_store,
+                trust_store_sha256=args.trust_store_sha256,
+                require_signature=args.require_signature,
+                expected_manifest_sha256=args.manifest_sha256,
+            )
             manifest = verify_bundle(args.bundle, args.manifest_sha256)
             result = {
                 "status": "integrity_verified",
                 "bundle_id": manifest["bundle_id"],
                 "counts": manifest["counts"],
+                "signature_verification": attestation,
             }
         elif args.command == "export-ocsf":
             from timeline_demo.ocsf import export_bundle
@@ -136,7 +154,21 @@ def main(argv=None):
         elif args.command == "verify-ocsf":
             from timeline_demo.ocsf import verify_export
 
+            from timeline_demo.signing import enforce_signature
+
+            attestation = enforce_signature(
+                args.directory,
+                signature=args.signature,
+                trust_store=args.trust_store,
+                trust_store_sha256=args.trust_store_sha256,
+                require_signature=args.require_signature,
+                kind="ocsf-export",
+                expected_manifest_sha256=args.manifest_sha256,
+                source_bundle=args.bundle,
+            )
             result = verify_export(args.directory, manifest_sha256=args.manifest_sha256, bundle=args.bundle)
+            if attestation is not None:
+                result = {**result, "signature_verification": attestation}
         elif args.command == "analyze":
             from timeline_demo.ai import Harness, load_policy, prepare
 
@@ -172,7 +204,22 @@ def main(argv=None):
 
             client = DatabricksClient()
             if args.command == "databricks-upload":
-                result = {"remote_bundle": client.upload_bundle(args.bundle, args.volume_root)}
+                result = {}
+                if any((args.signature, args.signature_root, args.trust_store, args.trust_store_sha256)):
+                    if not all(
+                        (args.signature, args.signature_root, args.trust_store, args.trust_store_sha256)
+                    ):
+                        raise ValueError(
+                            "signed upload requires signature, signature root and pinned signer trust"
+                        )
+                    result["remote_signature"] = client.upload_signature(
+                        args.bundle,
+                        args.signature,
+                        args.signature_root,
+                        args.trust_store,
+                        args.trust_store_sha256,
+                    )
+                result["remote_bundle"] = client.upload_bundle(args.bundle, args.volume_root)
             elif args.command == "databricks-download":
                 result = client.download_bundle(args.remote_bundle, args.output, args.manifest_sha256)
             elif args.command == "databricks-submit":

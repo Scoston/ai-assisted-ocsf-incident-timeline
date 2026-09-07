@@ -96,3 +96,7 @@ Use `notebooks/03_ai_harness.ipynb` for planning or explicit analysis. Install t
 Validate/deploy against your workspace, run the synthetic case, compare count and hashes, replay the same request, interrupt a publication stage and retry, deny a required permission, and alter one copied artifact. Confirm that failed attempts do not appear as completed cases and that restoring a bundle requires its pinned manifest hash.
 
 SDK tests and local contract validation are included. They do not establish your workspace permissions, billing settings, storage durability or live notebook compatibility. The repository's GitHub CI separately exercises a local Spark/Delta runtime; live Databricks acceptance requires your configured workspace.
+
+## Required signer verification
+
+Version 0.9.0 adds signed sidecar upload, verification before writes and final publication, and insert-only `signature_verifications` receipts. Configure `require_signature`, `signature_root`, `trust_store_path` and `trust_store_sha256` as deployment variables; they are not incoming job parameters. The OCSF task verifies the source signer but does not automatically sign its derived output. Historical receipts remain historical after revocation. [Exact setup, rotation and signed-export publication](../../docs/SIGNING.md).

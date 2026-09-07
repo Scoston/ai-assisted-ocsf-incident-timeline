@@ -19,6 +19,19 @@ variables:
     description: Allow partial OCSF publication with rejection receipts (true or false)
     default: "false"
 
+  require_signature:
+    description: Require a trusted detached source signature before publication (true or false)
+    default: "false"
+  signature_root:
+    description: Fixed Unity Catalog Volume directory containing bundle-id.sig.json sidecars
+    default: ""
+  trust_store_path:
+    description: Fixed read-only Unity Catalog Volume signer policy path
+    default: ""
+  trust_store_sha256:
+    description: Independently recorded SHA-256 of the deployed signer policy
+    default: ""
+
 artifacts:
   timeline_wheel:
     type: whl
@@ -47,12 +60,22 @@ resources:
               - "{{job.parameters.bundle_path}}"
               - --manifest-sha256
               - "{{job.parameters.manifest_sha256}}"
+              - --require-signature
+              - ${var.require_signature}
+              - --signature-root
+              - ${var.signature_root}
+              - --trust-store
+              - ${var.trust_store_path}
+              - --trust-store-sha256
+              - ${var.trust_store_sha256}
               - --catalog
               - ${var.catalog}
               - --schema
               - ${var.schema}
           libraries:
             - whl: ./dist/*.whl
+            - pypi:
+                package: "cryptography>=46,<51"
           max_retries: 2
           min_retry_interval_millis: 30000
           retry_on_timeout: false
@@ -69,6 +92,8 @@ resources:
               schema: ${var.schema}
           libraries:
             - whl: ./dist/*.whl
+            - pypi:
+                package: "cryptography>=46,<51"
         - task_key: export_and_publish_ocsf
           depends_on:
             - task_key: verify_and_publish
@@ -76,6 +101,10 @@ resources:
           notebook_task:
             notebook_path: ./integrations/databricks/export_ocsf.py
             base_parameters:
+              require_signature: ${var.require_signature}
+              signature_root: ${var.signature_root}
+              trust_store: ${var.trust_store_path}
+              trust_store_sha256: ${var.trust_store_sha256}
               enabled: ${var.ocsf_enabled}
               quarantine: ${var.ocsf_quarantine}
               export_root: ${var.ocsf_export_root}
@@ -85,6 +114,8 @@ resources:
               schema: ${var.schema}
           libraries:
             - whl: ./dist/*.whl
+            - pypi:
+                package: "cryptography>=46,<51"
           max_retries: 2
           min_retry_interval_millis: 30000
           retry_on_timeout: false

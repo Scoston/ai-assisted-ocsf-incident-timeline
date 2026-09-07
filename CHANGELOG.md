@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.0 — 2026-09-07
+
+- Added detached Ed25519 signatures for exact evidence/OCSF manifests, encrypted key generation and strictly parsed signer policies with required independent hashes.
+- Added versioned trust creation, key addition, scope restriction, verification-only retirement and revocation; no trusted timestamp or automatic signer identity is asserted.
+- Added `timeline-sign`, required-signature flags for bundle/export verification, signed sidecar upload and fixed Databricks deployment policy.
+- Added verification before Spark writes and before publication markers, insert-only signature receipts, and repeated source-trust checks in the OCSF task. Tines forwards the existing reference contract; signer policy stays in the deployment.
+- Added a sixth offline Jupyter notebook, signed real-Delta replay/revocation coverage, operational documentation and final roadmap reconciliation.
+
 ## 0.8.0 — 2026-09-07
 
 - Added isolated synthetic scale benchmarks with exact source hashes, hardware/resource limits, runtime, peak RSS, source/artifact sizes, AI coverage and token upper bounds.

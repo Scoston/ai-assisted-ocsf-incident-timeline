@@ -32,6 +32,8 @@ Reviewed baseline: `d8e8169e1c5bb175bc8c5218f005f6f2a9a563d3` on 2026-09-07. Sco
 
 11. Version 0.8.0 completes the offline evaluation tooling and measured synthetic workloads: source/hardware hashes, runtime/RSS/coverage data, parser/IOC diagnostics, an IPv6 correction and an analyst-label citation scorer. Real model faithfulness remains a live acceptance item. [Evaluation scope and results](EVALUATION.md).
 
+12. Version 0.9.0 completes signed manifests and configurable external signer trust: detached Ed25519 attestations, encrypted keys, pinned versioned policies, rotation/revocation, required-signature verification, Databricks sidecar upload/publication gates, retained verification receipts and a sixth notebook. [Signer trust and assurance boundaries](SIGNING.md).
+
 ## Deployment acceptance that depends on the operator environment
 
 These are explicit acceptance steps, not claims of completed production deployment:
@@ -41,13 +43,24 @@ These are explicit acceptance steps, not claims of completed production deployme
 - Run a synthetic live round trip and compare downloaded bundle hashes and Delta row counts. Test denied permissions, altered bundles and interrupted publication.
 - Confirm model access and data-processing requirements. Run a small reviewed evaluation set before enabling paid analysis. Model output quality has not been measured by the offline test doubles.
 
-## Next milestones
+## Remaining environment acceptance
 
 | Priority | Enhancement | Acceptance evidence |
 | --- | --- | --- |
 | 1 | Tenant acceptance and organization-specific parser fixtures | Sanitized representative exports pass source/record/field-level review; live workflow evidence recorded |
-| 5 | Signed manifests and external trust anchors | Explicit signer trust, key rotation and revocation; independent audit/retention controls |
 
 The existing artifact-family and top-50 SaaS catalogs remain descriptive references. Implementing a catalog entry requires a source contract and representative test data; the project does not claim those entries are all parsers.
 
 Completed priority 2 is bounded to the nine advertised core classes, with no optional OCSF profiles or extensions. Regression cases validate each class against the packaged schemas and exercise missing fields, wrong versions, invalid nested objects and provenance mismatches. New profiles, newer versions and additional classes need their own reviewed mapping and acceptance work.
+
+## Repository milestone status
+
+| Milestone | Repository status | External acceptance still needed |
+| --- | --- | --- |
+| Packaging, evidence, 21 parsers, Tines, Databricks, AI | Completed in 0.5.0 | Real tenant import, permissions, representative exports and provider access |
+| Nine-class pinned OCSF export | Completed in 0.6.0 | Organization mapping review and additional profiles/classes if required |
+| Four-source checkpointed collection | Completed in 0.7.0 | Live paging/retention comparison, scheduler identity, lag and late-arrival reconciliation |
+| Scale and quality tooling | Completed and measured synthetically in 0.8.0 | Representative workloads and independent analyst judgments of actual model outputs |
+| Signed manifests and pinned signer policy | Completed in 0.9.0 | Production signer identity, protected policy deployment, retention/audit controls and live revocation exercise |
+
+All planned repository implementation milestones are complete within the documented source and schema contracts. No production keys, credentials, source-specific organization fixtures or paid model outputs were available. Remaining acceptance steps require the operator environment. Use the linked guides to record the actual environment, expected/observed behavior and reviewer approval before enabling those live services.

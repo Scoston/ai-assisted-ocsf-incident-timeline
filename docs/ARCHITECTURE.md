@@ -48,3 +48,7 @@ No tools, web browsing or containment functions are exposed to the model. Its sc
 JSON/Windows XML documents: 32 MiB; line-oriented records: 4 MiB. Whole-document parsing errors fail the batch, even with `--quarantine`. Use JSONL for large exports. CSV field limits and column counts are checked. DTD/entity declarations, duplicate JSON keys and non-finite JSON numbers are rejected.
 
 Ordering uses source timestamps; it does not resolve clock skew or establish causation. Millisecond order does not distinguish sub-millisecond events; original timestamps remain available. Collection completeness, schema conformance, source authenticity and cryptographic signing are separate concerns.
+
+## Optional manifest attestations
+
+Detached Ed25519 sidecars bind exact manifest hashes and artifact kinds to a separately pinned signer policy. Bundle membership stays unchanged. Verification checks current configured key status/scope plus every covered artifact; no trusted signing time is asserted. Databricks can enforce this policy before writes and before publication markers, retaining separate verification receipts. Signer identity, key custody and policy/pin distribution remain external trust anchors. [Format, boundaries and lifecycle](SIGNING.md).

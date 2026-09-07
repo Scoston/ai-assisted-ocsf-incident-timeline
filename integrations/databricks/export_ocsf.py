@@ -3,11 +3,16 @@
 from pathlib import Path
 import re
 from timeline_demo.core.manifest import verify_bundle
-from timeline_demo.integrations.databricks import publish_ocsf_export, volume_path
+from timeline_demo.integrations.databricks import publish_ocsf_export, volume_path, job_signature_options
 from timeline_demo.ocsf import MAPPING_VERSION, export_bundle, verify_export
 from timeline_demo.parsers.common import compact_json, file_hash
+from timeline_demo.signing import enforce_signature
 
 
+dbutils.widgets.text("require_signature", "false")
+dbutils.widgets.text("signature_root", "")
+dbutils.widgets.text("trust_store", "")
+dbutils.widgets.text("trust_store_sha256", "")
 dbutils.widgets.text("enabled", "false")
 dbutils.widgets.text("quarantine", "false")
 dbutils.widgets.text("bundle_path", "")
@@ -27,6 +32,14 @@ source = volume_path(dbutils.widgets.get("bundle_path"))
 source_pin = dbutils.widgets.get("manifest_sha256")
 if not re.fullmatch(r"[a-f0-9]{64}", source_pin):
     raise ValueError("a pinned source manifest SHA-256 is required")
+source_signature_options = job_signature_options(
+    source,
+    source_pin,
+    dbutils.widgets.get("require_signature"),
+    dbutils.widgets.get("signature_root"),
+    dbutils.widgets.get("trust_store"),
+    dbutils.widgets.get("trust_store_sha256"),
+)
 manifest = verify_bundle(source, source_pin)
 export_root = volume_path(dbutils.widgets.get("export_root"))
 quarantine = dbutils.widgets.get("quarantine")
@@ -43,6 +56,9 @@ if report["counts"]["rejected_events"] and quarantine != "true":
     raise ValueError("strict OCSF publication rejects an existing partial export")
 
 # COMMAND ----------
+# Recheck source trust after export work. The derived export is not automatically signed.
+
+enforce_signature(source, expected_manifest_sha256=source_pin, **source_signature_options)
 result = publish_ocsf_export(
     spark,
     destination,

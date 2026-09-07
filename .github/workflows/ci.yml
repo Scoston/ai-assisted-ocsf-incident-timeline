@@ -18,7 +18,7 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
           cache: pip
-      - run: python -m pip install -e '.[dev,ai,databricks,collection]'
+      - run: python -m pip install -e '.[dev,ai,databricks,collection,signing]'
       - run: ruff check src tests scripts streamlit_timeline_ui integrations/databricks
       - run: pytest -q
       - run: python scripts/check_notebooks.py --kernel
@@ -46,7 +46,7 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - run: python -m pip install -e '.[dev]' 'pyspark==3.5.3' 'delta-spark==3.2.1'
+      - run: python -m pip install -e '.[dev,signing]' 'pyspark==3.5.3' 'delta-spark==3.2.1'
       - name: Verify Delta inserts, publication markers, and replay
         env:
           TIMELINE_TEST_DELTA: '1'

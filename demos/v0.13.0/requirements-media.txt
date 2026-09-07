@@ -1,0 +1,4 @@
+# Isolated media-build dependencies, never added to the runtime wheel/container.
+kokoro-onnx==0.4.9
+soundfile==0.14.0
+Pillow==11.3.0

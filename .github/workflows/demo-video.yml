@@ -13,36 +13,98 @@ concurrency:
   group: demo-video-${{ github.ref }}
   cancel-in-progress: true
 jobs:
-  capture:
+  build:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
+    outputs:
+      reviewed: ${{ steps.mode.outputs.reviewed }}
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - id: mode
+        run: |
+          if test -f demos/v0.13.0/approved.json; then
+            echo 'reviewed=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'reviewed=false' >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        if: steps.mode.outputs.reviewed == 'false'
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install isolated demo tools
+        if: steps.mode.outputs.reviewed == 'false'
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes ffmpeg fonts-dejavu-core
+          python -m pip install -e '.[dev,ui,signing]' 'playwright==1.62.0' -r demos/v0.13.0/requirements-media.txt
+          python -m playwright install --with-deps chromium
+      - name: Execute synthetic demonstrations and capture the viewer
+        if: steps.mode.outputs.reviewed == 'false'
+        run: |
+          python scripts/demo_video/prepare.py
+          python scripts/demo_video/capture_viewer.py
+      - name: Narrate and render the complete feature tour
+        if: steps.mode.outputs.reviewed == 'false'
+        run: |
+          python scripts/demo_video/narrate.py
+          python scripts/demo_video/render.py
+      - name: Decode and package the review candidate
+        if: steps.mode.outputs.reviewed == 'false'
+        run: |
+          ffmpeg -v error -xerror -i output/demo-video/deliverables/timeline-v0.13.0-demo.mp4 -f null -
+          python scripts/demo_video/package.py
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: steps.mode.outputs.reviewed == 'false'
+        with:
+          name: demo-video-candidate
+          path: output/demo-video/deliverables/
+          if-no-files-found: error
+          retention-days: 30
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: failure()
+        with:
+          name: demo-build-diagnostics
+          path: |
+            output/demo-video/capture/
+            output/demo-video/frames/
+          if-no-files-found: ignore
+          retention-days: 7
+  candidate:
+    if: needs.build.outputs.reviewed == 'false'
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        with:
+          name: demo-video-candidate
+          path: deliverables
+      - name: Upload candidate to the dedicated demo release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          zip -j "candidate-${GITHUB_SHA}.zip" deliverables/*
+          gh release upload demo-v0.13.0 "candidate-${GITHUB_SHA}.zip"
+          sha256sum "candidate-${GITHUB_SHA}.zip" >> "$GITHUB_STEP_SUMMARY"
+  publish:
+    if: needs.build.outputs.reviewed == 'true' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           persist-credentials: false
-      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
-        with:
-          python-version: '3.12'
-          cache: pip
-      - run: python -m pip install -e '.[ui]' 'playwright==1.62.0'
-      - run: python -m playwright install --with-deps chromium
-      - run: python scripts/demo_video/capture_viewer.py
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        if: always()
-        with:
-          name: demo-viewer-capture
-          path: output/demo-video/capture/
-          if-no-files-found: error
-          retention-days: 30
-      - name: Publish synthetic capture for video production
+      - name: Publish the exact reviewed video and companion files
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-        run: |
-          zip -j output/viewer-capture.zip output/demo-video/capture/*
-          if ! gh release view demo-v0.13.0 >/dev/null 2>&1; then
-            gh release create demo-v0.13.0 --target "$GITHUB_SHA" --prerelease --latest=false --title 'v0.13.0 feature demo — production preview' --notes 'Synthetic viewer capture for the narrated feature demo. The completed video, captions and transcript will be added after review. No tenant data or credentials are included.'
-          fi
-          gh release upload demo-v0.13.0 "output/viewer-capture.zip#Synthetic viewer capture"
+        run: python scripts/demo_video/publish.py

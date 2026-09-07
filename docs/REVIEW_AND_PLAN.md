@@ -1,5 +1,7 @@
 # Repository review and implementation plan
 
+The current 0.11 enterprise assessment and implemented security/operations release are in [ENTERPRISE_READINESS.md](ENTERPRISE_READINESS.md). This page preserves the original review and completed milestone history. Production acceptance requires the named tenant/platform/admin evidence; historical milestone completion does not establish enterprise readiness by itself.
+
 Reviewed baseline: `d8e8169e1c5bb175bc8c5218f005f6f2a9a563d3` on 2026-09-07. Scope is `Scoston/ai-assisted-ocsf-incident-timeline`; the separate AI-DFIR project is not changed.
 
 ## Review findings

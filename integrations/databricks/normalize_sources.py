@@ -5,8 +5,8 @@
 
 # COMMAND ----------
 import json
-from timeline_demo.pipeline import Input, run_pipeline
-from timeline_demo.integrations.databricks import volume_path
+from timeline_demo.pipeline import Input
+from timeline_demo.integrations.databricks import volume_path, normalize_volume_sources
 
 for name, default in [
     ("sources_json", "[]"),
@@ -17,7 +17,7 @@ for name, default in [
     dbutils.widgets.text(name, default)  # noqa: F821
 sources = json.loads(dbutils.widgets.get("sources_json"))  # noqa: F821
 inputs = [Input(item["parser"], volume_path(item["path"])) for item in sources]
-manifest = run_pipeline(
+manifest = normalize_volume_sources(
     inputs,
     volume_path(dbutils.widgets.get("output_bundle")),
     dbutils.widgets.get("case_id"),  # noqa: F821

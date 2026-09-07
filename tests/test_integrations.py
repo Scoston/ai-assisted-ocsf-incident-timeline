@@ -85,6 +85,49 @@ def test_sdk_upload_submit_and_status(bundle):
     assert client.status(123)["state"]["result_state"] == "SUCCESS"
 
 
+def test_volume_normalization_stages_locally_and_uploads_marker_last(tmp_path, cloudtrail, monkeypatch):
+    from timeline_demo.integrations.databricks import normalize_volume_sources
+    from timeline_demo.pipeline import Input
+    import timeline_demo.pipeline as pipeline
+
+    source = tmp_path / "source.json"
+    source.write_text(json.dumps(cloudtrail))
+    workspace = FakeWorkspace()
+    observed = []
+    original = pipeline.run_pipeline
+
+    def check(inputs, output, *args, **kwargs):
+        assert not str(output).startswith("/Volumes/")
+        observed.append(Path(output))
+        return original(inputs, output, *args, **kwargs)
+
+    monkeypatch.setattr(pipeline, "run_pipeline", check)
+    remote = "/Volumes/main/ir/evidence/normalized"
+    result = normalize_volume_sources(
+        [Input("cloudtrail", source)], remote, "volume-case", client=DatabricksClient(workspace)
+    )
+    assert result["counts"]["event_count"] == 1
+    assert list(workspace.uploads)[-1] == remote + "/audit_manifest.json"
+    assert observed and not observed[0].exists()
+
+
+def test_ocsf_upload_recovers_partial_files_and_rejects_conflict(bundle, tmp_path):
+    from timeline_demo.ocsf import export_bundle
+
+    directory = tmp_path / "export"
+    export_bundle(bundle, directory)
+    workspace = FakeWorkspace()
+    client = DatabricksClient(workspace)
+    remote = "/Volumes/main/ir/exports/derived"
+    workspace.uploads[remote + "/ocsf.jsonl"] = (directory / "ocsf.jsonl").read_bytes()
+    assert client.upload_export(directory, remote, bundle) == remote
+    assert list(workspace.uploads)[-1] == remote + "/export_manifest.json"
+    client.upload_export(directory, remote, bundle)
+    workspace.uploads[remote + "/ocsf.jsonl"] = b"conflict"
+    with pytest.raises(ValueError, match="conflict|expected size"):
+        client.upload_export(directory, remote, bundle)
+
+
 def test_tines_story_graphs_and_external_boundaries():
     for path in (ROOT / "integrations/tines/stories").glob("*.json"):
         story = json.loads(path.read_text())

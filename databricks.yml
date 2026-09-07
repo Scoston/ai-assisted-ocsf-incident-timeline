@@ -140,6 +140,8 @@ resources:
           libraries:
             - whl: ./dist/*.whl
             - pypi:
+                package: "databricks-sdk>=0.60,<1"
+            - pypi:
                 package: "cryptography>=46,<51"
           max_retries: 2
           min_retry_interval_millis: 30000

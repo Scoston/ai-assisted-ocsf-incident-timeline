@@ -16,3 +16,7 @@ analysis/
 # Signing material created locally; never commit private keys.
 keys/
 *.pem
+.streamlit/secrets.toml
+state/
+backups/
+deploy/*.local.*

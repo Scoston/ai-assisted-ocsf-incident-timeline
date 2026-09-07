@@ -1,0 +1,8 @@
+**
+!requirements/
+!requirements/runtime-py312-linux.txt
+!dist/
+!dist/*.whl
+!streamlit_timeline_ui/
+!streamlit_timeline_ui/app.py
+!Dockerfile

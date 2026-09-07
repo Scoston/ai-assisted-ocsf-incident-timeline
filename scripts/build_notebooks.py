@@ -42,6 +42,7 @@ def main():
     build_evaluation_notebook()
     build_signing_notebook()
     build_enterprise_notebook()
+    build_operations_notebook()
     write(
         "01_offline_investigation.ipynb",
         [
@@ -313,6 +314,48 @@ assert len([name for name in manifest['files'] if name.startswith('attachments/c
             ("code", "work.cleanup()"),
         ],
     )
+
+
+def build_operations_notebook():
+    write("08_operations_and_recovery.ipynb", [
+        ("md", "# Collector recovery and monitoring\nSimulate an interrupted collection, inspect health, back up committed pages, and resume from a verified snapshot. Synthetic data only; no provider or model calls. Install the collection extra."),
+        ("code", """import tempfile
+from pathlib import Path
+from timeline_demo.collection import collect_window
+from timeline_demo.collection.providers import Page
+from timeline_demo.operations import backup, restore, health, prometheus
+work = tempfile.TemporaryDirectory()
+root = Path(work.name)
+class Source:
+    parser = 'entra_signin'
+    identity = {'source': 'entra_signin', 'source_id': 'recovery-demo'}
+    interval = 0
+    def __init__(self, pages):
+        self.pages, self.calls = iter(pages), 0
+    def fetch(self, *args):
+        self.calls += 1
+        return next(self.pages)
+first = Source([Page(b'{"value":[]}', [], {'next': 2})])
+arguments = (root/'state', root/'bundle', 'recovery-demo', '2026-09-01T10:00:00Z', '2026-09-01T11:00:00Z')
+try:
+    collect_window(first, *arguments, max_pages=1)
+    raise AssertionError('expected a paused collection')
+except ValueError as error:
+    assert 'page budget' in str(error)
+assert not (root/'bundle').exists()
+health(root/'state', verify_blobs=True)"""),
+        ("code", """saved = backup(root/'state', root/'snapshot')
+assert saved['published_bundles_included'] is False
+restore(root/'snapshot', root/'restored', saved['snapshot_sha256'])
+remaining = Source([Page(b'{"value":[]}', [], None)])
+result = collect_window(remaining, root/'restored', *arguments[1:])
+assert remaining.calls == 1
+assert result['collection']['model_tokens'] == 0
+assert health(root/'restored', verify_blobs=True, verify_bundles=True)['healthy']
+print(prometheus(health(root/'restored')))"""),
+        ("md", "Persist the snapshot SHA-256 independently in production. Backups contain state and committed page blobs, not published bundles, signing keys or AI ledgers. Restore published bundles to their original absolute paths first. Never run both restored and original collector state simultaneously. See docs/OPERATIONS.md for recovery, retention and monitoring procedures."),
+        ("code", "work.cleanup()"),
+    ])
 
 
 if __name__ == "__main__":

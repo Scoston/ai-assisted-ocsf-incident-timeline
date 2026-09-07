@@ -2,9 +2,11 @@
 
 Build an investigation timeline from cloud, identity, endpoint, network and forensic exports. Preserve source files, normalize timestamps, retain parser provenance, verify artifact hashes, and add optional AI interpretation for human review.
 
-**Version 0.10.0:** an installable Python package, 25 parser contracts, two dedicated Tines stories, Databricks Volume/Jobs/Delta integration, seven Jupyter notebooks, a token-bounded AI harness, a schema-validated OCSF 1.3.0 export, 18 checkpointed collector types, published scale measurements, and optional signed manifests with pinned signer trust. The offline pipeline and OCSF export require no API key and consume **zero model tokens**.
+**Version 0.11.0:** an installable Python package, 25 parser contracts, two dedicated Tines stories, Databricks Volume/Jobs/Delta integration, eight Jupyter notebooks, a token-bounded AI harness, a schema-validated OCSF 1.3.0 export, 18 checkpointed collector types, published scale measurements, and optional signed manifests with pinned signer trust. This release adds verified recovery, health metrics, OIDC case access, ingestion limits and a locked container deployment. The offline pipeline and OCSF export require no API key and consume **zero model tokens**.
 
 The timeline uses an **OCSF-aligned analytical profile**. The separate `export-ocsf` command emits validated core OCSF events for nine pinned classes; missing required fields are rejected explicitly. File integrity checks do not prove source authenticity, complete collection, accurate clocks, or legal admissibility. AI analysis is stored separately and cannot establish those properties.
+
+Start with the [enterprise readiness assessment](docs/ENTERPRISE_READINESS.md) for implemented controls and the tenant, identity, storage and administrator acceptance work required before production use.
 
 ## Start locally
 
@@ -35,12 +37,14 @@ jupyter lab notebooks/
 streamlit run streamlit_timeline_ui/app.py
 ```
 
-The viewer starts with a verified example bundle. Select a newly generated bundle in its sidebar. It displays an explicit event limit and verifies hashes before presenting the timeline.
+Local viewer mode requires a loopback bind and starts with a verified example bundle. Shared mode requires OIDC, explicit case assignments, pinned manifests and trusted signatures; see [deployment](docs/DEPLOYMENT.md). Select a newly generated bundle in its sidebar. It displays an explicit event limit and verifies hashes before presenting the timeline.
 
 ## Integrations and analysis
 
 | Need | Implemented path | Guide |
 | --- | --- | --- |
+| Enterprise operations | Health/Prometheus, consistent checkpoint backup/restore and parser upgrade boundaries | [Operations](docs/OPERATIONS.md) |
+| Shared access and deployment | OIDC case authorization, locked dependencies, container, advisory scans and build provenance | [Deployment](docs/DEPLOYMENT.md) |
 | Signed evidence | Detached bundle/export signatures, pinned signer policy, rotation/revocation and optional Databricks enforcement | [Signer setup and operating limits](docs/SIGNING.md) |
 | Continuous collection | Fixed windows, durable pages/cursors and overlapping catch-up batches for 18 collector types | [Collection setup and coverage](docs/COLLECTION.md) |
 | Tines orchestration | Importable publish/monitor and run-inspection stories; asynchronous receipts, bounded polling and stable Databricks idempotency keys | [Tines implementation and operational implications](integrations/tines/README.md) |
@@ -84,6 +88,6 @@ python scripts/check_notebooks.py --kernel
 python -m build
 ```
 
-GitHub Actions tests Python 3.10/3.12, executes the notebooks, builds the distribution, and runs a separate real Spark/Delta replay gate. Tenant credentials are not used in CI. See [validation record](docs/VALIDATION.md) for results and live acceptance steps.
+GitHub Actions tests Python 3.10/3.12, executes all eight notebooks, builds the distribution, runs real Spark/Delta replay, audits dependencies, runs CodeQL and exercises the installed wheel in an unprivileged offline container. Successful main builds attest the distribution. Tenant credentials are not used in CI. See [validation record](docs/VALIDATION.md) for results and live acceptance steps.
 
 Upgrading from the nested 0.4 demo? Read [UPGRADING.md](UPGRADING.md). The original training catalogs and demo material remain in `catalogs/` and `docs/legacy_demo_guide.md`; catalogs describe investigation coverage and are not executable parsers.

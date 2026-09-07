@@ -1,5 +1,15 @@
 # Upgrading
 
+## From 0.10 to 0.11
+
+Read [enterprise readiness](docs/ENTERPRISE_READINESS.md), [deployment](docs/DEPLOYMENT.md) and [operations](docs/OPERATIONS.md). Finish active windows with the old release before upgrading. The state schema adds a nullable parser version: new runs bind it; incomplete legacy/changed-version runs with committed pages fail before network access. Completed old runs remain replayable. Back up state and published evidence before migration; do not roll a migrated active state back by editing SQLite.
+
+Offline ingestion now has explicit aggregate budgets and rejects direct `/Volumes/` output. Use the updated Databricks normalization/OCSF adapters, which stage locally and upload manifests last. Redeploy the wheel and job configuration; the OCSF task now declares the Databricks SDK dependency. Give the driver adequate local disk space.
+
+Manifest 2.0, parser versions and OCSF mapping versions are unchanged. Existing well-formed bundles verify; previously accepted duplicate JSON keys, invalid lengths, noncanonical paths or special files are rejected. Preserve rejected originals rather than rewriting evidence to bypass checks.
+
+Local viewer mode requires a loopback bind; shared access requires the new OIDC/pinned-policy setup. Generated POSIX files are private to their owner. Provision deliberate service/group access through your platform instead of relying on ambient world-readable permissions. The deployment lock is specifically Linux/Python 3.12.
+
 ## From 0.9 to 0.10
 
 Reinstall the package with `.[collection,databricks]` for the expanded collectors. Copy the new source examples and scope one configuration to each account/region, table, feed or application. Existing four-source collection reports and checkpoints remain compatible. New reports add a source-specific `window_basis`; late delivered or updated evidence can have a timeline timestamp outside that collection window.

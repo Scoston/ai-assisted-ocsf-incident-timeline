@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
 
 from timeline_demo.parsers.registry import SPECS
@@ -33,6 +34,10 @@ def main(argv=None):
     ingest.add_argument("--quarantine", action="store_true")
     ingest.add_argument("--assume-timezone")
     ingest.add_argument("--parquet", action="store_true")
+    from timeline_demo.pipeline import Limits
+
+    for name, value in vars(Limits()).items():
+        ingest.add_argument("--" + name.replace("_", "-"), type=int, default=value)
     verify = commands.add_parser("verify")
     verify.add_argument("bundle")
     verify.add_argument("--manifest-sha256")
@@ -124,6 +129,7 @@ def main(argv=None):
                 quarantine=args.quarantine,
                 assume_timezone=args.assume_timezone,
                 parquet=args.parquet,
+                limits=Limits(**{name: getattr(args, name) for name in vars(Limits())}),
             )
         elif args.command == "verify":
             from timeline_demo.core.manifest import verify_bundle
@@ -192,8 +198,12 @@ def main(argv=None):
                     },
                 }
             if args.output:
-                Path(args.output).parent.mkdir(parents=True, exist_ok=True)
-                with Path(args.output).open("x", encoding="utf-8") as stream:
+                from timeline_demo.core.storage import no_links
+
+                output = no_links(args.output)
+                output.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+                fd = os.open(output, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+                with os.fdopen(fd, "w", encoding="utf-8") as stream:
                     stream.write(json.dumps(result, indent=2) + "\n")
         elif args.command == "tines-request":
             from timeline_demo.integrations.databricks import tines_request

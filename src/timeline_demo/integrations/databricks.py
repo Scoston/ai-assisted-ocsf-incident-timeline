@@ -32,6 +32,18 @@ def volume_path(path):
     return path
 
 
+def normalize_volume_sources(inputs, output_bundle, case_id, *, client=None, **options):
+    """Normalize on driver-local disk; publish sequential Volume objects, manifest last."""
+    from timeline_demo.pipeline import run_pipeline
+
+    volume_path(output_bundle)
+    with tempfile.TemporaryDirectory(prefix="timeline-normalize-") as temp:
+        local = Path(temp) / "bundle"
+        manifest = run_pipeline(inputs, local, case_id, **options)
+        (client or DatabricksClient()).upload_bundle_at(local, output_bundle)
+    return manifest
+
+
 def tines_request(bundle, remote_bundle, job_id):
     manifest = verify_bundle(bundle)
     volume_path(remote_bundle)
@@ -59,7 +71,31 @@ class DatabricksClient:
     def upload_bundle(self, bundle, volume_root):
         manifest = verify_bundle(bundle)
         remote = volume_path(volume_root.rstrip("/")) + "/" + manifest["bundle_id"]
-        names = sorted(manifest["files"]) + ["audit_manifest.json"]  # Commit marker uploaded last.
+        return self.upload_bundle_at(bundle, remote)
+
+    def upload_bundle_at(self, bundle, remote):
+        manifest = verify_bundle(bundle)
+        pin = file_hash(Path(bundle) / "audit_manifest.json")
+        return self._upload_artifact(
+            bundle, remote, manifest["files"], "audit_manifest.json", lambda: verify_bundle(bundle, pin)
+        )
+
+    def upload_export(self, export, remote, bundle):
+        from timeline_demo.ocsf import verify_export
+
+        report = verify_export(export, bundle=bundle)
+        pin = file_hash(Path(export) / "export_manifest.json")
+        return self._upload_artifact(
+            export,
+            remote,
+            report["files"],
+            "export_manifest.json",
+            lambda: verify_export(export, manifest_sha256=pin, bundle=bundle),
+        )
+
+    def _upload_artifact(self, bundle, remote, entries, marker, verify):
+        volume_path(remote)
+        names = sorted(entries) + [marker]  # Commit marker uploaded last.
         from databricks.sdk.errors import ResourceAlreadyExists
 
         for folder in sorted(
@@ -68,6 +104,8 @@ class DatabricksClient:
             self.workspace.files.create_directory(folder)
 
         for name in names:
+            if name == marker:
+                verify()
             local = Path(bundle) / name
             path = remote + "/" + name
             try:
@@ -77,8 +115,12 @@ class DatabricksClient:
                 # Safe restart after a partial upload; conflicting remote bytes fail closed.
                 response = self.workspace.files.download(path)
                 digest = hashlib.sha256()
+                count = 0
                 with response.contents as contents:
                     for block in iter(lambda: contents.read(1024 * 1024), b""):
+                        count += len(block)
+                        if count > local.stat().st_size:
+                            raise ValueError("remote artifact exceeds expected size")
                         digest.update(block)
                 if digest.hexdigest() != file_hash(local):
                     raise ValueError("remote bundle conflict: " + name)
@@ -124,9 +166,10 @@ class DatabricksClient:
                 raw = contents.read(4 * 1024 * 1024 + 1)
             if len(raw) > 4 * 1024 * 1024 or hashlib.sha256(raw).hexdigest() != expected_manifest_sha256:
                 raise ValueError("downloaded manifest does not match pinned digest")
-            import json
+            from timeline_demo.core.manifest import parse_manifest
+            from timeline_demo.core.storage import private_tree
 
-            manifest = json.loads(raw)
+            manifest = parse_manifest(raw)
             (root / "audit_manifest.json").write_bytes(raw)
             for name, entry in manifest["files"].items():
                 local = safe_member(root, name)
@@ -140,6 +183,7 @@ class DatabricksClient:
                             raise ValueError("download larger than manifest entry")
                         stream.write(block)
             result = verify_bundle(root, expected_manifest_sha256)
+            private_tree(root)
             root.rename(target)
         return result
 
@@ -498,8 +542,17 @@ def run_ocsf_job(
     destination = Path(export_root) / (manifest["bundle_id"] + "-" + MAPPING_VERSION)
     if destination.resolve().is_relative_to(Path(bundle).resolve()):
         raise ValueError("OCSF export must be outside the evidence bundle")
-    if destination.exists():
+    on_volume = str(destination).startswith("/Volumes/")
+    if (destination / "export_manifest.json").is_file():
         report = verify_export(destination, bundle=bundle)
+    elif on_volume:
+        volume_path(str(destination))
+        with tempfile.TemporaryDirectory(prefix="timeline-ocsf-job-") as temp:
+            local = Path(temp) / "export"
+            report = export_bundle(
+                bundle, local, manifest_sha256=manifest_pin, quarantine=quarantine == "true"
+            )
+            DatabricksClient().upload_export(local, str(destination), bundle)
     else:
         report = export_bundle(
             bundle, destination, manifest_sha256=manifest_pin, quarantine=quarantine == "true"

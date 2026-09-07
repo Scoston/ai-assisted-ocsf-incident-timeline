@@ -1,0 +1,15 @@
+{
+  "version": "1.0",
+  "trust_store": "/policy/trust.json",
+  "trust_store_sha256": "REPLACE_WITH_INDEPENDENTLY_RECORDED_SHA256",
+  "principals": [
+    {"issuer": "https://login.microsoftonline.com/TENANT_ID/v2.0", "subject": "APPLICATION_SCOPED_SUBJECT", "cases": ["case-001"]}
+  ],
+  "cases": {
+    "case-001": {
+      "bundle": "/evidence/case-001",
+      "manifest_sha256": "REPLACE_WITH_INDEPENDENTLY_RECORDED_SHA256",
+      "signature": "/signatures/case-001.sig.json"
+    }
+  }
+}

@@ -1,0 +1,613 @@
+{
+  "schema_version": 18,
+  "standard_lib_version": 41,
+  "action_runtime_version": 6,
+  "name": "Timeline - Publish and monitor Databricks",
+  "description": "AI incident timeline integration. Disabled until tenant credentials, paths and runbooks are configured. No containment or AI action is executed.",
+  "guid": "60bc4cbe9fb35301b82906f76d0f408c",
+  "agents": [
+    {
+      "name": "Receive bundle",
+      "type": "Agents::WebhookAgent",
+      "guid": "306544f6d5295c248e7afc69af2f418e",
+      "disabled": true,
+      "options": {
+        "path": "timeline-bundle",
+        "secret": "REPLACE_WITH_RANDOM_SECRET",
+        "verbs": "post",
+        "include_headers": true,
+        "response_code": 202,
+        "response": {
+          "status": "received",
+          "completion": "asynchronous"
+        }
+      },
+      "description": "Configure tenant resources and enable after acceptance testing.",
+      "monitoring": {
+        "monitor_failures": true,
+        "monitor_all_events": false,
+        "monitor_no_events_emitted": null
+      }
+    },
+    {
+      "name": "Validate contract",
+      "type": "Agents::TriggerAgent",
+      "guid": "9f79a84ddfeb5f5a89891eb3520e85eb",
+      "disabled": true,
+      "options": {
+        "rules": [
+          {
+            "path": "<<receive_bundle.body.contract_version>>",
+            "value": "^1\\.0$",
+            "type": "regex"
+          },
+          {
+            "path": "<<receive_bundle.body.bundle_path>>",
+            "value": "^/Volumes/[A-Za-z_][A-Za-z0-9_]*/[A-Za-z_][A-Za-z0-9_]*/[A-Za-z_][A-Za-z0-9_]*/[A-Za-z0-9_./-]+$",
+            "type": "regex"
+          },
+          {
+            "path": "<<receive_bundle.body.manifest_sha256>>",
+            "value": "^[a-f0-9]{64}$",
+            "type": "regex"
+          },
+          {
+            "path": "<<receive_bundle.body.idempotency_key>>",
+            "value": "^[a-f0-9]{64}$",
+            "type": "regex"
+          }
+        ],
+        "must_match": 4
+      },
+      "description": "Configure tenant resources and enable after acceptance testing.",
+      "monitoring": {
+        "monitor_failures": true,
+        "monitor_all_events": false,
+        "monitor_no_events_emitted": null
+      }
+    },
+    {
+      "name": "Submit job",
+      "type": "Agents::HTTPRequestAgent",
+      "guid": "8f79c2fb52f05c4da0108051835f0513",
+      "disabled": true,
+      "options": {
+        "url": "<<RESOURCE.databricks_host>>/api/2.2/jobs/run-now",
+        "method": "post",
+        "content_type": "json",
+        "headers": {
+          "Authorization": "Bearer <<CREDENTIAL.databricks_token>>"
+        },
+        "log_error_on_status": [
+          "400-599"
+        ],
+        "payload": {
+          "job_id": "=RESOURCE.timeline_job_id",
+          "idempotency_token": "<<receive_bundle.body.idempotency_key>>",
+          "job_parameters": {
+            "bundle_path": "<<receive_bundle.body.bundle_path>>",
+            "manifest_sha256": "<<receive_bundle.body.manifest_sha256>>"
+          }
+        }
+      },
+      "description": "Configure tenant resources and enable after acceptance testing.",
+      "monitoring": {
+        "monitor_failures": true,
+        "monitor_all_events": false,
+        "monitor_no_events_emitted": null
+      }
+    },
+    {
+      "name": "Submission accepted",
+      "type": "Agents::TriggerAgent",
+      "guid": "b63005051748532a82510f39db5ac9aa",
+      "disabled": true,
+      "options": {
+        "rules": [
+          {
+            "path": "<<submit_job.status>>",
+            "value": "^200$",
+            "type": "regex"
+          },
+          {
+            "path": "<<submit_job.body.run_id>>",
+            "value": "^[0-9]+$",
+            "type": "regex"
+          }
+        ],
+        "must_match": 2
+      },
+      "description": "Configure tenant resources and enable after acceptance testing.",
+      "monitoring": {
+        "monitor_failures": true,
+        "monitor_all_events": false,
+        "monitor_no_events_emitted": null
+      }
+    },
+    {
+      "name": "Initialize poll",
+      "type": "Agents::EventTransformationAgent",
+      "guid": "c8c7dbb356795eee8925227e7bb45f0b",
+      "disabled": true,
+      "options": {
+        "mode": "message_only",
+        "payload": {
+          "run_id": "=submit_job.body.run_id",
+          "polls": 0,
+          "bundle": "=receive_bundle.body"
+        }
+      },
+      "description": "Configure tenant resources and enable after acceptance testing.",
+      "monitoring": {
+        "monitor_failures": true,
+        "monitor_all_events": false,
+        "monitor_no_events_emitted": null
+      }
+    },
+    {
+      "name": "Poll context",
+      "type": "Agents::EventTransformationAgent",
+      "guid": "928abe3ab8ee55ada03a5262f6390692",
+      "disabled": true,
+      "options": {
+        "mode": "message_only",
+        "payload": "=DEFAULT(next_poll, initialize_poll)"
+      },
+      "description": "Configure tenant resources and enable after acceptance testing.",
+      "monitoring": {
+        "monitor_failures": true,
+        "monitor_all_events": false,
+        "monitor_no_events_emitted": null
+      }
+    },
+    {
+      "name": "Get run",
+      "type": "Agents::HTTPRequestAgent",
+      "guid": "5a6e6f08d7735d219ee0f0f5d43aa1cb",
+      "disabled": true,
+      "options": {
+        "url": "<<RESOURCE.databricks_host>>/api/2.2/jobs/runs/get?run_id=<<poll_context.run_id>>",
+        "method": "get",
+        "content_type": "json",
+        "headers": {
+          "Authorization": "Bearer <<CREDENTIAL.databricks_token>>"
+        },
+        "log_error_on_status": [
+          "400-599"
+        ]
+      },
+      "description": "Configure tenant resources and enable after acceptance testing.",
+      "monitoring": {
+        "monitor_failures": true,
+        "monitor_all_events": false,
+        "monitor_no_events_emitted": null
+      }
+    },
+    {
+      "name": "Run succeeded",
+      "type": "Agents::TriggerAgent",
+      "guid": "42d97aa0acf858d598c816c289455cb6",
+      "disabled": true,
+      "options": {
+        "rules": [
+          {
+            "path": "<<get_run.status>>",
+            "value": "^200$",
+            "type": "regex"
+          },
+          {
+            "path": "<<get_run.body.state.life_cycle_state>>",
+            "value": "^TERMINATED$",
+            "type": "regex"
+          },
+          {
+            "path": "<<get_run.body.state.result_state>>",
+            "value": "^SUCCESS$",
+            "type": "regex"
+          }
+        ],
+        "must_match": 3
+      },
+      "description": "Configure tenant resources and enable after acceptance testing.",
+      "monitoring": {
+        "monitor_failures": true,
+        "monitor_all_events": false,
+        "monitor_no_events_emitted": null
+      }
+    },
+    {
+      "name": "Review required",
+      "type": "Agents::EventTransformationAgent",
+      "guid": "89f39bc50a4e5ef79b3c714652c7cd44",
+      "disabled": true,
+      "options": {
+        "mode": "message_only",
+        "payload": {
+          "status": "published",
+          "human_review_required": true,
+          "run_id": "=poll_context.run_id",
+          "bundle": "=poll_context.bundle",
+          "run_url": "=get_run.body.run_page_url"
+        }
+      },
+      "description": "Configure tenant resources and enable after acceptance testing.",
+      "monitoring": {
+        "monitor_failures": true,
+        "monitor_all_events": false,
+        "monitor_no_events_emitted": null
+      }
+    },
+    {
+      "name": "Run pending",
+      "type": "Agents::TriggerAgent",
+      "guid": "222e0ba1e7845c35af6021ab91575631",
+      "disabled": true,
+      "options": {
+        "rules": [
+          {
+            "path": "<<get_run.status>>",
+            "value": "^200$",
+            "type": "regex"
+          },
+          {
+            "path": "<<get_run.body.state.life_cycle_state>>",
+            "value": "^(PENDING|RUNNING|QUEUED|BLOCKED|WAITING_FOR_RETRY|TERMINATING)$",
+            "type": "regex"
+          },
+          {
+            "path": "<<poll_context.polls>>",
+            "value": "60",
+            "type": "field<value"
+          }
+        ],
+        "must_match": 3
+      },
+      "description": "Configure tenant resources and enable after acceptance testing.",
+      "monitoring": {
+        "monitor_failures": true,
+        "monitor_all_events": false,
+        "monitor_no_events_emitted": null
+      }
+    },
+    {
+      "name": "Next poll",
+      "type": "Agents::EventTransformationAgent",
+      "guid": "6a36484d25a95b2abcb66537c96afc64",
+      "disabled": true,
+      "options": {
+        "mode": "message_only",
+        "payload": {
+          "run_id": "=poll_context.run_id",
+          "polls": "=poll_context.polls + 1",
+          "bundle": "=poll_context.bundle"
+        }
+      },
+      "description": "Configure tenant resources and enable after acceptance testing.",
+      "monitoring": {
+        "monitor_failures": true,
+        "monitor_all_events": false,
+        "monitor_no_events_emitted": null
+      }
+    },
+    {
+      "name": "Wait thirty seconds",
+      "type": "Agents::EventTransformationAgent",
+      "guid": "f80168dacf325ffcb2a2532bd295fd64",
+      "disabled": true,
+      "options": {
+        "mode": "delay",
+        "seconds": 30
+      },
+      "description": "Configure tenant resources and enable after acceptance testing.",
+      "monitoring": {
+        "monitor_failures": true,
+        "monitor_all_events": false,
+        "monitor_no_events_emitted": null
+      }
+    },
+    {
+      "name": "Run failed",
+      "type": "Agents::TriggerAgent",
+      "guid": "afb400ca7a4c5e8c8bb274cd3c7a8532",
+      "disabled": true,
+      "options": {
+        "rules": [
+          {
+            "path": "<<get_run.body.state.result_state>>",
+            "value": "^(FAILED|TIMEDOUT|CANCELED|MAXIMUM_CONCURRENT_RUNS_REACHED|UPSTREAM_FAILED|EXCLUDED|SUCCESS_WITH_FAILURES)$",
+            "type": "regex"
+          }
+        ],
+        "must_match": 1
+      },
+      "description": "Configure tenant resources and enable after acceptance testing.",
+      "monitoring": {
+        "monitor_failures": true,
+        "monitor_all_events": false,
+        "monitor_no_events_emitted": null
+      }
+    },
+    {
+      "name": "Failure receipt",
+      "type": "Agents::EventTransformationAgent",
+      "guid": "a35d0cdd3cee5fdca292d2735b73b3a7",
+      "disabled": true,
+      "options": {
+        "mode": "message_only",
+        "payload": {
+          "status": "failed",
+          "run_id": "=poll_context.run_id",
+          "state": "=get_run.body.state",
+          "bundle": "=poll_context.bundle"
+        }
+      },
+      "description": "Configure tenant resources and enable after acceptance testing.",
+      "monitoring": {
+        "monitor_failures": true,
+        "monitor_all_events": false,
+        "monitor_no_events_emitted": null
+      }
+    },
+    {
+      "name": "Polling exhausted",
+      "type": "Agents::TriggerAgent",
+      "guid": "2fdd3c42c4b45c518f852386433fc079",
+      "disabled": true,
+      "options": {
+        "rules": [
+          {
+            "path": "<<poll_context.polls>>",
+            "value": "60",
+            "type": "field>=value"
+          },
+          {
+            "path": "<<get_run.body.state.life_cycle_state>>",
+            "value": "^(PENDING|RUNNING|QUEUED|BLOCKED|WAITING_FOR_RETRY|TERMINATING)$",
+            "type": "regex"
+          }
+        ],
+        "must_match": 2
+      },
+      "description": "Configure tenant resources and enable after acceptance testing.",
+      "monitoring": {
+        "monitor_failures": true,
+        "monitor_all_events": false,
+        "monitor_no_events_emitted": null
+      }
+    },
+    {
+      "name": "Timeout receipt",
+      "type": "Agents::EventTransformationAgent",
+      "guid": "d32fea8a2bb2524e9271acb80ca5e00d",
+      "disabled": true,
+      "options": {
+        "mode": "message_only",
+        "payload": {
+          "status": "poll_timeout",
+          "run_id": "=poll_context.run_id",
+          "bundle": "=poll_context.bundle",
+          "instruction": "Inspect the existing Databricks run; do not submit a new job."
+        }
+      },
+      "description": "Configure tenant resources and enable after acceptance testing.",
+      "monitoring": {
+        "monitor_failures": true,
+        "monitor_all_events": false,
+        "monitor_no_events_emitted": null
+      }
+    },
+    {
+      "name": "Submission error",
+      "type": "Agents::TriggerAgent",
+      "guid": "cc2df0d3809e59edb340799148c49dbf",
+      "disabled": true,
+      "options": {
+        "rules": [
+          {
+            "path": "<<submit_job.status>>",
+            "value": "^[45][0-9]{2}$",
+            "type": "regex"
+          }
+        ],
+        "must_match": 1
+      },
+      "description": "Configure tenant resources and enable after acceptance testing.",
+      "monitoring": {
+        "monitor_failures": true,
+        "monitor_all_events": false,
+        "monitor_no_events_emitted": null
+      }
+    },
+    {
+      "name": "Submission failure",
+      "type": "Agents::EventTransformationAgent",
+      "guid": "6a0ddd43a3b555e796a2161c905837a2",
+      "disabled": true,
+      "options": {
+        "mode": "message_only",
+        "payload": {
+          "status": "submission_failed",
+          "http_status": "=submit_job.status",
+          "bundle": "=receive_bundle.body"
+        }
+      },
+      "description": "Configure tenant resources and enable after acceptance testing.",
+      "monitoring": {
+        "monitor_failures": true,
+        "monitor_all_events": false,
+        "monitor_no_events_emitted": null
+      }
+    },
+    {
+      "name": "Polling error",
+      "type": "Agents::TriggerAgent",
+      "guid": "57308654b3de5a0ba8555ae8ed9f4ac9",
+      "disabled": true,
+      "options": {
+        "rules": [
+          {
+            "path": "<<get_run.status>>",
+            "value": "^[45][0-9]{2}$",
+            "type": "regex"
+          }
+        ],
+        "must_match": 1
+      },
+      "description": "Configure tenant resources and enable after acceptance testing.",
+      "monitoring": {
+        "monitor_failures": true,
+        "monitor_all_events": false,
+        "monitor_no_events_emitted": null
+      }
+    },
+    {
+      "name": "Polling failure",
+      "type": "Agents::EventTransformationAgent",
+      "guid": "24a60e49adac5895bef4944306e6c942",
+      "disabled": true,
+      "options": {
+        "mode": "message_only",
+        "payload": {
+          "status": "poll_http_error",
+          "run_id": "=poll_context.run_id",
+          "http_status": "=get_run.status",
+          "bundle": "=poll_context.bundle"
+        }
+      },
+      "description": "Configure tenant resources and enable after acceptance testing.",
+      "monitoring": {
+        "monitor_failures": true,
+        "monitor_all_events": false,
+        "monitor_no_events_emitted": null
+      }
+    },
+    {
+      "name": "Run internal error",
+      "type": "Agents::TriggerAgent",
+      "guid": "902e7cd1f4db5243aafc4601bb22c89a",
+      "disabled": true,
+      "options": {
+        "rules": [
+          {
+            "path": "<<get_run.body.state.life_cycle_state>>",
+            "value": "^(INTERNAL_ERROR|SKIPPED)$",
+            "type": "regex"
+          }
+        ],
+        "must_match": 1
+      },
+      "description": "Configure tenant resources and enable after acceptance testing.",
+      "monitoring": {
+        "monitor_failures": true,
+        "monitor_all_events": false,
+        "monitor_no_events_emitted": null
+      }
+    }
+  ],
+  "links": [
+    {
+      "source": 0,
+      "receiver": 1
+    },
+    {
+      "source": 1,
+      "receiver": 2
+    },
+    {
+      "source": 2,
+      "receiver": 3
+    },
+    {
+      "source": 3,
+      "receiver": 4
+    },
+    {
+      "source": 4,
+      "receiver": 5
+    },
+    {
+      "source": 5,
+      "receiver": 6
+    },
+    {
+      "source": 6,
+      "receiver": 7
+    },
+    {
+      "source": 7,
+      "receiver": 8
+    },
+    {
+      "source": 6,
+      "receiver": 9
+    },
+    {
+      "source": 9,
+      "receiver": 10
+    },
+    {
+      "source": 10,
+      "receiver": 11
+    },
+    {
+      "source": 11,
+      "receiver": 5
+    },
+    {
+      "source": 6,
+      "receiver": 12
+    },
+    {
+      "source": 12,
+      "receiver": 13
+    },
+    {
+      "source": 6,
+      "receiver": 14
+    },
+    {
+      "source": 14,
+      "receiver": 15
+    },
+    {
+      "source": 2,
+      "receiver": 16
+    },
+    {
+      "source": 16,
+      "receiver": 17
+    },
+    {
+      "source": 6,
+      "receiver": 18
+    },
+    {
+      "source": 18,
+      "receiver": 19
+    },
+    {
+      "source": 6,
+      "receiver": 20
+    },
+    {
+      "source": 20,
+      "receiver": 13
+    }
+  ],
+  "diagram_notes": [],
+  "diagram_layout": "{\"306544f6d5295c248e7afc69af2f418e\": [150, 0], \"9f79a84ddfeb5f5a89891eb3520e85eb\": [500, 0], \"8f79c2fb52f05c4da0108051835f0513\": [850, 0], \"b63005051748532a82510f39db5ac9aa\": [150, 160], \"c8c7dbb356795eee8925227e7bb45f0b\": [500, 160], \"928abe3ab8ee55ada03a5262f6390692\": [850, 160], \"5a6e6f08d7735d219ee0f0f5d43aa1cb\": [150, 320], \"42d97aa0acf858d598c816c289455cb6\": [500, 320], \"89f39bc50a4e5ef79b3c714652c7cd44\": [850, 320], \"222e0ba1e7845c35af6021ab91575631\": [150, 480], \"6a36484d25a95b2abcb66537c96afc64\": [500, 480], \"f80168dacf325ffcb2a2532bd295fd64\": [850, 480], \"afb400ca7a4c5e8c8bb274cd3c7a8532\": [150, 640], \"a35d0cdd3cee5fdca292d2735b73b3a7\": [500, 640], \"2fdd3c42c4b45c518f852386433fc079\": [850, 640], \"d32fea8a2bb2524e9271acb80ca5e00d\": [150, 800], \"cc2df0d3809e59edb340799148c49dbf\": [500, 800], \"6a0ddd43a3b555e796a2161c905837a2\": [850, 800], \"57308654b3de5a0ba8555ae8ed9f4ac9\": [150, 960], \"24a60e49adac5895bef4944306e6c942\": [500, 960], \"902e7cd1f4db5243aafc4601bb22c89a\": [850, 960]}",
+  "keep_events_for": 86400,
+  "send_to_story_enabled": false,
+  "synchronous_webhooks_enabled": false,
+  "entry_agent_guid": "306544f6d5295c248e7afc69af2f418e",
+  "exit_agent_guids": [
+    "89f39bc50a4e5ef79b3c714652c7cd44",
+    "a35d0cdd3cee5fdca292d2735b73b3a7",
+    "d32fea8a2bb2524e9271acb80ca5e00d",
+    "6a0ddd43a3b555e796a2161c905837a2",
+    "24a60e49adac5895bef4944306e6c942"
+  ],
+  "tags": [],
+  "resources": [],
+  "credentials": []
+}

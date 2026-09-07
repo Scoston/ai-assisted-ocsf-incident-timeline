@@ -1,0 +1,47 @@
+name: Validate timeline integrations
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ['3.10', '3.12']
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+      - run: python -m pip install -e '.[dev,ai,databricks]'
+      - run: ruff check src tests scripts streamlit_timeline_ui integrations/databricks
+      - run: pytest -q
+      - run: python scripts/check_notebooks.py --kernel
+      - run: python -m build
+      - name: Verify packaged resource files
+        run: |
+          python -c "from timeline_demo.ai import load_policy; assert len(load_policy()['tasks']) == 3"
+          timeline verify examples/demo_bundle
+  delta:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          cache: pip
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - run: python -m pip install -e '.[dev]' 'pyspark==3.5.3' 'delta-spark==3.2.1'
+      - name: Verify Delta inserts, publication markers, and replay
+        env:
+          TIMELINE_TEST_DELTA: '1'
+          SPARK_LOCAL_IP: '127.0.0.1'
+        run: pytest -q tests/test_delta.py

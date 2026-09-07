@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Project OCSF-aligned timeline profile (not upstream OCSF conformance)",
+  "type": "object",
+  "required": ["event_uuid", "epoch_ms", "time_utc", "ocsf_class_uid", "parser_name", "parser_version", "activity_name", "raw_data_hash", "raw_file_hash", "evidence_path", "record_index", "child_index", "metadata"],
+  "properties": {
+    "event_uuid": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "epoch_ms": {"type": "integer"},
+    "time_utc": {"type": "string", "pattern": "^.+T.+\\+00:00$"},
+    "ocsf_class_uid": {"type": "integer", "minimum": 0},
+    "parser_name": {"type": "string", "minLength": 1},
+    "parser_version": {"type": "string", "minLength": 1},
+    "activity_name": {"type": "string"},
+    "raw_data_hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "raw_file_hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "evidence_path": {"type": "string", "pattern": "^evidence/[a-f0-9]{64}"},
+    "record_index": {"type": "integer", "minimum": 1},
+    "child_index": {"type": "integer", "minimum": 0},
+    "metadata": {"type": "object", "required": ["schema_version", "mapping_version", "ocsf_mapping_status"]}
+  }
+}

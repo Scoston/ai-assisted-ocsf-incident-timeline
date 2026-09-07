@@ -242,6 +242,8 @@ class M365(Enterprise):
                 raise ValueError("M365 returned content outside the requested feed scope")
             paths.append(self._content_path(item.get("contentUri")))
         link = headers.get("nextpageuri")
+        if "nextpageuri" in headers and (not isinstance(link, str) or not link):
+            raise ValueError("invalid M365 continuation header")
         next_path = self._list_path(link) if link else None
         next_cursor = (
             {"phase": "content", "paths": paths, "next": next_path}

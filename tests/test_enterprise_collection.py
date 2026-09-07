@@ -615,6 +615,9 @@ def test_m365_documented_v1_continuation_alias():
     )
     link = f"https://manage.office.com/api/v1/{GUID}/activity/feed/subscriptions/content?nextPage=x"
     assert provider._list_path(link).startswith("/api/v1/")
+    provider.http = FakeHttp([([], {"nextpageuri": ""})], "https://manage.office.com")
+    with pytest.raises(ValueError, match="continuation"):
+        provider.fetch(START, END, {"phase": "list"})
 
 
 def test_json_null_is_rejected_instead_of_skipped_as_a_text_header(tmp_path):

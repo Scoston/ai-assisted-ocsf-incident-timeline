@@ -1,8 +1,8 @@
 # AI-assisted OCSF incident timeline
 
-Build an investigation timeline from cloud, identity, endpoint, network and forensic exports. Preserve source files, normalize timestamps, retain parser provenance, verify artifact hashes, and add optional AI interpretation for human review.
+Build an investigation timeline from cloud, identity, endpoint, network, forensic exports and native artifacts. Preserve source files, normalize timestamps, retain parser provenance, verify artifact hashes, and add optional AI interpretation for human review.
 
-**Version 0.12.0:** an installable Python package, 27 parser contracts, two dedicated Tines stories, Databricks Volume/Jobs/Delta integration, nine Jupyter notebooks, a token-bounded AI harness, a schema-validated OCSF 1.3.0 export, 19 checkpointed collector types, published scale measurements, and optional signed manifests with pinned signer trust. This release adds restart-safe scheduling, expected-source monitoring, AI ledger recovery, and GitHub/Kubernetes evidence coverage to the signed, access-controlled deployment baseline. See the [follow-up review](docs/GAP_REVIEW.md). The offline pipeline and OCSF export require no API key and consume **zero model tokens**.
+**Version 0.13.0:** complete pinned log2timeline/Plaso coverage through a native backend: **59 parsers, 186 parser plugins and 4 cookie plugins**, with an auditable [format inventory and ingestion guide](docs/PLASO.md). The package now has 28 import/parser contracts, 19 checkpointed collector types and ten Jupyter notebooks, alongside dedicated Tines stories, Databricks Volume/Jobs/Delta integration, signed manifests and a token-bounded AI harness. Native parsing, offline ingestion and OCSF export consume **zero model tokens**.
 
 The timeline uses an **OCSF-aligned analytical profile**. The separate `export-ocsf` command emits validated core OCSF events for nine pinned classes; missing required fields are rejected explicitly. File integrity checks do not prove source authenticity, complete collection, accurate clocks, or legal admissibility. AI analysis is stored separately and cannot establish those properties.
 
@@ -53,7 +53,8 @@ Local viewer mode requires a loopback bind and starts with a verified example bu
 | OCSF interoperability | Nine complete core class validators, strict/quarantine export, source binding and optional Databricks job task | [OCSF mappings, validation and deployment](docs/OCSF_EXPORT.md) |
 | Evaluation | Reproducible runtime/RSS/coverage benchmarks, parser/IOC truth fixtures and analyst-label scorer | [Measurements and evaluation](docs/EVALUATION.md) |
 | AI task harness | Optional single-call tasks, compact evidence groups, citations, durable case budgets and cache | [AI harness and model policy](docs/AI_HARNESS.md) |
-| Parsers | 27 named contracts with fixtures; JSON/JSONL/gzip/CSV/TSV/Parquet, exported Windows XML, RFC 5424 and VPC text readers | [Parser coverage and limits](docs/PARSERS.md) |
+| Native forensic artifacts | Complete pinned Plaso parser collection, artifact/image/storage ingestion, runtime coverage checks and retained evidence | [Native setup and every format](docs/PLASO.md) |
+| Parsers | 28 named contracts with fixtures; JSON/JSONL/gzip/CSV/TSV/Parquet, exported Windows XML, RFC 5424 and VPC text readers | [Parser coverage and limits](docs/PARSERS.md) |
 | Review and improvement plan | Original findings, implemented work, acceptance requirements and next milestones | [Repository review and plan](docs/REVIEW_AND_PLAN.md) |
 
 Preview AI cost boundaries without sending a request:

@@ -44,6 +44,7 @@ def main():
     build_enterprise_notebook()
     build_operations_notebook()
     build_developer_incident_notebook()
+    build_plaso_notebook()
     write(
         "01_offline_investigation.ipynb",
         [
@@ -421,6 +422,70 @@ inventory(configs)""",
             (
                 "md",
                 "Use the generated inventory with `timeline-ops health --inventory FILE` on collected state to detect sources that never started. GitHub collection is organization-scoped on api.github.com; Kubernetes historical audits must come from an enabled log backend or exported files. Different audit stages share an auditID but retain distinct evidence identities. The original authenticated user and any impersonated user remain separate in raw evidence. Review docs/DEVELOPER_INCIDENTS.md before tenant acceptance.",
+            ),
+            ("code", "work.cleanup()"),
+        ],
+    )
+
+
+def build_plaso_notebook():
+    write(
+        "10_plaso_coverage.ipynb",
+        [
+            (
+                "md",
+                "# Complete Plaso coverage\nInspect the pinned upstream catalog and build an evidence bundle from a synthetic export. The default cells use no Docker, network or model tokens. Native processing uses the optional pinned backend; see docs/PLASO.md.",
+            ),
+            (
+                "code",
+                """from pathlib import Path
+import json
+import tempfile
+from collections import Counter
+from timeline_demo.integrations.plaso import catalog, ingest_native
+from timeline_demo.pipeline import Input, run_pipeline, read_timeline
+from timeline_demo.core.manifest import verify_bundle
+root = Path.cwd()
+if not (root/'examples').exists():
+    root = root.parent
+inventory = catalog()
+counts = Counter(entry['kind'] for entry in inventory['entries'])
+assert counts == {'parser': 59, 'plugin': 186, 'cookie_plugin': 4}
+print({'upstream_commit': inventory['upstream_commit'], 'registrations': dict(counts), 'model_tokens': 0})
+[(entry['id'], entry['data_format']) for entry in inventory['entries'] if 'esxi' in entry['id']]""",
+            ),
+            (
+                "code",
+                """work = tempfile.TemporaryDirectory()
+workdir = Path(work.name)
+sample = json.loads((root/'examples/parser_samples.json').read_text())['plaso_event']
+source = workdir/'events.jsonl'
+source.write_text(json.dumps(sample) + '\\n')
+bundle = workdir/'bundle'
+manifest = run_pipeline([Input('plaso_event', source)], bundle, 'plaso-notebook-demo')
+assert verify_bundle(bundle) == manifest
+event = list(read_timeline(bundle))[0]
+assert event['metadata']['plaso']['parser_chain'] == 'filestat'
+event['metadata']['plaso']""",
+            ),
+            (
+                "md",
+                "The catalog enumerates available native parsers; it does not prove every input byte is understood. Keep acquired originals and .plaso storage. Host filestat on a staged copy is flagged and is distinct from original image filesystem timestamps. Invalid/semantic times require review; unmapped OCSF families remain explicit.",
+            ),
+            (
+                "code",
+                """RUN_NATIVE = False
+ACQUIRED_SOURCE = Path('/cases/acquired')
+NATIVE_WORK = Path('/cases/plaso-work-001')
+NATIVE_BUNDLE = Path('/cases/plaso-bundle-001')
+if RUN_NATIVE:
+    # First build integrations/plaso/Dockerfile on a dedicated Linux/WSL host.
+    # New paths are required; retained evidence is never overwritten.
+    result = ingest_native(ACQUIRED_SOURCE, NATIVE_WORK, NATIVE_BUNDLE,
+                           'native-notebook-case', timezone='UTC', year=2026)
+    print(result)
+else:
+    print('Native execution disabled; synthetic export only. Zero model tokens.')""",
             ),
             ("code", "work.cleanup()"),
         ],

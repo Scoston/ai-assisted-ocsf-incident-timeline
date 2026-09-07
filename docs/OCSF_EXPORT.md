@@ -2,7 +2,7 @@
 
 Version 0.6.0 adds a separate, deterministic export of core OCSF 1.3.0 events. The existing `timeline.jsonl` remains the project analytical profile, with its original event identities and evidence references. Exporting does not modify an evidence bundle, call a model or fetch a schema over the network.
 
-Current mapping version `ocsf-export-1.2.0` includes enterprise and GitHub/Kubernetes parsers; 1.0.0 and 1.1.0 exports remain verifiable. Query-row wrappers and Workspace child references remain source-bound. Email/URL/registry/generic telemetry and sparse records may stay unmapped or fail required-field validation; review quarantine counts before publication.
+Current mapping version `ocsf-export-1.3.0` adds Plaso native-event attribution; 1.0.0, 1.1.0 and 1.2.0 exports remain verifiable. Query-row wrappers and Workspace child references remain source-bound. Email/URL/registry/generic telemetry and sparse records may stay unmapped or fail required-field validation; review quarantine counts before publication.
 
 ## Use the export
 
@@ -102,4 +102,4 @@ Source scans and event joins use disk-backed SQLite, and export validation accou
 
 ## Mapping compatibility in 0.12
 
-New exports use `ocsf-export-1.2.0`, adding GitHub/Kubernetes vendor attribution for API Activity. Existing 1.0.0 and 1.1.0 exports retain verification support. New exports belong in a new output directory; retained evidence and parser identities are unchanged.
+New exports use `ocsf-export-1.3.0`, adding attribution for the Plaso native-event importer. Existing 1.0.0, 1.1.0 and 1.2.0 exports retain verification support. New exports belong in a new output directory; retained evidence and parser identities are unchanged.

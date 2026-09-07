@@ -20,6 +20,9 @@ def main():
             if not archive.read(prefix + name):
                 raise ValueError("missing schema license/notice")
         archive.read("timeline_demo/resources/ocsf_export_manifest.schema.json")
+        catalog = json.loads(archive.read("timeline_demo/resources/plaso_catalog.json"))
+        assert len(catalog["entries"]) == 249
+        archive.read("timeline_demo/resources/plaso_NOTICE.txt")
     print(f"{wheel.name}: {len(lock['classes'])} pinned OCSF schemas and notices verified")
 
 

@@ -23,6 +23,7 @@
         {"context": "tests (3.12)", "integration_id": 15368},
         {"context": "delta", "integration_id": 15368},
         {"context": "enterprise", "integration_id": 15368},
+        {"context": "plaso", "integration_id": 15368},
         {"context": "codeql", "integration_id": 15368}
       ]
     }}

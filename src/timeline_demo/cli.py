@@ -44,6 +44,29 @@ def main(argv=None):
 
     for name, value in vars(Limits()).items():
         ingest.add_argument("--" + name.replace("_", "-"), type=int, default=value)
+    from timeline_demo.integrations.plaso import DEFAULT_IMAGE, NativeLimits
+
+    commands.add_parser("plaso-parsers", help="Show the complete pinned native Plaso inventory")
+    native = commands.add_parser(
+        "plaso-ingest", help="Run all pinned log2timeline parsers on acquired artifacts"
+    )
+    for name in ("source", "work", "output", "case-id"):
+        native.add_argument("--" + name, required=True)
+    native.add_argument("--image", default=DEFAULT_IMAGE)
+    native.add_argument(
+        "--storage-file", action="store_true", help="Source is an existing .plaso storage file"
+    )
+    native.add_argument("--timezone", default="UTC")
+    native.add_argument(
+        "--entry-point", help="Relative image/primary file within an acquired source directory"
+    )
+    native.add_argument("--year", type=int, help="Initial year for formats without a year")
+    native.add_argument(
+        "--allow-partial", action="store_true", help="Retain warnings and quarantine invalid events"
+    )
+    for options in (NativeLimits(), Limits()):
+        for name, value in vars(options).items():
+            native.add_argument("--" + name.replace("_", "-"), type=int, default=value)
     verify = commands.add_parser("verify")
     verify.add_argument("bundle")
     verify.add_argument("--manifest-sha256")
@@ -91,6 +114,27 @@ def main(argv=None):
     try:
         if args.command == "parsers":
             result = {name: spec.product for name, spec in SPECS.items()}
+        elif args.command == "plaso-parsers":
+            from timeline_demo.integrations.plaso import catalog
+
+            result = catalog()
+        elif args.command == "plaso-ingest":
+            from timeline_demo.integrations.plaso import ingest_native
+
+            result = ingest_native(
+                args.source,
+                args.work,
+                args.output,
+                args.case_id,
+                image=args.image,
+                storage_file=args.storage_file,
+                entry_point=args.entry_point,
+                timezone=args.timezone,
+                year=args.year,
+                allow_partial=args.allow_partial,
+                native_limits=NativeLimits(**{name: getattr(args, name) for name in vars(NativeLimits())}),
+                limits=Limits(**{name: getattr(args, name) for name in vars(Limits())}),
+            )
         elif args.command in {"collect", "collect-until"}:
             from timeline_demo.collection import collect_window, collect_until
             from timeline_demo.collection.providers import make_provider

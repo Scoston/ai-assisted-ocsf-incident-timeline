@@ -61,5 +61,25 @@
     },
     "requestReceivedTimestamp": "2026-09-01T09:59:59.950000Z",
     "stageTimestamp": "2026-09-01T10:00:00.000000Z"
+  },
+  "plaso_event": {
+    "__container_type__": "event",
+    "timestamp": 1788256800000000,
+    "date_time": {
+      "__class_name__": "PosixTimeInMicroseconds",
+      "__type__": "DateTimeValues",
+      "timestamp": 1788256800000000
+    },
+    "parser": "filestat",
+    "data_type": "fs:stat",
+    "timestamp_desc": "Modification Time",
+    "message": "Synthetic file metadata",
+    "filename": "/example/evidence.txt",
+    "hostname": "host-1",
+    "username": "alice",
+    "pathspec": {
+      "type_indicator": "OS",
+      "location": "/example/evidence.txt"
+    }
   }
 }

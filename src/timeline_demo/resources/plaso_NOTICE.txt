@@ -1,0 +1,7 @@
+Plaso parser inventory
+Derived from log2timeline/plaso, https://github.com/log2timeline/plaso
+Revision 00fcc6e7f95a002c85464f0dfd193396bd7d86d3
+Copyright 2012-2026 The Plaso project authors. Licensed under Apache License 2.0.
+See the Apache-2.0 LICENSE distributed with this package.
+The catalog is generated metadata, not a copy of the Plaso parser implementation.
+The optional backend retains upstream source, licenses and notices in /opt/plaso-source.

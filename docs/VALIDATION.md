@@ -4,24 +4,25 @@ Implementation date: 2026-09-07. Baseline: `d8e8169e1c5bb175bc8c5218f005f6f2a9a5
 
 ## Local verification
 
-- Version 0.9.0 regression suite: 173 passed, including 27 signing, 16 evaluation/IPv6, 15 collection and 44 OCSF cases; one real Spark/Delta test is separately gated by `TIMELINE_TEST_DELTA=1`.
+- Version 0.10.0 regression suite: 234 passed, including 53 new enterprise cases and the original collection/signing/evaluation gates; one real Spark/Delta test is separately gated by `TIMELINE_TEST_DELTA=1`.
 - Collection: interruption/resume, cursor cycles, timestamp boundaries, watermark advancement, page/record/byte limits, raw page integrity, HTTP throttling/redirects, SDK pagination and SQL result truncation checked with test doubles. Live permissions, source retention and late-arrival coverage remain acceptance steps.
+- Enterprise collection: all 14 new types, eight Azure Monitor tables, source-clock handling, native M365 UTC, SDK request-shape validation, header pagination, async resume, missing detail IDs, changed totals, query caps/partial results, network endpoints, nested Workspace events, historical OCSF mappings and malformed rows checked offline. Source-specific API/authentication and live acceptance limits are recorded in [ENTERPRISE_APIS.md](ENTERPRISE_APIS.md).
 - Evaluation: six fresh-process synthetic workloads (1,000/10,000/100,000 events, repeated/diverse), fixture diagnostics, scorer denominator/duplicate/support checks and source/label binding. Exact results and limits are in [EVALUATION.md](EVALUATION.md).
 - Signing: encryption, deterministic signatures, artifact/policy/key/kind substitution, trusted-policy pins, source-bound OCSF, rotation, revocation, exclusive writes, permissions, required verification, upload replay/conflicts and deployment policy boundaries checked.
 - Original synthetic demo: five events ingested, exported and verified successfully.
-- All 21 parser fixtures: UTC conversion, deterministic identity and class/profile behavior checked.
+- All 25 parser fixtures: UTC conversion, deterministic identity and class/profile behavior checked.
 - Negative inputs: ambiguous timestamps, DST fold/gap, invalid JSON, duplicate keys, non-finite numbers, malformed CSV/XML paths, quarantine, artifact tampering and directory traversal checked.
 - AI harness: offline planning, bounded requests, task routing, durable reservations, concurrency, case isolation, cache hits, failed/incomplete output, invented citations and no evidence mutation checked with test doubles. No paid model requests were made.
 - SDK adapter: upload, repeat upload, pinned download, job parameter/idempotency contract and status behavior checked with test doubles and the installed Databricks SDK types.
 - Tines: export graph/index/resource/credential boundaries checked. Tenant import and expression evaluation remain deployment acceptance steps.
 - OCSF: all nine pinned class validators, mapped source contracts, nested constraints, class/activity/type consistency, version/profile rejection, missing required fields, deterministic output, quarantine accounting, source binding, rehashed-invalid exports, duplicate references and symlink boundaries checked. The original five-event bundle exports five validated core events without changing its manifest.
 - Schema generation: exact official catalog hash and `ocsf-json-schema==1.2.0` reproduce all nine packaged definitions. Runtime schema checks use no network or generator dependency. Schema and notice inclusion are checked inside the built wheel.
-- Jupyter: all code cells in all six notebooks executed successfully in offline mode. Local kernel startup was blocked by the workspace's socket restrictions, so real Jupyter transport execution is included in GitHub Actions.
+- Jupyter: all code cells in all seven notebooks executed successfully in offline mode. Local kernel startup was blocked by the workspace's socket restrictions, so real Jupyter transport execution is included in GitHub Actions.
 - Python source lint and distribution build checked. GitHub Actions also performs these checks on Python 3.10 and 3.12.
 
 ## Runtime CI
 
-The `Validate timeline integrations` workflow executes the six notebooks through Jupyter and runs a real Spark 3.5.3 / Delta 3.2.1 insert/replay test on an Ubuntu runner with Java 17. Version 0.9.0 extends that gate to signed source/OCSF publications, repeat verification receipts, configured inspection and denial after key revocation, while retaining OCSF events, empty rejection tables, stable event keys and final export markers. Consult the workflow run associated with the merged commit for the authoritative result; a local test-double pass is not a substitute for this gate.
+The `Validate timeline integrations` workflow executes the seven notebooks through Jupyter and runs a real Spark 3.5.3 / Delta 3.2.1 insert/replay test on an Ubuntu runner with Java 17. Version 0.9.0 extends that gate to signed source/OCSF publications, repeat verification receipts, configured inspection and denial after key revocation, while retaining OCSF events, empty rejection tables, stable event keys and final export markers. Consult the workflow run associated with the merged commit for the authoritative result; a local test-double pass is not a substitute for this gate.
 
 The preceding 0.5.0 implementation passed Python 3.10/3.12, real Jupyter kernels and Delta in [GitHub Actions run 34131970448](https://github.com/Scoston/ai-assisted-ocsf-incident-timeline/actions/runs/34131970448). This is historical evidence; new changes require their own green run.
 
@@ -37,4 +38,5 @@ Before enabling live workflows, complete the acceptance cases in the Tines and D
 
 - 0.7.0: [run 34140270470](https://github.com/Scoston/ai-assisted-ocsf-incident-timeline/actions/runs/34140270470), Python 3.10/3.12, real Jupyter and Delta all passed before PR #3 merged.
 - 0.8.0: [run 34141192293](https://github.com/Scoston/ai-assisted-ocsf-incident-timeline/actions/runs/34141192293), Python 3.10/3.12, real Jupyter, evaluation smoke workloads and Delta all passed before PR #4 merged.
-- 0.9.0: the PR #5 workflow is the required authoritative gate for the signed implementation; consult its exact head and job results before merge.
+- 0.9.0: [run 34143093485](https://github.com/Scoston/ai-assisted-ocsf-incident-timeline/actions/runs/34143093485), Python 3.10/3.12, six real Jupyter notebooks and signed Delta replay/revocation passed before PR #5 merged.
+- 0.10.0: the PR #6 workflow is the required gate for enterprise collectors and the seventh notebook. Historical green runs do not validate this change.

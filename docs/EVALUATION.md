@@ -36,7 +36,7 @@ The [initial measurement](../benchmarks/results/2026-09-07-scale.json) predates 
 
 ## Deterministic quality probes
 
-The [parser truth file](../benchmarks/parser_truth.json) binds the 21 minimal synthetic source fixtures to 42 expected class/time fields. All 42 pass. This confirms those field contracts and does not measure every parser field, representative tenant accuracy or full OCSF conformance; the separate OCSF test suite covers the pinned core schemas.
+The [parser truth file](../benchmarks/parser_truth.json) binds the 25 minimal synthetic source fixtures to 50 expected class/time fields. All 50 pass in the [0.10.0 probe](../benchmarks/results/2026-09-07-enterprise-quality.json). Historical result files retain their original 21-fixture hashes; they are not re-labeled as new measurements. This confirms those field contracts and does not measure every parser field, representative tenant accuracy or full OCSF conformance; the separate OCSF test suite covers the pinned core schemas.
 
 The IOC probe has six labelled candidates across three deliberately small cases. [Before correction](../benchmarks/results/2026-09-07-quality.json), five were found: precision 1.0, recall 0.8333, with the IPv6 address missed. [After correction](../benchmarks/results/2026-09-07-quality-ipv6.json), all six are found with no false positives in this fixture. Added regressions exercise mapped/compressed IPv6, invalid addresses, timestamps, bracketed URLs and excluded zone identifiers. These tiny diagnostic scores are not threat-detection accuracy; domain-like strings and hash-shaped strings remain candidates requiring context.
 

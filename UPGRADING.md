@@ -1,5 +1,13 @@
 # Upgrading
 
+## From 0.9 to 0.10
+
+Reinstall the package with `.[collection,databricks]` for the expanded collectors. Copy the new source examples and scope one configuration to each account/region, table, feed or application. Existing four-source collection reports and checkpoints remain compatible. New reports add a source-specific `window_basis`; late delivered or updated evidence can have a timeline timestamp outside that collection window.
+
+M365 and GuardDuty parsers change to 2.1.0 for source UTC semantics and native remote IP fields. Their re-ingested event IDs intentionally change; preserve existing evidence and reconcile versions when querying across old/new bundles. Four additional parsers start at 1.0.0. OCSF export mapping advances to 1.1.0; historical 1.0.0 exports still verify. Re-export into a new directory and redeploy the current wheel when adopting new Databricks mappings. Remove obsolete wheel files before deployment with a `dist/*.whl` pattern.
+
+No new live collector is activated during upgrade. See [enterprise coverage](docs/COLLECTOR_COVERAGE.md) and [API/authentication contracts](docs/ENTERPRISE_APIS.md) for supported formats, query caps, permissions and live acceptance.
+
 ## From 0.8 to 0.9
 
 Install `.[signing]` for local signature operations and reinstall the wheel for the new CLI. Existing bundles and parser/event identities remain unchanged; signatures are detached. Unsigned verification/publication defaults remain compatible. Configure `require_signature=true` plus the fixed sidecar root, trust policy path and independent pin when deploying a required-signature Databricks job. Redeploy both the job definition and wheel; uploading a signature alone does not enable enforcement. The deployed export/inspection tasks now use positional wheel entry points to avoid notebook parameter overrides. Interactive notebooks remain available for analyst use.

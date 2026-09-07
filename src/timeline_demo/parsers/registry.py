@@ -8,6 +8,7 @@ from pathlib import Path
 
 from .common import compact_json, file_hash, parse_time, pick, sha256_of_text
 from .readers import _strict_json, iter_records
+from .enterprise import enterprise_class
 
 PARSER_VERSION = "2.0.0"
 PROFILE_VERSION = "timeline-ocsf-aligned-2.0"
@@ -27,9 +28,60 @@ class Spec:
     severity: str = "severity"
     unit: str | None = None
     version: str = PARSER_VERSION
+    source_timezone: str | None = None
 
 
 SPECS = {
+    "defender_hunting": Spec(
+        "Microsoft Defender Advanced Hunting",
+        0,
+        "record.Timestamp",
+        "record.ActionType|table",
+        "record.AccountUpn|record.AccountName|record.InitiatingProcessAccountUpn|record.InitiatingProcessAccountName|record.SenderFromAddress",
+        "record.DeviceName|record.Application",
+        "record.LocalIP|record.IPAddress|record.RemoteIP",
+        "record.ReportId|record.NetworkMessageId",
+        "record.ActionType",
+        version="1.0.0",
+    ),
+    "azure_log_analytics": Spec(
+        "Azure Monitor Logs",
+        0,
+        "record.TimeGenerated",
+        "record.EventID|record.Activity|record.OperationName|record.DeviceEventClassID|record.ProcessName|table",
+        "record.TargetUserName|record.Account|record.EventData.TargetUserName|record.SourceUserName|record.UserPrincipalName|record.ServicePrincipalName|record.Identity",
+        "record.Computer|record.DeviceName|record.HostName|record.ResourceDisplayName|record.AppDisplayName",
+        "record.IpAddress|record.EventData.IpAddress|record.SourceIP|record.HostIP|record.IPAddress",
+        "record.EventRecordId|record.EventRecordID|record._ItemId|record.Id",
+        "record.DeviceAction|record.ResultType",
+        "record.SeverityLevel|record.LogSeverity",
+        version="1.0.0",
+    ),
+    "google_workspace": Spec(
+        "Google Workspace Audit",
+        6003,
+        "id.time",
+        "workspace_event.name",
+        "actor.email|actor.profileId",
+        "id.applicationName",
+        "ipAddress",
+        "id.uniqueQualifier",
+        "workspace_event.type",
+        version="1.0.0",
+    ),
+    "crowdstrike_alert": Spec(
+        "CrowdStrike Falcon Alert",
+        2004,
+        "timestamp|created_timestamp",
+        "display_name|name|scenario|description",
+        "user_name",
+        "device.hostname|hostname",
+        "device.external_ip",
+        "composite_id|id",
+        "status",
+        "severity_name",
+        version="1.0.0",
+    ),
     "cloudtrail": Spec(
         "AWS CloudTrail",
         6003,
@@ -48,9 +100,10 @@ SPECS = {
         "type",
         "resource.accessKeyDetails.userName",
         "resource.instanceDetails.instanceId",
-        "service.action.awsApiCallAction.remoteIpDetails.ipAddress",
+        "service.action.awsApiCallAction.remoteIpDetails.ipAddressV4|service.action.networkConnectionAction.remoteIpDetails.ipAddressV4|service.action.awsApiCallAction.remoteIpDetails.ipAddress",
         "id",
         "service.archived",
+        version="2.1.0",
     ),
     "securityhub": Spec(
         "AWS Security Hub ASFF",
@@ -120,6 +173,8 @@ SPECS = {
         "ClientIP",
         "Id",
         "ResultStatus",
+        version="2.1.0",
+        source_timezone="UTC",
     ),
     "defender_alert": Spec(
         "Microsoft Defender Alert",
@@ -356,19 +411,26 @@ def normalize_record(raw, parser, evidence_path, raw_file_hash, record_index, as
         variants = record["behaviors"]
         if not isinstance(variants, list) or any(not isinstance(x, dict) for x in variants):
             raise ValueError("behaviors must contain objects")
+    if parser == "google_workspace":
+        variants = record.get("events")
+        if not isinstance(variants, list) or not variants or any(not isinstance(x, dict) for x in variants):
+            raise ValueError("Workspace activity requires a nonempty events array")
     raw_hash = sha256_of_text(compact_json(raw))
     results = []
     for child_index, behavior in enumerate(variants):
         if behavior is not None:
-            record["behavior"] = behavior
+            record["workspace_event" if parser == "google_workspace" else "behavior"] = behavior
         ts = field(record, spec.time)
-        time_utc, epoch_ms, offset = parse_time(ts, spec.unit, assume_timezone)
+        effective_timezone = spec.source_timezone or assume_timezone
+        time_utc, epoch_ms, offset = parse_time(ts, spec.unit, effective_timezone)
         activity = field(record, spec.activity)
         if activity is None and parser == "entra_signin":
             activity = "user.signin"
         if activity is None:
             raise ValueError("missing source activity field")
         class_uid = spec.class_uid
+        if parser in {"defender_hunting", "azure_log_analytics", "google_workspace"}:
+            class_uid = enterprise_class(record, parser)
         if parser == "ocsf":
             class_uid = int(pick(record, "class_uid", "ocsf_class_uid", default=0))
             if class_uid <= 0:
@@ -411,7 +473,7 @@ def normalize_record(raw, parser, evidence_path, raw_file_hash, record_index, as
                 "epoch_ms": epoch_ms,
                 "timezone_offset": offset,
                 "original_timestamp": str(ts),
-                "timezone_assumption": assume_timezone,
+                "timezone_assumption": effective_timezone,
                 "temporal_confidence": "source_reported",
                 "parser_name": parser,
                 "parser_version": spec.version,

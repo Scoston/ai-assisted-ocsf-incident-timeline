@@ -34,6 +34,8 @@ Reviewed baseline: `d8e8169e1c5bb175bc8c5218f005f6f2a9a563d3` on 2026-09-07. Sco
 
 12. Version 0.9.0 completes signed manifests and configurable external signer trust: detached Ed25519 attestations, encrypted keys, pinned versioned policies, rotation/revocation, required-signature verification, Databricks sidecar upload/publication gates, retained verification receipts and a sixth notebook. [Signer trust and assurance boundaries](SIGNING.md).
 
+13. Version 0.10.0 evaluates enterprise incident coverage, expands collection from four to 18 types and parsers from 21 to 25, and adds eight Azure Monitor/14 Defender table choices, source-specific clocks, API/recovery tests and a seventh notebook. See [coverage decisions](COLLECTOR_COVERAGE.md) and [API contracts](ENTERPRISE_APIS.md).
+
 ## Deployment acceptance that depends on the operator environment
 
 These are explicit acceptance steps, not claims of completed production deployment:
@@ -62,5 +64,6 @@ Completed priority 2 is bounded to the nine advertised core classes, with no opt
 | Four-source checkpointed collection | Completed in 0.7.0 | Live paging/retention comparison, scheduler identity, lag and late-arrival reconciliation |
 | Scale and quality tooling | Completed and measured synthetically in 0.8.0 | Representative workloads and independent analyst judgments of actual model outputs |
 | Signed manifests and pinned signer policy | Completed in 0.9.0 | Production signer identity, protected policy deployment, retention/audit controls and live revocation exercise |
+| Enterprise incident collection and new parser coverage | Implemented in 0.10.0 | Source inventory, read scopes, forwarding/retention, live window/count comparison and representative vendor records |
 
 All planned repository implementation milestones are complete within the documented source and schema contracts. No production keys, credentials, source-specific organization fixtures or paid model outputs were available. Remaining acceptance steps require the operator environment. Use the linked guides to record the actual environment, expected/observed behavior and reviewer approval before enabling those live services.

@@ -1,6 +1,6 @@
 # Evidence and integration architecture
 
-The same Python pipeline serves the CLI, Jupyter and Databricks source-normalization notebook. It reads exported data; it does not acquire live vendor data automatically.
+The same Python pipeline serves the CLI, Jupyter and Databricks source-normalization notebook. It reads exported data or bundles produced by explicitly configured collectors. The 18 collector types preserve raw response pages and commit each cursor only after durable storage. New providers distinguish delivery/update/envelope clocks from native event time. No collector activates source auditing or invokes an AI model. See [enterprise source contracts](ENTERPRISE_APIS.md).
 
 The optional `ocsf.py` layer joins verified timeline references to archived source records using disk-backed SQLite and emits a separate OCSF 1.3.0 export. Packaged schemas have pinned hashes and local references only. Every timeline event is accepted or receives a rejection receipt in quarantine mode; strict failures expose no final output. The export manifest binds the source manifest and the schema lock. `verify-ocsf --bundle` additionally checks source identities, time/class and provenance fields. This leaves the original bundle identity and OCSF-aligned timeline contract intact. See [OCSF export](OCSF_EXPORT.md) for the exact semantic scope.
 

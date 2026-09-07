@@ -1,0 +1,69 @@
+{
+  "scope": "synthetic fixture diagnostics; not real model or incident quality",
+  "parser_fields": {
+    "checked": 50,
+    "correct": 50,
+    "accuracy": 1.0,
+    "errors": []
+  },
+  "ioc_candidates": {
+    "true_positive": 6,
+    "false_positive": 0,
+    "false_negative": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "cases": [
+      {
+        "name": "positive candidates",
+        "true_positive": 5,
+        "false_positive": 0,
+        "false_negative": 0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      {
+        "name": "invalid IPv4 and plain words",
+        "true_positive": 0,
+        "false_positive": 0,
+        "false_negative": 0,
+        "precision": null,
+        "recall": null
+      },
+      {
+        "name": "IPv6 coverage probe",
+        "true_positive": 1,
+        "false_positive": 0,
+        "false_negative": 0,
+        "precision": 1.0,
+        "recall": 1.0
+      }
+    ]
+  },
+  "synthetic_citation_scorer": {
+    "evaluation_version": "1.0",
+    "bundle_id": "92cd4c47f9c64a52b9ec0713dacd1a8bf8d6558debdadca376e3207e27d7eab1",
+    "analysis_sha256": "70fb6ce2950d898e2bf2959ed8e8e5d2bc4ec1bb9fefa0633b042764342244b7",
+    "labels_sha256": "f0443b9e009584b47d1f73bba3224fda83a18d16e4e70404db947319530466f5",
+    "reviewer": "Codex synthetic fixture author; not an independent analyst review",
+    "model": "synthetic-handwritten-fixture",
+    "task": "summarize",
+    "findings": 3,
+    "expected_claims": 2,
+    "matched_claims": 1,
+    "duplicate_claims": 1,
+    "claim_precision": 0.3333333333333333,
+    "claim_recall": 0.5,
+    "citation_reference_validity": 1.0,
+    "citation_faithfulness": 0.6666666666666666,
+    "model_tokens": 0,
+    "scope": "finding-level analyst judgments; summary and next-step prose are not scored"
+  },
+  "provider_model_quality": null,
+  "model_tokens": 0,
+  "fixture_hashes": {
+    "ioc_truth.json": "e7f26cec5a7865ca6067cff0fcd1b649b02750dacabd9a6f5c2f5664baba9051",
+    "parser_truth.json": "ea003e4534c8aa87ceeb2eea86687622577dc4a7ae8453ef7a519c5666081666",
+    "synthetic_analysis.json": "5825a6c276f106c24ad1f5f4cf3e23700eecb1c241a9229af6c481ff3b12a1e2",
+    "synthetic_review.json": "5039a2dd3b40b3ffe150df7bf002d1cea9b59f515f12828f2ece05b2a6fca039"
+  }
+}

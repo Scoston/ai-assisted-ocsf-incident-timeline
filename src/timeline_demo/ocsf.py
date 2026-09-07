@@ -25,7 +25,7 @@ from timeline_demo.parsers.readers import _strict_json, iter_records
 from timeline_demo.pipeline import read_timeline
 
 VERSION = "1.3.0"
-MAPPING_VERSION = "ocsf-export-1.0.0"
+MAPPING_VERSION = "ocsf-export-1.1.0"
 RESOURCE_ROOT = files("timeline_demo").joinpath("resources/ocsf/1.3.0")
 EXPORT_FILES = {"ocsf.jsonl", "rejections.jsonl"}
 REPORT_VALIDATOR = Draft202012Validator(
@@ -131,6 +131,10 @@ def _source_record(raw, parser, child):
         record = _strict_json(record["record_json"])
     if parser == "crowdstrike_detection" and record.get("behaviors"):
         record["behavior"] = record["behaviors"][child]
+    if parser in {"defender_hunting", "azure_log_analytics"}:
+        record = record["record"]
+    if parser == "google_workspace":
+        record["workspace_event"] = record["events"][child]
     if not isinstance(record, dict):
         raise ValueError("source must be an object")
     return record
@@ -145,12 +149,16 @@ def _vendor(parser):
         "azure_activity",
         "m365_audit",
         "defender_alert",
+        "defender_hunting",
+        "azure_log_analytics",
         "windows_event",
     }:
         return "Microsoft"
     return {
         "gcp_audit": "Google",
+        "google_workspace": "Google",
         "crowdstrike_detection": "CrowdStrike",
+        "crowdstrike_alert": "CrowdStrike",
         "okta": "Okta",
         "zeek": "Zeek",
         "suricata": "OISF",
@@ -231,7 +239,9 @@ def map_event(event, raw):
     elif uid == 3002:
         if actor:
             result["user"] = actor["user"]
-        if parser == "windows_event":
+        if parser == "windows_event" or (
+            parser == "azure_log_analytics" and str(event["activity_name"]).isdigit()
+        ):
             if event["asset_name"]:
                 result["dst_endpoint"] = {"hostname": event["asset_name"]}
             result["activity_id"] = 2 if str(event["activity_name"]) == "4634" else 1
@@ -248,6 +258,10 @@ def map_event(event, raw):
             )
             if service:
                 result["service"] = {"name": _text(service)}
+            if parser == "google_workspace":
+                result["service"] = {"name": _text(pick(record, "id.applicationName"))}
+            if parser == "defender_hunting" and event["asset_name"]:
+                result["dst_endpoint"] = {"hostname": event["asset_name"]}
             if parser == "entra_signin":
                 result["activity_id"] = 1
             elif event["activity_name"] == "user.session.start":
@@ -256,6 +270,8 @@ def map_event(event, raw):
                 result["activity_id"] = 2
     elif uid == 2004:
         finding_id = pick(record, "id", "Id", "detection_id", "alert.signature_id")
+        if parser == "crowdstrike_alert":
+            finding_id = pick(record, "composite_id", "id")
         if finding_id is None and parser == "crowdstrike_detection":
             finding_id = pick(record, "behavior.id")
         if finding_id is None:
@@ -267,11 +283,16 @@ def map_event(event, raw):
             provenance["finding_uid_origin"] = "derived_from_source_record_and_parser_identity"
     elif uid in {4001, 4002, 4003}:
         destination = _endpoint(pick(record, "dstaddr", "id.resp_h", "dest_ip"))
+        if parser in {"defender_hunting", "azure_log_analytics"}:
+            destination = _endpoint(pick(record, "RemoteIP", "DestinationIP"))
+            source = _endpoint(pick(record, "LocalIP", "SourceIP"))
+            if source:
+                result["src_endpoint"] = source
         if destination:
             result["dst_endpoint"] = destination
         for name, paths in [
-            ("src_endpoint", ("srcport", "id.orig_p", "src_port")),
-            ("dst_endpoint", ("dstport", "id.resp_p", "dest_port")),
+            ("src_endpoint", ("srcport", "id.orig_p", "src_port", "LocalPort", "SourcePort")),
+            ("dst_endpoint", ("dstport", "id.resp_p", "dest_port", "RemotePort", "DestinationPort")),
         ]:
             port = pick(record, *paths)
             if port is not None and port != "-" and name in result:
@@ -302,19 +323,32 @@ def map_event(event, raw):
             result["query"] = {"hostname": query}
             # Combined sensor records may include both directions; leave activity unknown.
     elif uid in {1001, 1007}:
-        host = pick(record, "Computer", "System.Computer", "host.name", "hostname")
+        host = pick(record, "Computer", "System.Computer", "host.name", "hostname", "DeviceName")
         if host:
             result["device"] = {"hostname": _text(host), "type_id": 0}
-        subject = pick(record, "EventData.SubjectUserName", "username")
+        subject = pick(
+            record,
+            "EventData.SubjectUserName",
+            "username",
+            "SubjectUserName",
+            "InitiatingProcessAccountUpn",
+            "InitiatingProcessAccountName",
+        )
         if subject:
             result["actor"] = {"user": {"name": _text(subject)}}
         if uid == 1007:
-            process_id = pick(record, "EventData.NewProcessId")
+            process_id = pick(record, "EventData.NewProcessId", "NewProcessId", "ProcessId")
             if process_id is not None:
                 result["process"] = {"pid": _integer(process_id)}
             result["activity_id"] = 1  # The only mapped Windows process event is 4688.
+            if parser == "defender_hunting":
+                result["activity_id"] = {"ProcessCreated": 1, "ProcessTerminated": 2}.get(
+                    record.get("ActionType"), 0
+                )
         else:
             path = pick(record, "filename", "pathspec.location")
+            if parser == "defender_hunting" and record.get("FileName"):
+                path = str(record.get("FolderPath", "")).rstrip("\\/") + "/" + str(record["FileName"])
             if path:
                 result["file"] = {
                     "name": str(path).replace("\\", "/").rsplit("/", 1)[-1],
@@ -483,6 +517,11 @@ def verify_export(directory, *, manifest_sha256=None, bundle=None):
                     if name == "ocsf.jsonl":
                         validate_event(row)
                         reference = row.get("unmapped", {}).get("timeline_export")
+                        if (
+                            not isinstance(reference, dict)
+                            or reference.get("mapping_version") != report["mapping_version"]
+                        ):
+                            raise ValueError("OCSF event mapping version differs from its export manifest")
                     else:
                         reference = row
                         if (

@@ -1,0 +1,5 @@
+{
+  "source": "okta",
+  "host": "https://example.okta.com",
+  "source_id": "example-okta"
+}

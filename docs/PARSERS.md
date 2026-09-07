@@ -29,6 +29,14 @@ Version 0.6.0 adds a separate [schema-validated OCSF export](OCSF_EXPORT.md) for
 | `tines_audit` | Tines audit record export | `created_at` or `timestamp`, ISO | API Activity 6003 |
 | `databricks_audit` | Workspace audit JSON or exported `system.access.audit` rows | `event_time` ISO or `timestamp` milliseconds | API Activity 6003 |
 | `ai_agent` | Project audit contract: timestamp, action/tool, agent ID, event ID, resource/status | `timestamp`, zoned ISO | API Activity 6003 |
+| `defender_hunting` | Explicit `table` plus `record` from one of 14 supported hunting tables | `record.Timestamp`, ISO | Process 1007, network 4001, logon 3002, file 1001, identity/cloud API 6003; email/URL/registry/generic-device tables unmapped |
+| `azure_log_analytics` | Explicit `table` plus `record`, eight supported tables | `record.TimeGenerated`, ISO | Selected Windows event classes, sign-ins 3002, CommonSecurityLog with endpoints 4001; Syslog/other Windows IDs unmapped |
+| `google_workspace` | Admin Reports activity with `id`, `actor`, `events[]`; every event expanded | `id.time`, ISO | Login 3002; admin/token/drive 6003 |
+| `crowdstrike_alert` | Falcon alerts v2 entity (separate from legacy detection/behavior exports) | `timestamp`, then `created_timestamp`, ISO | Detection Finding 2004 |
+
+Version 0.10.0 supplies 25 parser contracts. New parsers start at 1.0.0. M365 and GuardDuty advance to 2.1.0: suffix-free M365 `CreationTime` is explicitly UTC under the source contract, and GuardDuty captures native `ipAddressV4` fields. Re-ingesting these two sources changes event identities; retained bundles are not rewritten. New OCSF mappings are version `ocsf-export-1.1.0` and retain verification support for 1.0.0 exports.
+
+For query exports use `{"table":"DeviceProcessEvents","record":{...}}` or `{"table":"SecurityEvent","record":{...}}` per row; raw Results/columns/rows arrays are not guessed into a table. See [allowed tables and source clocks](ENTERPRISE_APIS.md). Collection archives both the native API body and projected parser records. A mapped class alone does not guarantee all required OCSF fields exist.
 
 The exact field aliases are centralized in `src/timeline_demo/parsers/registry.py`. Every listed parser has a synthetic fixture in `examples/parser_samples.json` and a regression test. These fixtures establish the advertised shape; they do not establish compatibility with every vendor SKU, API revision or export option.
 

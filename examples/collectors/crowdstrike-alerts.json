@@ -1,0 +1,5 @@
+{
+  "source": "crowdstrike_alert",
+  "host": "https://api.crowdstrike.com",
+  "source_id": "example-crowdstrike-alerts"
+}

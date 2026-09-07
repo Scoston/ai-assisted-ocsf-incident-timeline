@@ -19,5 +19,9 @@
   "ocsf": {"time":1788256800000,"class_uid":6003,"activity_name":"Read","metadata":{"uid":"18"},"severity_id":2},
   "tines_audit": {"created_at":"2026-09-01T10:00:00Z","operation_name":"Story updated","id":"19","user_email":"alice@example.test"},
   "databricks_audit": {"event_time":"2026-09-01T10:00:00Z","action_name":"runNow","request_id":"20","user_identity":{"email":"alice@example.test"}},
-  "ai_agent": {"timestamp":"2026-09-01T10:00:00Z","action":"tool.call","tool_name":"read_alert","agent_id":"agent-1","event_id":"21","status":"success"}
+  "ai_agent": {"timestamp":"2026-09-01T10:00:00Z","action":"tool.call","tool_name":"read_alert","agent_id":"agent-1","event_id":"21","status":"success"},
+  "defender_hunting": {"table": "DeviceProcessEvents", "record": {"Timestamp": "2026-09-01T10:00:00Z", "ActionType": "ProcessCreated", "ReportId": 701, "DeviceId": "device-1", "DeviceName": "workstation-1", "AccountName": "alice", "InitiatingProcessAccountName": "alice", "ProcessId": 700, "FileName": "example.exe"}},
+  "azure_log_analytics": {"table": "SecurityEvent", "record": {"TimeGenerated": "2026-09-01T10:00:00Z", "EventID": 4624, "EventRecordId": "701", "Computer": "workstation-1", "TargetUserName": "alice", "IpAddress": "198.51.100.1"}},
+  "google_workspace": {"id": {"time": "2026-09-01T10:00:00Z", "uniqueQualifier": "701", "applicationName": "login", "customerId": "Ctest"}, "actor": {"email": "alice@example.test"}, "ipAddress": "198.51.100.1", "events": [{"type": "login", "name": "login_success", "parameters": []}]},
+  "crowdstrike_alert": {"composite_id": "test:alert:701", "timestamp": "2026-09-01T10:00:00Z", "created_timestamp": "2026-09-01T10:00:00Z", "updated_timestamp": "2026-09-01T10:00:00Z", "display_name": "Synthetic endpoint alert", "severity_name": "High", "user_name": "alice", "device": {"hostname": "workstation-1"}, "status": "new"}
 }

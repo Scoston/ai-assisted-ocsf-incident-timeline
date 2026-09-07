@@ -2,6 +2,8 @@
 
 Version 0.6.0 adds a separate, deterministic export of core OCSF 1.3.0 events. The existing `timeline.jsonl` remains the project analytical profile, with its original event identities and evidence references. Exporting does not modify an evidence bundle, call a model or fetch a schema over the network.
 
+Version 0.10.0 adds mapping version `ocsf-export-1.1.0` for the new enterprise parsers; 1.0.0 exports remain verifiable. Query-row wrappers and Workspace child references remain source-bound. Email/URL/registry/generic telemetry and sparse records may stay unmapped or fail required-field validation; review quarantine counts before publication.
+
 ## Use the export
 
 ```bash

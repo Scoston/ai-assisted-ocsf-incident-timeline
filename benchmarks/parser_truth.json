@@ -1,5 +1,5 @@
 {
-  "fixture_sha256": "100a4ff2222cf0f87a1d12af4a8764c1a54c3e92cd25f86ae932500eac662fab",
+  "fixture_sha256": "5c1f985c675fcb9c6c1e996daac2ac70ab8b54d73a854b7f192776ff5856629d",
   "scope": "Minimal synthetic field contracts, authored from the input fixture. Not organization-specific or held-out accuracy.",
   "expected": {
     "cloudtrail": {
@@ -85,6 +85,22 @@
     "ai_agent": {
       "epoch_ms": 1788256800000,
       "ocsf_class_uid": 6003
+    },
+    "defender_hunting": {
+      "epoch_ms": 1788256800000,
+      "ocsf_class_uid": 1007
+    },
+    "azure_log_analytics": {
+      "epoch_ms": 1788256800000,
+      "ocsf_class_uid": 3002
+    },
+    "google_workspace": {
+      "epoch_ms": 1788256800000,
+      "ocsf_class_uid": 3002
+    },
+    "crowdstrike_alert": {
+      "epoch_ms": 1788256800000,
+      "ocsf_class_uid": 2004
     }
   }
 }

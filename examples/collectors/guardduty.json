@@ -1,0 +1,6 @@
+{
+  "source": "guardduty",
+  "region": "us-east-1",
+  "detector_id": "00000000000000000000000000000000",
+  "source_id": "example-guardduty"
+}

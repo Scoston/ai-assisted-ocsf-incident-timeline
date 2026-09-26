@@ -135,7 +135,7 @@ jobs:
           languages: python
           build-mode: none
           queries: security-extended
-      - uses: github/codeql-action/analyze@6f5948dfacef28e207b48d0905cf90c03365536d # v3
+      - uses: github/codeql-action/analyze@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
   attest:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: [tests, delta, enterprise, plaso, codeql]

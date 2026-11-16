@@ -1,5 +1,5 @@
 # Linux/Python 3.12 deployment; update this digest through reviewed dependency PRs.
-FROM python:3.12-slim@sha256:78387bc3881b8273120a12ebe6c1ab22b018ccc2c9adf565ae1ac9b536e184ea
+FROM python:3.15-slim@sha256:65a65fc7b30b06cb6df4930fd4650697cb23f4c2698ab81fc87e4b031bc36928
 ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 PIP_NO_CACHE_DIR=1 \
     TIMELINE_VIEWER_MODE=oidc STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
 COPY requirements/runtime-py312-linux.txt /opt/timeline/requirements.txt
